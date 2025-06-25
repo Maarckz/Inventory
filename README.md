@@ -1,3 +1,8 @@
+
+<div align="left">
+  <a href="https://github.com/maarckz/Inventory" target="_blank"><img height="260" width= "960" src="https://github.com/Maarckz/Maarckz/blob/main/Images/Inventory.png?raw=true"/> 
+</div>
+
 # Machine Inventory System with WAZUH
 
 This document describes the architecture, components, and operation of a machine inventory system for corporate environments using Wazuh. The solution integrates data collection via script, processing, and web-based visualization, emphasizing security and ease of operation. The architecture is modular, scalable, and follows best practices for data protection.
