@@ -126,7 +126,11 @@ LOGIN_BLOCK_TIME=300  # seconds
    ```bash
    python app.py
    ```
-
+5. Default Login and Password:
+   ```bash
+   Login: admin
+   Password: Meuadmin123
+   ```
 ## Monitoring & Maintenance
 
 - **Recommended Routines**  
