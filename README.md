@@ -49,7 +49,7 @@ Accessible via browser, with:
   - Detailed view of collected data per host
 
 <div align="left">
-  <a href="https://github.com/maarckz/Inventory" target="_blank"><img height="600" width= "960" src="https://github.com/Maarckz/Maarckz/blob/main/Images/InventoryDemo.gif?raw=true"/> 
+  <a href="https://github.com/maarckz/Inventory" target="_blank"><img height="500" width= "960" src="https://github.com/Maarckz/Maarckz/blob/main/Images/InventoryDemo.gif?raw=true"/> 
 </div>
 
 
