@@ -13,7 +13,7 @@ import os
 # Carregar variáveis de ambiente
 load_dotenv()
 app = Flask(__name__)
-app.secret_key = os.getenv('SECRET_KEY', 'fallback_secret_key_123!')
+app.secret_key = os.getenv('SECRET_KEY')
 app.config['STATIC_FOLDER'] = 'static'
 
 # Configurações de hardening
@@ -31,8 +31,8 @@ AUTH_FILE = os.getenv('AUTH_FILE')
 SSL_CERT = os.getenv('SSL_CERT_PATH')
 SSL_KEY = os.getenv('SSL_KEY_PATH')
 USE_HTTPS = os.getenv('USE_HTTPS').lower() == 'true'
-MAX_LOGIN_ATTEMPTS = int(os.getenv('MAX_LOGIN_ATTEMPTS', '5') or '5')
-LOGIN_BLOCK_TIME = int(os.getenv('LOGIN_BLOCK_TIME', '300'))  # Default to 300 seconds (5 minutes)
+MAX_LOGIN_ATTEMPTS = int(os.getenv('MAX_LOGIN_ATTEMPTS'))
+LOGIN_BLOCK_TIME = int(os.getenv('LOGIN_BLOCK_TIME'))  # Default to 300 seconds (5 minutes)
 
 
 # Funções auxiliares
@@ -442,7 +442,7 @@ if __name__ == '__main__':
     
     # Configurações do servidor
     host = os.getenv('HOST', '0.0.0.0')
-    port = int(os.getenv('PORT', '8000'))
+    port = int(os.getenv('PORT'))
     debug = os.getenv('DEBUG', 'False').lower() == 'true'
     
     app.run(
