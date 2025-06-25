@@ -113,7 +113,10 @@ LOGIN_BLOCK_TIME=300  # seconds
 
 ## Installation & Execution
 
-1. Clone the repository and configure `.env` as above.  
+1. Clone the repository and configure `.env` as above.
+   ```bash
+   https://github.com/Maarckz/Inventory.git
+   ```
 2. Install dependencies:
    ```bash
    pip install flask bcrypt requests python-dotenv
