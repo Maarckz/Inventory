@@ -53,7 +53,7 @@ Accessible via browser, with:
 </div>
 
 
-## Directory Structure Example
+## Directory Structure
 
 ```
 ├── data
@@ -141,8 +141,6 @@ LOGIN_BLOCK_TIME=300  # seconds
    ```
 
 
-
-    
 ## Monitoring & Maintenance
 
 - **Recommended Routines**  
