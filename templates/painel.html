@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Painel de Máquinas{% endblock %}
+
+{% block content %}
+<div class="panel-header">
+    <a href="{{ url_for('search') }}" class="btn btn-primary">
+        <i class="fas fa-search"></i> Pesquisar Máquinas
+    </a>
+</div>
+
+<div class="machines-grid">
+    {% for machine in machines %}
+    <div class="machine-card">
+        <div class="machine-header">
+            <a class="hostname-btn"
+                style="background-color: #6366F1; color: #fff; padding: 0.5rem 1.25rem; border-radius: 6px; font-size: 1rem; font-weight: 600; text-decoration: none; display: inline-block;">
+                {{ machine.hostname.upper() }}
+            </a>
+            <span class="status status-{{ 'ativo' if machine.device_status == 'Ativo' else 'inativo' }}">
+                {{ machine.device_status }}
+            </span>
+        </div>
+
+        <div class="machine-info">
+            <div class="info-item">
+                <span class="info-label">Sistema Operacional</span>
+                <span class="info-value">{{ machine.os_name }}</span>
+            </div>
+
+            <div class="info-item">
+                <span class="info-label">Processador</span>
+                <span class="info-value">{{ machine.cpu_name }}</span>
+            </div>
+
+            <div class="info-item">
+                <span class="info-label">Memória RAM</span>
+                <span class="info-value">{{ machine.ram_total }} GB</span>
+            </div>
+
+            <div class="info-item">
+                <span class="info-label">Última Atividade</span>
+                <span class="info-value">{{ machine.last_seen | formatar_data }}</span>
+            </div>
+        </div>
+
+        <div class="machine-actions">
+            <a href="{{ url_for('machine_details', hostname=machine.hostname) }}" class="btn btn-sm btn-primary">
+                <i class="fas fa-eye"></i> Detalhes
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

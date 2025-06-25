@@ -1,0 +1,1197 @@
+{
+    "agent_info": {
+        "os": {
+            "name": "Ubuntu",
+            "platform": "ubuntu",
+            "version": "24.04.2 LTS"
+        },
+        "status": "disconnected",
+        "ip": "192.168.56.211",
+        "name": "server",
+        "id": "002",
+        "lastKeepAlive": "2025-06-25T00:43:16+00:00",
+        "calculated_status": "Ligado"
+    },
+    "inventory": {
+        "hardware": [
+            {
+                "cpu": {
+                    "cores": 2,
+                    "mhz": 3194,
+                    "name": "AMD Ryzen 7 5800H with Radeon Graphics"
+                },
+                "ram": {
+                    "free": 1040948,
+                    "total": 4267080,
+                    "usage": 76
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-24T23:44:00+00:00"
+                },
+                "board_serial": "0"
+            }
+        ],
+        "os": [
+            {
+                "os": {
+                    "codename": "noble",
+                    "major": "24",
+                    "minor": "04",
+                    "name": "Ubuntu",
+                    "platform": "ubuntu",
+                    "version": "24.04.2 LTS (Noble Numbat)"
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-24T23:44:00+00:00"
+                },
+                "hostname": "server",
+                "version": "#65-Ubuntu SMP PREEMPT_DYNAMIC Mon May 19 17:15:03 UTC 2025",
+                "architecture": "x86_64",
+                "sysname": "Linux",
+                "release": "6.8.0-62-generic"
+            }
+        ],
+        "ports": [
+            {
+                "local": {
+                    "ip": "127.0.0.53",
+                    "port": 53
+                },
+                "remote": {
+                    "ip": "0.0.0.0",
+                    "port": 0
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-24T21:43:44+00:00"
+                },
+                "state": "listening",
+                "tx_queue": 0,
+                "pid": 565,
+                "inode": 7071,
+                "rx_queue": 0,
+                "process": "systemd-resolve",
+                "protocol": "tcp"
+            },
+            {
+                "local": {
+                    "ip": "127.0.0.54",
+                    "port": 53
+                },
+                "remote": {
+                    "ip": "0.0.0.0",
+                    "port": 0
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-24T21:43:44+00:00"
+                },
+                "tx_queue": 0,
+                "pid": 565,
+                "inode": 7072,
+                "rx_queue": 0,
+                "process": "systemd-resolve",
+                "protocol": "udp"
+            },
+            {
+                "local": {
+                    "ip": "0.0.0.0",
+                    "port": 443
+                },
+                "remote": {
+                    "ip": "0.0.0.0",
+                    "port": 0
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-24T21:43:45+00:00"
+                },
+                "state": "listening",
+                "tx_queue": 0,
+                "pid": 959,
+                "inode": 8020,
+                "rx_queue": 0,
+                "process": "nginx",
+                "protocol": "tcp"
+            },
+            {
+                "local": {
+                    "ip": "127.0.0.1",
+                    "port": 36671
+                },
+                "remote": {
+                    "ip": "0.0.0.0",
+                    "port": 0
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-24T21:43:45+00:00"
+                },
+                "state": "listening",
+                "tx_queue": 0,
+                "pid": 910,
+                "inode": 8077,
+                "rx_queue": 0,
+                "process": "containerd",
+                "protocol": "tcp"
+            },
+            {
+                "local": {
+                    "ip": "::",
+                    "port": 2377
+                },
+                "remote": {
+                    "ip": "::",
+                    "port": 0
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-24T21:43:45+00:00"
+                },
+                "state": "listening",
+                "tx_queue": 0,
+                "pid": 1060,
+                "inode": 10070,
+                "rx_queue": 0,
+                "process": "dockerd",
+                "protocol": "tcp6"
+            },
+            {
+                "local": {
+                    "ip": "0.0.0.0",
+                    "port": 80
+                },
+                "remote": {
+                    "ip": "0.0.0.0",
+                    "port": 0
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-24T21:43:46+00:00"
+                },
+                "state": "listening",
+                "tx_queue": 0,
+                "pid": 959,
+                "inode": 8018,
+                "rx_queue": 0,
+                "process": "nginx",
+                "protocol": "tcp"
+            },
+            {
+                "local": {
+                    "ip": "::",
+                    "port": 80
+                },
+                "remote": {
+                    "ip": "::",
+                    "port": 0
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-24T21:43:46+00:00"
+                },
+                "state": "listening",
+                "tx_queue": 0,
+                "pid": 959,
+                "inode": 8019,
+                "rx_queue": 0,
+                "process": "nginx",
+                "protocol": "tcp6"
+            },
+            {
+                "local": {
+                    "ip": "::",
+                    "port": 22
+                },
+                "remote": {
+                    "ip": "::",
+                    "port": 0
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-24T21:43:47+00:00"
+                },
+                "state": "listening",
+                "tx_queue": 0,
+                "pid": 1,
+                "inode": 6103,
+                "rx_queue": 0,
+                "process": "systemd",
+                "protocol": "tcp6"
+            },
+            {
+                "local": {
+                    "ip": "127.0.0.54",
+                    "port": 53
+                },
+                "remote": {
+                    "ip": "0.0.0.0",
+                    "port": 0
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-24T21:43:47+00:00"
+                },
+                "state": "listening",
+                "tx_queue": 0,
+                "pid": 565,
+                "inode": 7073,
+                "rx_queue": 0,
+                "process": "systemd-resolve",
+                "protocol": "tcp"
+            },
+            {
+                "local": {
+                    "ip": "127.0.0.53",
+                    "port": 53
+                },
+                "remote": {
+                    "ip": "0.0.0.0",
+                    "port": 0
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-24T21:43:47+00:00"
+                },
+                "tx_queue": 0,
+                "pid": 565,
+                "inode": 7070,
+                "rx_queue": 0,
+                "process": "systemd-resolve",
+                "protocol": "udp"
+            },
+            {
+                "local": {
+                    "ip": "0.0.0.0",
+                    "port": 9200
+                },
+                "remote": {
+                    "ip": "0.0.0.0",
+                    "port": 0
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-24T21:43:47+00:00"
+                },
+                "state": "listening",
+                "tx_queue": 0,
+                "pid": 1371,
+                "inode": 10974,
+                "rx_queue": 0,
+                "process": "docker-proxy",
+                "protocol": "tcp"
+            },
+            {
+                "local": {
+                    "ip": "::",
+                    "port": 9200
+                },
+                "remote": {
+                    "ip": "::",
+                    "port": 0
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-24T21:43:47+00:00"
+                },
+                "state": "listening",
+                "tx_queue": 0,
+                "pid": 1384,
+                "inode": 9790,
+                "rx_queue": 0,
+                "process": "docker-proxy",
+                "protocol": "tcp6"
+            },
+            {
+                "local": {
+                    "ip": "0.0.0.0",
+                    "port": 4789
+                },
+                "remote": {
+                    "ip": "0.0.0.0",
+                    "port": 0
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-24T22:43:40+00:00"
+                },
+                "tx_queue": 0,
+                "pid": 0,
+                "inode": 16860,
+                "rx_queue": 0,
+                "process": " ",
+                "protocol": "udp"
+            },
+            {
+                "local": {
+                    "ip": "::",
+                    "port": 7946
+                },
+                "remote": {
+                    "ip": "::",
+                    "port": 0
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-24T22:43:40+00:00"
+                },
+                "tx_queue": 0,
+                "pid": 1060,
+                "inode": 15918,
+                "rx_queue": 0,
+                "process": "dockerd",
+                "protocol": "udp6"
+            },
+            {
+                "local": {
+                    "ip": "0.0.0.0",
+                    "port": 5001
+                },
+                "remote": {
+                    "ip": "0.0.0.0",
+                    "port": 0
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-24T22:43:40+00:00"
+                },
+                "state": "listening",
+                "tx_queue": 0,
+                "pid": 3257,
+                "inode": 16879,
+                "rx_queue": 0,
+                "process": "docker-proxy",
+                "protocol": "tcp"
+            },
+            {
+                "local": {
+                    "ip": "0.0.0.0",
+                    "port": 3001
+                },
+                "remote": {
+                    "ip": "0.0.0.0",
+                    "port": 0
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-24T22:43:40+00:00"
+                },
+                "state": "listening",
+                "tx_queue": 0,
+                "pid": 3559,
+                "inode": 17601,
+                "rx_queue": 0,
+                "process": "docker-proxy",
+                "protocol": "tcp"
+            },
+            {
+                "local": {
+                    "ip": "0.0.0.0",
+                    "port": 3443
+                },
+                "remote": {
+                    "ip": "0.0.0.0",
+                    "port": 0
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-24T22:43:40+00:00"
+                },
+                "state": "listening",
+                "tx_queue": 0,
+                "pid": 3571,
+                "inode": 17615,
+                "rx_queue": 0,
+                "process": "docker-proxy",
+                "protocol": "tcp"
+            },
+            {
+                "local": {
+                    "ip": "::",
+                    "port": 33335
+                },
+                "remote": {
+                    "ip": "::",
+                    "port": 0
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-24T22:43:40+00:00"
+                },
+                "state": "listening",
+                "tx_queue": 0,
+                "pid": 1060,
+                "inode": 20397,
+                "rx_queue": 0,
+                "process": "dockerd",
+                "protocol": "tcp6"
+            },
+            {
+                "local": {
+                    "ip": "::",
+                    "port": 33334
+                },
+                "remote": {
+                    "ip": "::",
+                    "port": 0
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-24T22:43:40+00:00"
+                },
+                "state": "listening",
+                "tx_queue": 0,
+                "pid": 1060,
+                "inode": 21560,
+                "rx_queue": 0,
+                "process": "dockerd",
+                "protocol": "tcp6"
+            },
+            {
+                "local": {
+                    "ip": "::",
+                    "port": 33333
+                },
+                "remote": {
+                    "ip": "::",
+                    "port": 0
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-24T22:43:40+00:00"
+                },
+                "state": "listening",
+                "tx_queue": 0,
+                "pid": 1060,
+                "inode": 18249,
+                "rx_queue": 0,
+                "process": "dockerd",
+                "protocol": "tcp6"
+            },
+            {
+                "local": {
+                    "ip": "::",
+                    "port": 33336
+                },
+                "remote": {
+                    "ip": "::",
+                    "port": 0
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-24T22:43:40+00:00"
+                },
+                "state": "listening",
+                "tx_queue": 0,
+                "pid": 1060,
+                "inode": 20219,
+                "rx_queue": 0,
+                "process": "dockerd",
+                "protocol": "tcp6"
+            },
+            {
+                "local": {
+                    "ip": "::",
+                    "port": 5001
+                },
+                "remote": {
+                    "ip": "::",
+                    "port": 0
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-24T22:43:40+00:00"
+                },
+                "state": "listening",
+                "tx_queue": 0,
+                "pid": 3266,
+                "inode": 15997,
+                "rx_queue": 0,
+                "process": "docker-proxy",
+                "protocol": "tcp6"
+            },
+            {
+                "local": {
+                    "ip": "::",
+                    "port": 3001
+                },
+                "remote": {
+                    "ip": "::",
+                    "port": 0
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-24T22:43:40+00:00"
+                },
+                "state": "listening",
+                "tx_queue": 0,
+                "pid": 3565,
+                "inode": 17608,
+                "rx_queue": 0,
+                "process": "docker-proxy",
+                "protocol": "tcp6"
+            },
+            {
+                "local": {
+                    "ip": "::",
+                    "port": 3443
+                },
+                "remote": {
+                    "ip": "::",
+                    "port": 0
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-24T22:43:40+00:00"
+                },
+                "state": "listening",
+                "tx_queue": 0,
+                "pid": 3580,
+                "inode": 17622,
+                "rx_queue": 0,
+                "process": "docker-proxy",
+                "protocol": "tcp6"
+            },
+            {
+                "local": {
+                    "ip": "::",
+                    "port": 7946
+                },
+                "remote": {
+                    "ip": "::",
+                    "port": 0
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-24T22:43:40+00:00"
+                },
+                "state": "listening",
+                "tx_queue": 0,
+                "pid": 1060,
+                "inode": 15917,
+                "rx_queue": 0,
+                "process": "dockerd",
+                "protocol": "tcp6"
+            },
+            {
+                "local": {
+                    "ip": "192.168.56.211",
+                    "port": 68
+                },
+                "remote": {
+                    "ip": "0.0.0.0",
+                    "port": 0
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-24T23:44:00+00:00"
+                },
+                "tx_queue": 0,
+                "pid": 522,
+                "inode": 201761,
+                "rx_queue": 0,
+                "process": "systemd-network",
+                "protocol": "udp"
+            }
+        ],
+        "netaddr": [
+            {
+                "scan": {
+                    "id": 0
+                },
+                "address": "fe80::a00:27ff:fede:79dc",
+                "proto": "ipv6",
+                "iface": "enp0s3",
+                "netmask": "ffff:ffff:ffff:ffff::"
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "address": "192.168.56.211",
+                "proto": "ipv4",
+                "iface": "enp0s3",
+                "broadcast": "192.168.56.255",
+                "netmask": "255.255.255.0"
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "address": "172.18.0.1",
+                "proto": "ipv4",
+                "iface": "br-d0c68a978075",
+                "broadcast": "172.18.255.255",
+                "netmask": "255.255.0.0"
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "address": "172.19.0.1",
+                "proto": "ipv4",
+                "iface": "docker_gwbridge",
+                "broadcast": "172.19.255.255",
+                "netmask": "255.255.0.0"
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "address": "172.17.0.1",
+                "proto": "ipv4",
+                "iface": "docker0",
+                "broadcast": "172.17.255.255",
+                "netmask": "255.255.0.0"
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "address": "fe80::42:e5ff:fea4:7d88",
+                "proto": "ipv6",
+                "iface": "br-d0c68a978075",
+                "netmask": "ffff:ffff:ffff:ffff::"
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "address": "fe80::86b:5bff:fed6:45a3",
+                "proto": "ipv6",
+                "iface": "vethcb62c73",
+                "netmask": "ffff:ffff:ffff:ffff::"
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "address": "fe80::42:1fff:fee3:c3a0",
+                "proto": "ipv6",
+                "iface": "docker_gwbridge",
+                "netmask": "ffff:ffff:ffff:ffff::"
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "address": "fe80::fc77:baff:fef0:44ed",
+                "proto": "ipv6",
+                "iface": "veth0b85325",
+                "netmask": "ffff:ffff:ffff:ffff::"
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "address": "fe80::1cb4:a5ff:fefe:9d3d",
+                "proto": "ipv6",
+                "iface": "veth0f22527",
+                "netmask": "ffff:ffff:ffff:ffff::"
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "address": "fe80::28b0:c4ff:feac:371a",
+                "proto": "ipv6",
+                "iface": "veth18c703d",
+                "netmask": "ffff:ffff:ffff:ffff::"
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "address": "fe80::48f8:53ff:fefa:3421",
+                "proto": "ipv6",
+                "iface": "veth2669423",
+                "netmask": "ffff:ffff:ffff:ffff::"
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "address": "fe80::6c26:bcff:fe1c:77c9",
+                "proto": "ipv6",
+                "iface": "veth47a8b3b",
+                "netmask": "ffff:ffff:ffff:ffff::"
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "address": "fe80::a8dc:21ff:feed:5761",
+                "proto": "ipv6",
+                "iface": "veth81a45ba",
+                "netmask": "ffff:ffff:ffff:ffff::"
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "address": "fe80::ac45:85ff:fe33:6fb2",
+                "proto": "ipv6",
+                "iface": "vetha332da2",
+                "netmask": "ffff:ffff:ffff:ffff::"
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "address": "fe80::8c68:5cff:fe51:3985",
+                "proto": "ipv6",
+                "iface": "vetha95941a",
+                "netmask": "ffff:ffff:ffff:ffff::"
+            }
+        ],
+        "netiface": [
+            {
+                "rx": {
+                    "bytes": 167918,
+                    "dropped": 0,
+                    "errors": 0,
+                    "packets": 655
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-24T23:44:00+00:00"
+                },
+                "tx": {
+                    "bytes": 287627,
+                    "dropped": 0,
+                    "errors": 0,
+                    "packets": 809
+                },
+                "name": "br-d0c68a978075",
+                "type": "ethernet",
+                "mac": "02:42:e5:a4:7d:88",
+                "state": "up",
+                "mtu": 1500
+            },
+            {
+                "rx": {
+                    "bytes": 2130088,
+                    "dropped": 0,
+                    "errors": 0,
+                    "packets": 12907
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-24T23:44:00+00:00"
+                },
+                "tx": {
+                    "bytes": 1858397,
+                    "dropped": 0,
+                    "errors": 0,
+                    "packets": 7125
+                },
+                "name": "enp0s3",
+                "type": "ethernet",
+                "mac": "08:00:27:de:79:dc",
+                "state": "up",
+                "mtu": 1500
+            },
+            {
+                "rx": {
+                    "bytes": 38087334,
+                    "dropped": 0,
+                    "errors": 0,
+                    "packets": 17466
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-24T23:44:00+00:00"
+                },
+                "tx": {
+                    "bytes": 84620323,
+                    "dropped": 0,
+                    "errors": 0,
+                    "packets": 26317
+                },
+                "name": "vethcb62c73",
+                "type": "ethernet",
+                "mac": "0a:6b:5b:d6:45:a3",
+                "state": "up",
+                "mtu": 1500
+            },
+            {
+                "rx": {
+                    "bytes": 0,
+                    "dropped": 0,
+                    "errors": 0,
+                    "packets": 0
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-24T21:43:44+00:00"
+                },
+                "tx": {
+                    "bytes": 0,
+                    "dropped": 0,
+                    "errors": 0,
+                    "packets": 0
+                },
+                "name": "docker0",
+                "type": "ethernet",
+                "mac": "02:42:48:17:d4:db",
+                "state": "down",
+                "mtu": 1500
+            },
+            {
+                "rx": {
+                    "bytes": 72928,
+                    "dropped": 0,
+                    "errors": 0,
+                    "packets": 395
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-24T23:44:00+00:00"
+                },
+                "tx": {
+                    "bytes": 107298,
+                    "dropped": 0,
+                    "errors": 0,
+                    "packets": 328
+                },
+                "name": "docker_gwbridge",
+                "type": "ethernet",
+                "mac": "02:42:1f:e3:c3:a0",
+                "state": "up",
+                "mtu": 1500
+            },
+            {
+                "rx": {
+                    "bytes": 78022,
+                    "dropped": 0,
+                    "errors": 0,
+                    "packets": 389
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-24T23:44:00+00:00"
+                },
+                "tx": {
+                    "bytes": 107322,
+                    "dropped": 0,
+                    "errors": 0,
+                    "packets": 334
+                },
+                "name": "veth0b85325",
+                "type": "ethernet",
+                "mac": "fe:77:ba:f0:44:ed",
+                "state": "up",
+                "mtu": 1500
+            },
+            {
+                "rx": {
+                    "bytes": 436,
+                    "dropped": 0,
+                    "errors": 0,
+                    "packets": 6
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-24T23:44:00+00:00"
+                },
+                "tx": {
+                    "bytes": 1994,
+                    "dropped": 0,
+                    "errors": 0,
+                    "packets": 23
+                },
+                "name": "veth0f22527",
+                "type": "ethernet",
+                "mac": "1e:b4:a5:fe:9d:3d",
+                "state": "up",
+                "mtu": 1500
+            },
+            {
+                "rx": {
+                    "bytes": 0,
+                    "dropped": 0,
+                    "errors": 0,
+                    "packets": 0
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-24T23:44:00+00:00"
+                },
+                "tx": {
+                    "bytes": 1826,
+                    "dropped": 0,
+                    "errors": 0,
+                    "packets": 23
+                },
+                "name": "veth18c703d",
+                "type": "ethernet",
+                "mac": "2a:b0:c4:ac:37:1a",
+                "state": "up",
+                "mtu": 1500
+            },
+            {
+                "rx": {
+                    "bytes": 0,
+                    "dropped": 0,
+                    "errors": 0,
+                    "packets": 0
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-24T23:44:00+00:00"
+                },
+                "tx": {
+                    "bytes": 1258,
+                    "dropped": 0,
+                    "errors": 0,
+                    "packets": 17
+                },
+                "name": "veth2669423",
+                "type": "ethernet",
+                "mac": "4a:f8:53:fa:34:21",
+                "state": "up",
+                "mtu": 1500
+            },
+            {
+                "rx": {
+                    "bytes": 84659523,
+                    "dropped": 0,
+                    "errors": 0,
+                    "packets": 26657
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-24T23:44:00+00:00"
+                },
+                "tx": {
+                    "bytes": 38294492,
+                    "dropped": 0,
+                    "errors": 0,
+                    "packets": 17899
+                },
+                "name": "veth47a8b3b",
+                "type": "ethernet",
+                "mac": "6e:26:bc:1c:77:c9",
+                "state": "up",
+                "mtu": 1500
+            },
+            {
+                "rx": {
+                    "bytes": 381600,
+                    "dropped": 0,
+                    "errors": 0,
+                    "packets": 1049
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-24T23:44:00+00:00"
+                },
+                "tx": {
+                    "bytes": 330015,
+                    "dropped": 0,
+                    "errors": 0,
+                    "packets": 1193
+                },
+                "name": "veth81a45ba",
+                "type": "ethernet",
+                "mac": "aa:dc:21:ed:57:61",
+                "state": "up",
+                "mtu": 1500
+            },
+            {
+                "rx": {
+                    "bytes": 0,
+                    "dropped": 0,
+                    "errors": 0,
+                    "packets": 0
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-24T23:44:00+00:00"
+                },
+                "tx": {
+                    "bytes": 1258,
+                    "dropped": 0,
+                    "errors": 0,
+                    "packets": 17
+                },
+                "name": "vetha332da2",
+                "type": "ethernet",
+                "mac": "ae:45:85:33:6f:b2",
+                "state": "up",
+                "mtu": 1500
+            },
+            {
+                "rx": {
+                    "bytes": 96,
+                    "dropped": 0,
+                    "errors": 0,
+                    "packets": 2
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-24T23:44:00+00:00"
+                },
+                "tx": {
+                    "bytes": 2346,
+                    "dropped": 0,
+                    "errors": 0,
+                    "packets": 33
+                },
+                "name": "vetha95941a",
+                "type": "ethernet",
+                "mac": "8e:68:5c:51:39:85",
+                "state": "up",
+                "mtu": 1500
+            }
+        ],
+        "netproto": [
+            {
+                "scan": {
+                    "id": 0
+                },
+                "dhcp": "unknown",
+                "type": "ipv4",
+                "iface": "enp0s3",
+                "gateway": "192.168.56.100"
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "dhcp": "unknown",
+                "type": "ipv4",
+                "iface": "br-d0c68a978075",
+                "gateway": " "
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "dhcp": "unknown",
+                "type": "ipv4",
+                "iface": "docker0",
+                "gateway": " "
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "dhcp": "unknown",
+                "type": "ipv4",
+                "iface": "docker_gwbridge",
+                "gateway": " "
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "dhcp": "unknown",
+                "type": "ipv6",
+                "iface": "br-d0c68a978075",
+                "gateway": " "
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "dhcp": "unknown",
+                "type": "ipv6",
+                "iface": "enp0s3",
+                "gateway": "192.168.56.100"
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "dhcp": "unknown",
+                "type": "ipv6",
+                "iface": "vethcb62c73",
+                "gateway": " "
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "dhcp": "unknown",
+                "type": "ipv6",
+                "iface": "docker_gwbridge",
+                "gateway": " "
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "dhcp": "unknown",
+                "type": "ipv6",
+                "iface": "veth0b85325",
+                "gateway": " "
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "dhcp": "unknown",
+                "type": "ipv6",
+                "iface": "veth0f22527",
+                "gateway": " "
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "dhcp": "unknown",
+                "type": "ipv6",
+                "iface": "veth18c703d",
+                "gateway": " "
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "dhcp": "unknown",
+                "type": "ipv6",
+                "iface": "veth2669423",
+                "gateway": " "
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "dhcp": "unknown",
+                "type": "ipv6",
+                "iface": "veth47a8b3b",
+                "gateway": " "
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "dhcp": "unknown",
+                "type": "ipv6",
+                "iface": "veth81a45ba",
+                "gateway": " "
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "dhcp": "unknown",
+                "type": "ipv6",
+                "iface": "vetha332da2",
+                "gateway": " "
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "dhcp": "unknown",
+                "type": "ipv6",
+                "iface": "vetha95941a",
+                "gateway": " "
+            }
+        ]
+    }
+}

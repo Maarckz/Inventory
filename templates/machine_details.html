@@ -1,0 +1,344 @@
+{% extends "base.html" %}
+
+{% block title %}Detalhes da Máquina - {{ machine.hostname }}{% endblock %}
+
+{% block content %}
+<div class="machine-details-container">
+    <div class="details-header">
+        <a class="hostname-btn"
+            style="background-color: #6366F1; color: #fff; padding: 0.5rem 1.25rem; border-radius: 6px; font-size: 1.25rem; font-weight: 600; text-decoration: none; display: inline-block;">
+            {{ machine.hostname.upper() }}
+        </a>
+        <span class="status status-{{ 'ativo' if machine.device_status == 'Ativo' else 'inativo' }}">
+            {{ machine.device_status }}
+        </span>
+    </div>
+
+    <div class="details-grid">
+        <!-- Informações Básicas -->
+        <div class="details-section">
+            <div class="section-header">
+                <i class="fas fa-info-circle"></i>
+                <h3>Informações Básicas</h3>
+            </div>
+            <div class="section-body">
+                <div class="detail-row">
+                    <span class="detail-label">Host name</span>
+                    <span class="detail-value">{{ machine.hostname }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Operating system</span>
+                    <span class="detail-value">{{ machine.os_name }} {{ machine.os_version }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Arch</span>
+                    <span class="detail-value">{{ machine.os_architecture }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Board serial</span>
+                    <span class="detail-value">{{ machine.board_serial }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Last scan</span>
+                    <span class="detail-value">{{ machine.last_seen | formatar_data }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hardware -->
+        <div class="details-section">
+            <div class="section-header">
+                <i class="fas fa-microchip"></i>
+                <h3>Hardware</h3>
+            </div>
+            <div class="section-body">
+                <div class="detail-row">
+                    <span class="detail-label">CPU</span>
+                    <span class="detail-value">{{ machine.cpu_name }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Cores</span>
+                    <span class="detail-value">{{ machine.cpu_cores }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Memory</span>
+                    <span class="detail-value">{{ machine.ram_total }} GB</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Network Interfaces -->
+        <div class="details-section">
+            <div class="section-header">
+                <i class="fas fa-network-wired"></i>
+                <h3>Network interfaces ({{ machine.netiface|length }})</h3>
+            </div>
+            <div class="section-body">
+                <table class="interface-table">
+                    <thead>
+                        <tr>
+                            <th>Interface</th>
+                            <th>MAC</th>
+                            <th>State</th>
+                            <th>MTU</th>
+                            <th>Type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for iface in machine.netiface %}
+                        <tr>
+                            <td>{{ iface.name }}</td>
+                            <td>{{ iface.mac }}</td>
+                            <td><span class="status status-{{ iface.state }}">{{ iface.state }}</span></td>
+                            <td>{{ iface.mtu }}</td>
+                            <td>{{ iface.type }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Network Ports -->
+        <div class="details-section">
+            <div class="section-header">
+                <i class="fas fa-plug"></i>
+                <h3>Network ports ({{ machine.ports|length }})</h3>
+            </div>
+            <div class="section-body">
+                <table class="port-table">
+                    <thead>
+                        <tr>
+                            <th>Local port</th>
+                            <th>Local IP</th>
+                            <th>Process</th>
+                            <th>PID</th>
+                            <th>State</th>
+                            <th>Protocol</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for port in machine.ports %}
+                        <tr>
+                            <td>{{ port.local.port }}</td>
+                            <td>{{ port.local.ip }}</td>
+                            <td>{{ port.process }}</td>
+                            <td>{{ port.pid }}</td>
+                            <td>{{ port.state if port.state else '-' }}</td>
+                            <td>{{ port.protocol }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Network Settings -->
+        <div class="details-section">
+            <div class="section-header">
+                <i class="fas fa-cog"></i>
+                <h3>Network settings ({{ machine.netaddr|length }})</h3>
+            </div>
+            <div class="section-body">
+                <table class="network-table">
+                    <thead>
+                        <tr>
+                            <th>Interface</th>
+                            <th>Address</th>
+                            <th>Netmask</th>
+                            <th>Type</th>
+                            <th>Broadcast</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for addr in machine.netaddr %}
+                        <tr>
+                            <td>{{ addr.iface }}</td>
+                            <td>{{ addr.address }}</td>
+                            <td>{{ addr.netmask }}</td>
+                            <td>{{ addr.proto }}</td>
+                            <td>{{ addr.broadcast if addr.broadcast else '-' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="back-button">
+        <a href="{{ url_for('painel') }}" class="btn">
+            <i class="fas fa-arrow-left"></i> Voltar ao Painel
+        </a>
+    </div>
+</div>
+
+<style>
+    .machine-details-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .details-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+    }
+
+    .details-header h2 {
+        font-size: 1.75rem;
+        color: var(--dark);
+    }
+
+    .status {
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .status-ativo {
+        background-color: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+    }
+
+    .status-inativo {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+    }
+
+    .status-up {
+        background-color: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+    }
+
+    .status-down {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+    }
+
+    .details-grid {
+        display: block;
+        /*display: grid;*/
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .details-section {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+    }
+
+    .section-header {
+        padding: 1rem 1.5rem;
+        background: var(--light);
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .section-header h3 {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--dark);
+    }
+
+    .section-header i {
+        color: var(--primary);
+    }
+
+    .section-body {
+        padding: 1.5rem;
+    }
+
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+
+    .detail-row:last-child {
+        margin-bottom: 0;
+    }
+
+    .detail-label {
+        font-weight: 500;
+        color: var(--dark-gray);
+    }
+
+    .detail-value {
+        font-weight: 600;
+        color: var(--dark);
+        text-align: right;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.875rem;
+    }
+
+    th,
+    td {
+        padding: 0.75rem;
+        text-align: left;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    th {
+        background: var(--light);
+        font-weight: 600;
+        color: var(--dark-gray);
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+    }
+
+    .back-button {
+        margin-top: 2rem;
+        text-align: center;
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        background: var(--primary);
+        color: white;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .btn:hover {
+        background: var(--primary-dark);
+        transform: translateY(-2px);
+    }
+
+    @media (max-width: 768px) {
+        .details-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .section-body {
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        table {
+            display: block;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+    }
+</style>
+{% endblock %}

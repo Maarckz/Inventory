@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/chart.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Configuração comum para os gráficos
+        const chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            return `${context.label}: ${context.raw} (${context.parsed}%)`;
+                        }
+                    }
+                }
+            },
+            onClick: (event, elements, chart) => {
+                if (elements.length > 0) {
+                    const index = elements[0].index;
+                    const label = chart.data.labels[index].toLowerCase();
+                    window.location.href = `/search?query=${encodeURIComponent(label)}`;
+                }
+            }
+        };
+
+        // Carregar dados via AJAX
+        fetch('/get_chart_data')
+            .then(response => response.json())
+            .then(data => {
+                // Gráfico de Sistemas Operacionais
+                const osCtx = document.getElementById('osChart').getContext('2d');
+                new Chart(osCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: data.os_labels,
+                        datasets: [{
+                            data: data.os_data,
+                            backgroundColor: [
+                                '#6366F1', '#8B5CF6', '#EC4899',
+                                '#F43F5E', '#F97316', '#F59E0B'
+                            ],
+                            borderWidth: 0,
+                            hoverOffset: 10
+                        }]
+                    },
+                    options: chartOptions
+                });
+
+                // Gráfico de Processadores
+                const cpuCtx = document.getElementById('cpuChart').getContext('2d');
+                new Chart(cpuCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.cpu_labels,
+                        datasets: [{
+                            label: 'Quantidade',
+                            data: data.cpu_data,
+                            backgroundColor: '#6366F1',
+                            borderRadius: 6,
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        ...chartOptions,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    drawBorder: false
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+
+                // Gráfico de Memória RAM
+                const ramCtx = document.getElementById('ramChart').getContext('2d');
+                new Chart(ramCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: data.ram_labels,
+                        datasets: [{
+                            data: data.ram_data,
+                            backgroundColor: [
+                                '#6366F1', '#8B5CF6', '#EC4899',
+                                '#F43F5E', '#F97316'
+                            ],
+                            borderWidth: 0,
+                            hoverOffset: 10
+                        }]
+                    },
+                    options: chartOptions
+                });
+            });
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div class="dashboard-stats">
+        <div class="stat-card stat-primary">
+            <div class="stat-icon">
+                <i class="fas fa-laptop"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Total de Máquinas</span>
+                <span class="stat-value">{{ active_count + inactive_count }}</span>
+            </div>
+        </div>
+
+        <div class="stat-card stat-success">
+            <div class="stat-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Ativas</span>
+                <span class="stat-value">{{ active_count }}</span>
+            </div>
+        </div>
+
+        <div class="stat-card stat-danger">
+            <div class="stat-icon">
+                <i class="fas fa-times-circle"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Inativas</span>
+                <span class="stat-value">{{ inactive_count }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="chart-grid">
+    <div class="chart-container">
+        <div class="chart-header">
+            <h3>Sistemas Operacionais</h3>
+        </div>
+        <div class="chart-wrapper">
+            <canvas id="osChart"></canvas>
+        </div>
+    </div>
+
+    <div class="chart-container">
+        <div class="chart-header">
+            <h3>Processadores</h3>
+        </div>
+        <div class="chart-wrapper">
+            <canvas id="cpuChart"></canvas>
+        </div>
+    </div>
+
+    <div class="chart-container">
+        <div class="chart-header">
+            <h3>Memória RAM</h3>
+        </div>
+        <div class="chart-wrapper">
+            <canvas id="ramChart"></canvas>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Inventário TI{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="{{ url_for('static', filename='js/chart.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.png') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="header-content">
+                <a href="{{ url_for('get_data') }}">
+                    <img src="{{ url_for('static', filename='mlogo.svg') }}" alt="Logo" class="app-logo" style="height: 40px;">
+                </a>
+                <nav class="app-nav">
+                    <a href="{{ url_for('dashboard') }}" class="nav-link">
+                        <i class="fas fa-chart-pie"></i> Dashboard
+                    </a>
+                    <a href="{{ url_for('painel') }}" class="nav-link">
+                        <i class="fas fa-laptop"></i> Painel
+                    </a>
+                    <a href="{{ url_for('search') }}" class="nav-link">
+                        <i class="fas fa-search"></i> Pesquisa
+                    </a>
+                    {% if 'username' in session %}
+                        <a href="{{ url_for('logout') }}" class="nav-link">
+                            <i class="fas fa-sign-out-alt"></i> Sair
+                        </a>
+                    {% endif %}
+                </nav>
+            </div>
+        </header>
+        
+        <main class="app-main">
+            <div class="container">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">
+                                {{ message }}
+                                <button class="alert-close" onclick="this.parentElement.remove()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
