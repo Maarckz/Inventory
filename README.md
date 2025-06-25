@@ -131,10 +131,12 @@ LOGIN_BLOCK_TIME=300  # seconds
    python3 utils/get_data.py
    ```
    Here you need to configure wazuh-wui credentials.
-   You can retrieve the credentials from the .tar with the command :
+   You can retrieve the credentials from the .tar with the command:
    ```bash
    sudo tar -axf wazuh-install-files.tar wazuh-install-files/wazuh-passwords.txt -O
    ```
+4. Set credentials on utils/get_data.py
+
 5. Start the web application:
    ```bash
    python app.py
