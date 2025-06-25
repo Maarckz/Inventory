@@ -137,7 +137,7 @@ LOGIN_BLOCK_TIME=300  # seconds
 
 
 <div align="left">
-  <a href="https://github.com/maarckz/Inventory" target="_blank"><img height="800" width= "960" src="https://github.com/Maarckz/Maarckz/blob/main/Images/InventoryDemo.gif?raw=true"/> 
+  <a href="https://github.com/maarckz/Inventory" target="_blank"><img height="600" width= "960" src="https://github.com/Maarckz/Maarckz/blob/main/Images/InventoryDemo.gif?raw=true"/> 
 </div>
 ## Monitoring & Maintenance
 
