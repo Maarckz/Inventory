@@ -137,11 +137,15 @@ LOGIN_BLOCK_TIME=300  # seconds
    ```
 4. Set credentials on utils/get_data.py
 
-5. Start the web application:
+5. Create TLS/SSL Cert:
+  ```bash
+  openssl req -x509 -newkey rsa:4096 -nodes -out ssl/cert.pem -keyout ssl/key.pem -days 365 
+  ```
+6. Start the web application:
    ```bash
    python app.py
    ```
-6. Default Login and Password:
+7. Default Login and Password:
    ```bash
    Login: admin
    Password: Meuadmin123
