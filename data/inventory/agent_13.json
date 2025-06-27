@@ -1,0 +1,452 @@
+{
+    "agent_info": {
+        "os": {
+            "name": "Debian",
+            "platform": "debian",
+            "version": "11.6"
+        },
+        "status": "active",
+        "ip": "192.168.222.169",
+        "name": "host-app-92",
+        "id": "3745f93a",
+        "lastKeepAlive": "2025-06-20T15:55:32+00:00",
+        "calculated_status": "Ligado"
+    },
+    "inventory": {
+        "hardware": [
+            {
+                "cpu": {
+                    "cores": 4,
+                    "mhz": 2827,
+                    "name": "Apple M1 Max"
+                },
+                "ram": {
+                    "free": 29820928,
+                    "total": 4194304,
+                    "usage": 62
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-20T15:55:32+00:00"
+                },
+                "board_serial": "d67fc34a"
+            }
+        ],
+        "os": [
+            {
+                "os": {
+                    "codename": "bullseye",
+                    "major": "11",
+                    "minor": "6",
+                    "name": "Debian",
+                    "platform": "debian",
+                    "version": "11.6 (bullseye)"
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-20T15:55:32+00:00"
+                },
+                "hostname": "host-app-92",
+                "version": "#176-Debian SMP PREEMPT_DYNAMIC",
+                "architecture": "arm64",
+                "sysname": "Linux",
+                "release": "3.16.66-generic"
+            }
+        ],
+        "ports": [
+            {
+                "local": {
+                    "ip": "127.0.0.1",
+                    "port": 5601
+                },
+                "remote": {
+                    "ip": "0.0.0.0",
+                    "port": 0
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-20T15:55:32+00:00"
+                },
+                "state": "listening",
+                "tx_queue": 54,
+                "pid": 607,
+                "inode": 4303,
+                "rx_queue": 100,
+                "process": "kibana",
+                "protocol": "tcp"
+            },
+            {
+                "local": {
+                    "ip": "127.0.0.1",
+                    "port": 5432
+                },
+                "remote": {
+                    "ip": "0.0.0.0",
+                    "port": 0
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-20T15:55:32+00:00"
+                },
+                "state": "established",
+                "tx_queue": 12,
+                "pid": 1814,
+                "inode": 6270,
+                "rx_queue": 32,
+                "process": "postgresql",
+                "protocol": "tcp"
+            },
+            {
+                "local": {
+                    "ip": "127.0.0.1",
+                    "port": 3306
+                },
+                "remote": {
+                    "ip": "0.0.0.0",
+                    "port": 0
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-20T15:55:32+00:00"
+                },
+                "state": "time_wait",
+                "tx_queue": 21,
+                "pid": 2950,
+                "inode": 12641,
+                "rx_queue": 34,
+                "process": "mysql",
+                "protocol": "tcp"
+            },
+            {
+                "local": {
+                    "ip": "0.0.0.0",
+                    "port": 80
+                },
+                "remote": {
+                    "ip": "0.0.0.0",
+                    "port": 0
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-20T15:55:32+00:00"
+                },
+                "state": "time_wait",
+                "tx_queue": 12,
+                "pid": 2199,
+                "inode": 17478,
+                "rx_queue": 26,
+                "process": "nginx/apache",
+                "protocol": "tcp"
+            },
+            {
+                "local": {
+                    "ip": "192.168.222.169",
+                    "port": 443
+                },
+                "remote": {
+                    "ip": "0.0.0.0",
+                    "port": 0
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-20T15:55:32+00:00"
+                },
+                "state": "listening",
+                "tx_queue": 27,
+                "pid": 1577,
+                "inode": 18523,
+                "rx_queue": 55,
+                "process": "nginx/apache",
+                "protocol": "tcp"
+            },
+            {
+                "local": {
+                    "ip": "127.0.0.1",
+                    "port": 27017
+                },
+                "remote": {
+                    "ip": "0.0.0.0",
+                    "port": 0
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-20T15:55:32+00:00"
+                },
+                "state": "listening",
+                "tx_queue": 44,
+                "pid": 3318,
+                "inode": 8340,
+                "rx_queue": 72,
+                "process": "mongodb",
+                "protocol": "tcp"
+            },
+            {
+                "local": {
+                    "ip": "127.0.0.1",
+                    "port": 8080
+                },
+                "remote": {
+                    "ip": "0.0.0.0",
+                    "port": 0
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-20T15:55:32+00:00"
+                },
+                "state": "established",
+                "tx_queue": 63,
+                "pid": 613,
+                "inode": 15526,
+                "rx_queue": 19,
+                "process": "tomcat/webapp",
+                "protocol": "tcp"
+            }
+        ],
+        "netaddr": [
+            {
+                "scan": {
+                    "id": 0
+                },
+                "address": "10.224.128.214",
+                "proto": "ipv4",
+                "iface": "eth0",
+                "broadcast": "10.35.75.255",
+                "netmask": "255.255.255.0"
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "address": "fe80::45d2:d662:f516:8b3f",
+                "proto": "ipv6",
+                "iface": "eth0",
+                "netmask": "ffff:ffff:ffff:ffff::"
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "address": "10.129.226.112",
+                "proto": "ipv4",
+                "iface": "br-80984b9c",
+                "broadcast": "10.59.230.255",
+                "netmask": "255.255.255.0"
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "address": "fe80::4f8f:a6cf:eec3:7b3f",
+                "proto": "ipv6",
+                "iface": "br-80984b9c",
+                "netmask": "ffff:ffff:ffff:ffff::"
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "address": "10.126.159.185",
+                "proto": "ipv4",
+                "iface": "br-0898d51f",
+                "broadcast": "10.37.26.255",
+                "netmask": "255.255.255.0"
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "address": "fe80::ab9:c424:f9bb:a11b",
+                "proto": "ipv6",
+                "iface": "br-0898d51f",
+                "netmask": "ffff:ffff:ffff:ffff::"
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "address": "10.234.172.141",
+                "proto": "ipv4",
+                "iface": "veth6503a96e",
+                "broadcast": "10.213.165.255",
+                "netmask": "255.255.255.0"
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "address": "fe80::cdd7:e4a0:b362:9fbb",
+                "proto": "ipv6",
+                "iface": "veth6503a96e",
+                "netmask": "ffff:ffff:ffff:ffff::"
+            }
+        ],
+        "netiface": [
+            {
+                "rx": {
+                    "bytes": 35983571,
+                    "dropped": 19,
+                    "errors": 37,
+                    "packets": 9234
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-20T15:55:32+00:00"
+                },
+                "tx": {
+                    "bytes": 90745786,
+                    "dropped": 89,
+                    "errors": 22,
+                    "packets": 6179
+                },
+                "name": "eth0",
+                "type": "docker",
+                "mac": "9e:88:4a:7a:81:5c",
+                "state": "up",
+                "mtu": 9000
+            },
+            {
+                "rx": {
+                    "bytes": 19101599,
+                    "dropped": 92,
+                    "errors": 26,
+                    "packets": 5744
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-20T15:55:32+00:00"
+                },
+                "tx": {
+                    "bytes": 77922903,
+                    "dropped": 32,
+                    "errors": 6,
+                    "packets": 7399
+                },
+                "name": "br-80984b9c",
+                "type": "docker",
+                "mac": "89:bc:34:1b:42:94",
+                "state": "up",
+                "mtu": 1500
+            },
+            {
+                "rx": {
+                    "bytes": 36487873,
+                    "dropped": 44,
+                    "errors": 15,
+                    "packets": 1168
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-20T15:55:32+00:00"
+                },
+                "tx": {
+                    "bytes": 25408156,
+                    "dropped": 23,
+                    "errors": 39,
+                    "packets": 7955
+                },
+                "name": "br-0898d51f",
+                "type": "docker",
+                "mac": "f2:b9:71:37:9c:d6",
+                "state": "up",
+                "mtu": 9000
+            },
+            {
+                "rx": {
+                    "bytes": 39275834,
+                    "dropped": 86,
+                    "errors": 23,
+                    "packets": 8526
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-20T15:55:32+00:00"
+                },
+                "tx": {
+                    "bytes": 96934531,
+                    "dropped": 76,
+                    "errors": 46,
+                    "packets": 1332
+                },
+                "name": "veth6503a96e",
+                "type": "wifi",
+                "mac": "e8:b2:0c:3e:12:8a",
+                "state": "up",
+                "mtu": 1492
+            }
+        ],
+        "netproto": [
+            {
+                "scan": {
+                    "id": 0
+                },
+                "dhcp": "unknown",
+                "type": "ipv4",
+                "iface": "eth0",
+                "gateway": "10.128.39.1"
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "dhcp": "unknown",
+                "type": "ipv6",
+                "iface": "eth0",
+                "gateway": "::"
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "dhcp": "enabled",
+                "type": "ipv4",
+                "iface": "br-80984b9c",
+                "gateway": "10.55.17.1"
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "dhcp": "unknown",
+                "type": "ipv6",
+                "iface": "br-80984b9c",
+                "gateway": "::"
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "dhcp": "disabled",
+                "type": "ipv4",
+                "iface": "br-0898d51f",
+                "gateway": "10.80.3.1"
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "dhcp": "disabled",
+                "type": "ipv6",
+                "iface": "br-0898d51f",
+                "gateway": "::"
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "dhcp": "disabled",
+                "type": "ipv4",
+                "iface": "veth6503a96e",
+                "gateway": "10.89.61.1"
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "dhcp": "disabled",
+                "type": "ipv6",
+                "iface": "veth6503a96e",
+                "gateway": "::"
+            }
+        ]
+    }
+}

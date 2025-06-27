@@ -1,0 +1,209 @@
+{
+    "agent_info": {
+        "os": {
+            "name": "Ubuntu",
+            "platform": "ubuntu",
+            "version": "22.04.3 LTS"
+        },
+        "status": "inactive",
+        "ip": "192.168.125.141",
+        "name": "host-dev-6",
+        "id": "57a53e3a",
+        "lastKeepAlive": "2025-06-26T15:55:32+00:00",
+        "calculated_status": "Desligado"
+    },
+    "inventory": {
+        "hardware": [
+            {
+                "cpu": {
+                    "cores": 2,
+                    "mhz": 2012,
+                    "name": "Intel Xeon E5-2678"
+                },
+                "ram": {
+                    "free": 29336576,
+                    "total": 4194304,
+                    "usage": 66
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-26T15:55:32+00:00"
+                },
+                "board_serial": "411d03be"
+            }
+        ],
+        "os": [
+            {
+                "os": {
+                    "codename": "jammy",
+                    "major": "22",
+                    "minor": "04",
+                    "name": "Ubuntu",
+                    "platform": "ubuntu",
+                    "version": "22.04.3 LTS (jammy)"
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-26T15:55:32+00:00"
+                },
+                "hostname": "host-dev-6",
+                "version": "#149-Ubuntu SMP PREEMPT_DYNAMIC",
+                "architecture": "arm64",
+                "sysname": "Linux",
+                "release": "5.12.76-generic"
+            }
+        ],
+        "ports": [
+            {
+                "local": {
+                    "ip": "192.168.125.141",
+                    "port": 22
+                },
+                "remote": {
+                    "ip": "0.0.0.0",
+                    "port": 0
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-26T15:55:32+00:00"
+                },
+                "state": "listening",
+                "tx_queue": 46,
+                "pid": 3308,
+                "inode": 12155,
+                "rx_queue": 85,
+                "process": "sshd",
+                "protocol": "tcp"
+            },
+            {
+                "local": {
+                    "ip": "192.168.125.141",
+                    "port": 9200
+                },
+                "remote": {
+                    "ip": "0.0.0.0",
+                    "port": 0
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-26T15:55:32+00:00"
+                },
+                "state": "time_wait",
+                "tx_queue": 46,
+                "pid": 1811,
+                "inode": 7683,
+                "rx_queue": 55,
+                "process": "elasticsearch",
+                "protocol": "tcp"
+            },
+            {
+                "local": {
+                    "ip": "0.0.0.0",
+                    "port": 3306
+                },
+                "remote": {
+                    "ip": "0.0.0.0",
+                    "port": 0
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-26T15:55:32+00:00"
+                },
+                "state": "established",
+                "tx_queue": 0,
+                "pid": 1383,
+                "inode": 6039,
+                "rx_queue": 72,
+                "process": "mysql",
+                "protocol": "tcp"
+            },
+            {
+                "local": {
+                    "ip": "0.0.0.0",
+                    "port": 443
+                },
+                "remote": {
+                    "ip": "0.0.0.0",
+                    "port": 0
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-26T15:55:32+00:00"
+                },
+                "state": "listening",
+                "tx_queue": 74,
+                "pid": 1901,
+                "inode": 2672,
+                "rx_queue": 94,
+                "process": "nginx/apache",
+                "protocol": "tcp"
+            }
+        ],
+        "netaddr": [
+            {
+                "scan": {
+                    "id": 0
+                },
+                "address": "10.55.21.131",
+                "proto": "ipv4",
+                "iface": "eth0",
+                "broadcast": "10.25.28.255",
+                "netmask": "255.255.255.0"
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "address": "fe80::f67:a9b7:3984:25be",
+                "proto": "ipv6",
+                "iface": "eth0",
+                "netmask": "ffff:ffff:ffff:ffff::"
+            }
+        ],
+        "netiface": [
+            {
+                "rx": {
+                    "bytes": 31649799,
+                    "dropped": 13,
+                    "errors": 49,
+                    "packets": 1910
+                },
+                "scan": {
+                    "id": 0,
+                    "time": "2025-06-26T15:55:32+00:00"
+                },
+                "tx": {
+                    "bytes": 93151664,
+                    "dropped": 78,
+                    "errors": 40,
+                    "packets": 6269
+                },
+                "name": "eth0",
+                "type": "bridge",
+                "mac": "29:d8:89:73:f8:cd",
+                "state": "up",
+                "mtu": 1500
+            }
+        ],
+        "netproto": [
+            {
+                "scan": {
+                    "id": 0
+                },
+                "dhcp": "enabled",
+                "type": "ipv4",
+                "iface": "eth0",
+                "gateway": "10.88.143.1"
+            },
+            {
+                "scan": {
+                    "id": 0
+                },
+                "dhcp": "disabled",
+                "type": "ipv6",
+                "iface": "eth0",
+                "gateway": "::"
+            }
+        ]
+    }
+}
