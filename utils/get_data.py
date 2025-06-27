@@ -160,7 +160,7 @@ def main():
         host='192.168.56.210',
         port='55000',
         user='wazuh-wui',
-        password=''
+        password='ma?Pt3XvLxQzpU8.J3rIQ8.dYhxzV?pT'
     )
     api.authenticate()
     

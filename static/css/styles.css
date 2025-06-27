@@ -49,7 +49,7 @@ body {
 .header-content {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 1rem 2rem;
+    padding: 0.2rem 2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -382,7 +382,7 @@ body {
     background-color: var(--white);
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
-    padding: 2rem;
+    padding: 0 2rem 2rem 2rem;
 }
 
 .login-card h2 {

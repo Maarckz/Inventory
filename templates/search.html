@@ -22,16 +22,16 @@
         <table class="machine-table">
             <thead>
                 <tr>
-                    <th>Hostname</th>
-                    <th>IP Address</th>
-                    <th>Sistema Operacional</th>
-                    <th>Kernel</th>
-                    <th>Arquitetura</th>
-                    <th>Processador</th>
-                    <th>Núcleos</th>
-                    <th>Memória (GB)</th>
-                    <th>Status</th>
-                    <th>Última Atividade</th>
+                    <th data-sort="hostname">Hostname <i class="sort-icon"></i></th>
+                    <th data-sort="ip">IP Address <i class="sort-icon"></i></th>
+                    <th data-sort="os">Sistema Operacional <i class="sort-icon"></i></th>
+                    <th data-sort="kernel">Kernel <i class="sort-icon"></i></th>
+                    <th data-sort="arch">Arquitetura <i class="sort-icon"></i></th>
+                    <th data-sort="cpu">Processador <i class="sort-icon"></i></th>
+                    <th data-sort="cores">Núcleos <i class="sort-icon"></i></th>
+                    <th data-sort="ram">Memória (GB) <i class="sort-icon"></i></th>
+                    <th data-sort="status">Status <i class="sort-icon"></i></th>
+                    <th data-sort="lastseen">Última Atividade <i class="sort-icon"></i></th>
                 </tr>
             </thead>
             <tbody>
@@ -55,20 +55,11 @@
                             {{ machine.device_status }}
                         </span>
                     </td>
+                    <!-- Formato original mantido para exibição -->
                     <td>{{ machine.last_seen | formatar_data }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
-            <script>
-                document.addEventListener('DOMContentLoaded', function () {
-                    document.querySelectorAll('.machine-row').forEach(function (row) {
-                        row.style.cursor = 'pointer';
-                        row.addEventListener('click', function () {
-                            window.location.href = row.getAttribute('data-href');
-                        });
-                    });
-                });
-            </script>
         </table>
     </div>
 
@@ -154,6 +145,35 @@
         font-size: 0.75rem;
         letter-spacing: 0.05em;
         text-align: left;
+        position: relative;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .machine-table th:hover {
+        background-color: #f0f0f0;
+    }
+
+    .sort-icon {
+        display: inline-block;
+        width: 0;
+        height: 0;
+        margin-left: 5px;
+        opacity: 0.5;
+    }
+
+    .sort-icon.asc::after {
+        content: '▲';
+        display: inline-block;
+        font-size: 10px;
+        margin-left: 5px;
+    }
+
+    .sort-icon.desc::after {
+        content: '▼';
+        display: inline-block;
+        font-size: 10px;
+        margin-left: 5px;
     }
 
     .machine-table td {
@@ -257,6 +277,113 @@
         .machine-table td {
             padding: 0.75rem 0.5rem;
         }
+
+        .sort-icon {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
     }
 </style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Adiciona evento de clique nas linhas
+        document.querySelectorAll('.machine-row').forEach(function (row) {
+            row.style.cursor = 'pointer';
+            row.addEventListener('click', function () {
+                window.location.href = row.getAttribute('data-href');
+            });
+        });
+
+        // Configura ordenação das colunas
+        const getCellValue = (tr, idx) => {
+            const cell = tr.children[idx];
+            if (idx === 8) { // Coluna Status
+                return cell.querySelector('.status').textContent.trim();
+            }
+            if (idx === 2) { // Coluna SO
+                return cell.querySelector('strong').textContent.trim().toLowerCase();
+            }
+            if (idx === 9) { // Coluna Última Atividade (converte formato BR)
+                const dateText = cell.textContent.trim();
+                if (!dateText) return 0;
+                
+                // Converte formato "dd/mm/yyyy HH:MM" para timestamp
+                try {
+                    const [datePart, timePart] = dateText.split(' ');
+                    const [day, month, year] = datePart.split('/').map(Number);
+                    let hours = 0, minutes = 0;
+                    
+                    if (timePart) {
+                        [hours, minutes] = timePart.split(':').map(Number);
+                    }
+                    
+                    // Cria objeto Date (mês começa em 0)
+                    const dateObj = new Date(year, month - 1, day, hours, minutes);
+                    return dateObj.getTime();
+                } catch (e) {
+                    console.error('Erro ao converter data:', dateText, e);
+                    return 0;
+                }
+            }
+            return cell.textContent.trim().toLowerCase();
+        };
+
+        const comparer = (idx, asc) => (a, b) => {
+            const valA = getCellValue(asc ? a : b, idx);
+            const valB = getCellValue(asc ? b : a, idx);
+
+            // Verifica se são valores numéricos
+            if (!isNaN(valA) && !isNaN(valB)) {
+                return valA - valB;
+            }
+
+            // Verifica status (Ativo/Inativo)
+            if (idx === 8) {
+                const statusOrder = { 'Ativo': 1, 'Inativo': 0 };
+                return statusOrder[valA] - statusOrder[valB];
+            }
+
+            // Comparação padrão (string)
+            return valA.localeCompare(valB, 'pt', { sensitivity: 'base' });
+        };
+
+        // Adiciona eventos de clique nos cabeçalhos
+        document.querySelectorAll('th[data-sort]').forEach(th => {
+            const sortIcon = th.querySelector('.sort-icon');
+            th.addEventListener('click', () => {
+                const table = th.closest('table');
+                const tbody = table.querySelector('tbody');
+                const columnIndex = Array.from(th.parentNode.children).indexOf(th);
+                const isAsc = th.classList.contains('asc');
+                
+                // Remove classes de ordenação de todos os cabeçalhos
+                table.querySelectorAll('th').forEach(header => {
+                    header.classList.remove('asc', 'desc');
+                    const icon = header.querySelector('.sort-icon');
+                    if (icon) {
+                        icon.className = 'sort-icon';
+                    }
+                });
+                
+                // Define nova direção
+                const newDir = !isAsc;
+                th.classList.toggle('asc', newDir);
+                th.classList.toggle('desc', !newDir);
+                
+                // Atualiza ícone
+                if (sortIcon) {
+                    sortIcon.className = 'sort-icon ' + (newDir ? 'asc' : 'desc');
+                }
+                
+                // Ordena as linhas
+                Array.from(tbody.querySelectorAll('tr'))
+                    .sort(comparer(columnIndex, newDir))
+                    .forEach(tr => tbody.appendChild(tr));
+            });
+        });
+    });
+</script>
 {% endblock %}

@@ -68,7 +68,12 @@
                         datasets: [{
                             label: 'Quantidade',
                             data: data.cpu_data,
-                            backgroundColor: '#6366F1',
+                            backgroundColor: [
+                                '#0EA5E9', '#8B5CF6', '#EC4899',
+                                '#F43F5E', '#F97316', '#F59E0B',
+                                '#10B981', '#3B82F6', '#EAB308',
+                                '#A21CAF', '#BE185D', '#8B5CF6'
+                            ],
                             borderRadius: 6,
                             borderWidth: 0
                         }]
@@ -105,8 +110,8 @@
                         datasets: [{
                             data: data.ram_data,
                             backgroundColor: [
-                                '#6366F1', '#8B5CF6', '#EC4899',
-                                '#F43F5E', '#F97316'
+                                '#EC4899', '#F97316', '#6366F1',
+                                '#F43F5E', '#8B5CF6'
                             ],
                             borderWidth: 0,
                             hoverOffset: 10
@@ -132,25 +137,33 @@
             </div>
         </div>
 
-        <div class="stat-card stat-success">
+        <a href="/search?query=ativo" style="color: inherit; text-decoration: none;">
+            <div class="stat-card stat-success" style="cursor: pointer;">
             <div class="stat-icon">
                 <i class="fas fa-check-circle"></i>
             </div>
             <div class="stat-info">
                 <span class="stat-label">Ativas</span>
-                <span class="stat-value">{{ active_count }}</span>
+                <span class="stat-value">
+                {{ active_count }}
+                </span>
             </div>
-        </div>
+            </div>
+        </a>
 
-        <div class="stat-card stat-danger">
+        <a href="/search?query=inativo" style="color: inherit; text-decoration: none;">
+            <div class="stat-card stat-danger" style="cursor: pointer;">
             <div class="stat-icon">
                 <i class="fas fa-times-circle"></i>
             </div>
             <div class="stat-info">
                 <span class="stat-label">Inativas</span>
-                <span class="stat-value">{{ inactive_count }}</span>
+                <span class="stat-value">
+                {{ inactive_count }}
+                </span>
             </div>
-        </div>
+            </div>
+        </a>
     </div>
 </div>
 
