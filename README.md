@@ -57,63 +57,72 @@ Accessible via browser, with:
 
 ```
 ├── data
-│   ├── auth
-│   │   └── logins.json
-│   └── inventory
-│       ├── SERVER.json
-│       └── SOC1.json
-├── README.md
+│   ├── auth
+│   │   └── logins.json
+│   └── inventory
+│       ├── SERVER.json
+│       └── SOC1.json
+├── logs
 ├── ssl
-│   ├── cert.pem
-│   └── key.pem
+│   ├── cert.pem
+│   └── key.pem
 ├── static
-│   ├── css
-│   │   ├── all.min.css
-│   │   └── styles.css
-│   ├── favicon.png
-│   ├── js
-│   │   └── chart.js
-│   ├── logo.svg
-│   └── mlogo.svg
+│   ├── css
+│   │   ├── all.min.css
+│   │   └── styles.css
+│   ├── favicon.png
+│   ├── js
+│   │   └── chart.js
+│   ├── logo.svg
+│   └── mlogo.svg
 ├── templates
-│   ├── base.html
-│   ├── dashboard.html
-│   ├── login.html
-│   ├── machine_details.html
-│   ├── panel.html
-│   └── search.html
+│   ├── base.html
+│   ├── dashboard.html
+│   ├── error.html
+│   ├── login.html
+│   ├── machine_details.html
+│   ├── painel.html
+│   └── search.html
+├── TODO.md
 └── utils
     ├── get_data.py
     └── man_users.py
+
 ```
 
 ## Prerequisites
 
 - Python 3.8+
 - Operational Wazuh environment
-- Dependencies: `Flask`, `bcrypt`, `requests`, `python-dotenv`
+- Dependencies: `Flask`, `bcrypt`, `python-dotenv`
 
 ## Environment Configuration (`.env`)
 
 ```ini
-# Security
-SECRET_KEY=your_super_secret_key_here
+# Configurações de segurança
+SECRET_KEY=suachavesupersecreta_altere_esta_chave!
 INVENTORY_DIR=data/inventory
 AUTH_FILE=data/auth/logins.json
 
-# Network
+# Configurações de rede
 HOST=0.0.0.0
 PORT=8000
 DEBUG=False
 
-# HTTPS
+# Configurações de HTTPS
 USE_HTTPS=True
 SSL_CERT_PATH=ssl/cert.pem
 SSL_KEY_PATH=ssl/key.pem
 
-# Brute-force Protection
+# Proteção contra força bruta
 MAX_LOGIN_ATTEMPTS=3
-LOGIN_BLOCK_TIME=300  # seconds
+LOGIN_BLOCK_TIME=60
+
+# Permitir apenas IPs de uma faixa específica
+ALLOWED_IP_RANGES =192.168.0.0/16
+
+#ARQUIVO DE IPs BLOQUEADOS
+BLOCKED_IPS_FILE = logs/blocked_ips.json 
 ```
 
 ## Installation & Execution
@@ -158,12 +167,12 @@ LOGIN_BLOCK_TIME=300  # seconds
   - Daily execution of the collector  
   - Periodic audit of the user file (e.g., `users.json` or similar)  
   - Regular renewal of SSL certificates  
-- **Logging**  
-  - Flask App: errors, access logs, failed login attempts  
-  - Collector: processed agents and failures  
 
 ## Future Improvements
 
+- **Docker**  
+  - Deploy with docker image
+  - Automation with docker compose (dockerfile)  
 - **Collector**  
   - Externalize credentials via environment variables  
   - Parallel execution for scale  
@@ -176,3 +185,6 @@ LOGIN_BLOCK_TIME=300  # seconds
   - Multi-factor authentication (MFA)  
   - Encryption of JSON inventory files  
   - Detailed access auditing  
+- **Export Relatory**  
+  - Export to PDF or CSV File
+  - Integration with another tool
