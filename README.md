@@ -165,7 +165,7 @@ WAZUH_PASSWORD=ma?Pt3XvLxQzpU8.dYhxzV?pT
    Login: admin
    Password: Meuadmin123
    ```
-
+OBS: É possivel criar e remover usuãrios pelo "./utils/man_users.py" 
 
 ## Monitoring & Maintenance
 
