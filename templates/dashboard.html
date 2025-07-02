@@ -59,47 +59,64 @@
                     options: chartOptions
                 });
 
-                // Gráfico de Processadores
-                const cpuCtx = document.getElementById('cpuChart').getContext('2d');
-                new Chart(cpuCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: data.cpu_labels,
-                        datasets: [{
-                            label: 'Quantidade',
-                            data: data.cpu_data,
-                            backgroundColor: [
-                                '#0EA5E9', '#8B5CF6', '#EC4899',
-                                '#F43F5E', '#F97316', '#F59E0B',
-                                '#10B981', '#3B82F6', '#EAB308',
-                                '#A21CAF', '#BE185D', '#8B5CF6'
-                            ],
-                            borderRadius: 6,
-                            borderWidth: 0
-                        }]
-                    },
-                    options: {
-                        ...chartOptions,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                grid: {
-                                    drawBorder: false
-                                }
-                            },
-                            x: {
-                                grid: {
-                                    display: false
-                                }
-                            }
-                        },
-                        plugins: {
-                            legend: {
-                                display: false
-                            }
-                        }
+               // Gráfico de Processadores (modificado)
+const cpuCtx = document.getElementById('cpuChart').getContext('2d');
+new Chart(cpuCtx, {
+    type: 'bar',
+    data: {
+        labels: data.cpu_labels,
+        datasets: [{
+            label: 'Quantidade',
+            data: data.cpu_data,
+            backgroundColor: [
+                '#0EA5E9', '#8B5CF6', '#EC4899',
+                '#F43F5E', '#F97316', '#F59E0B',
+                '#10B981', '#3B82F6', '#EAB308',
+                '#A21CAF', '#BE185D', '#8B5CF6'
+            ],
+            borderRadius: 6,
+            borderWidth: 0
+        }]
+    },
+    options: {
+        ...chartOptions,
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: {
+                    drawBorder: false
+                },
+                ticks: {
+                    padding: 10 // Espaço extra no eixo Y
+                }
+            },
+            x: {
+                display: false, // Oculta completamente os rótulos e eixo X
+                grid: {
+                    display: false
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                display: false
+            },
+            tooltip: {
+                callbacks: {
+                    title: function(context) {
+                        // Mostra o nome do processador no tooltip
+                        return data.cpu_labels[context[0].dataIndex];
                     }
-                });
+                }
+            }
+        },
+        layout: {
+            padding: {
+                bottom: 10 // Espaço na base do gráfico
+            }
+        }
+    }
+});
 
                 // Gráfico de Memória RAM
                 const ramCtx = document.getElementById('ramChart').getContext('2d');
