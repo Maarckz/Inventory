@@ -4,6 +4,7 @@ import requests
 import urllib3
 from datetime import datetime, timedelta
 import logging
+from dotenv import load_dotenv
 
 # Disable insecure HTTPS warnings
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -155,12 +156,14 @@ def main():
     )
     
     # API configuration
+    load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
+
     api = WazuhAPI(
-        protocol='https',
-        host='192.168.56.210',
-        port='55000',
-        user='wazuh-wui',
-        password='ma?Pt3XvLxQzpU8.J3rIQ8.dYhxzV?pT'
+        protocol=os.getenv('WAZUH_PROTOCOL', 'https'),
+        host=os.getenv('WAZUH_HOST'),
+        port=os.getenv('WAZUH_PORT', '55000'),
+        user=os.getenv('WAZUH_USER'),
+        password=os.getenv('WAZUH_PASSWORD')
     )
     api.authenticate()
     
