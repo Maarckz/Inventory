@@ -18,7 +18,7 @@
                 "cpu": {
                     "cores": 2,
                     "mhz": 3194,
-                    "name": "AMD Ryzen 7 5800H with Radeon Graphics"
+                    "name": "AMD Ryzen 7 5800H"
                 },
                 "ram": {
                     "free": 1040948,

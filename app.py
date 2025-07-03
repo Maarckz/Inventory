@@ -52,9 +52,7 @@ USE_HTTPS = os.getenv('USE_HTTPS').lower() == 'true'
 MAX_LOGIN_ATTEMPTS = int(os.getenv('MAX_LOGIN_ATTEMPTS'))
 LOGIN_BLOCK_TIME = int(os.getenv('LOGIN_BLOCK_TIME')) 
 ALLOWED_IP_RANGES = os.getenv('ALLOWED_IP_RANGES').split(',')
-
-# Arquivo para armazenar IPs bloqueados
-BLOCKED_IPS_FILE = os.getenv('BLOCKED_IPS_FILE')
+BLOCKED_IPS_FILE = "logs/blocked_ips.json"
 blocked_ips_lock = threading.Lock()
 
 # Obter IPs do servidor (apenas interfaces UP, somente IPv4)
@@ -318,17 +316,29 @@ def get_machine_stats(machines):
         cpu_name = machine.get('cpu_name', 'Unknown')
         stats['cpu'][cpu_name] += 1
         
-        # Process RAM stats
+        # Process RAM stats com mais granularidade
         ram_gb = machine.get('ram_gb', 0)
         if ram_gb > 0:
-            if ram_gb <= 4:
-                ram_range = "0-4GB"
+            if ram_gb <= 2:
+                ram_range = "0-2GB"
+            elif ram_gb <= 4:
+                ram_range = "3-4GB"
+            elif ram_gb <= 6:
+                ram_range = "5-6GB"
             elif ram_gb <= 8:
-                ram_range = "5-8GB"
+                ram_range = "7-8GB"
+            elif ram_gb <= 12:
+                ram_range = "9-12GB"
             elif ram_gb <= 16:
-                ram_range = "9-16GB"
+                ram_range = "13-16GB"
+            elif ram_gb <= 24:
+                ram_range = "17-24GB"
+            elif ram_gb <= 32:
+                ram_range = "25-32GB"
+            elif ram_gb <= 64:
+                ram_range = "33-64GB"
             else:
-                ram_range = "16+GB"
+                ram_range = "64+GB"
         else:
             ram_range = 'Unknown'
         stats['ram'][ram_range] += 1
@@ -677,6 +687,14 @@ def machine_details(hostname):
         return redirect(url_for('painel'))
     
     return render_template('machine_details.html', machine=machine)
+
+@app.route('/settings')
+def settings():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+    
+    machines = get_all_machines()
+    return render_template('settings.html', machines=machines)
 
 @app.route('/get_data')
 def get_data():

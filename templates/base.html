@@ -27,6 +27,9 @@
                     <a href="{{ url_for('search') }}" class="nav-link">
                         <i class="fas fa-search"></i> Pesquisa
                     </a>
+                    <a href="{{ url_for('settings') }}" class="nav-link">
+                        <i class="fas fa-cog"></i> Configurações
+                    </a>
                     {% if 'username' in session %}
                         <a href="{{ url_for('logout') }}" class="nav-link">
                             <i class="fas fa-sign-out-alt"></i> Sair

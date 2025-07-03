@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Painel de Máquinas{% endblock %}
+
+{% block content %}
+
+    <div class="container">
+        <h1>{{ title }}</h1>
+        <p>{{ message }}</p>
+        {% if error_details %}
+        <div class="error-details"></div>
+            <p><strong>Detalhes:</strong> {{ error_details }}</p>
+        </div>
+        {% endif %}
+        <p>Em breve, envie sua sugestão!</p>
+        <a href="/" class="btn">Voltar à página inicial</a>
+    </div>
+{% endblock %}

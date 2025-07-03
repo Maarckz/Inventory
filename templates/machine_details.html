@@ -6,7 +6,7 @@
 <div class="machine-details-container">
     <div class="details-header">
         <a class="hostname-btn"
-            style="background-color: #6366F1; color: #fff; padding: 0.5rem 1.25rem; border-radius: 6px; font-size: 1.25rem; font-weight: 600; text-decoration: none; display: inline-block;">
+            style="background-color: #6366F1; color: #fff; padding: 0.5rem 1.15rem; border-radius: 6px; font-size: 1.25rem; font-weight: 600; text-decoration: none; display: inline-block;">
             {{ machine.hostname.upper() }}
         </a>
         <span class="status status-{{ 'ativo' if machine.device_status == 'Ativo' else 'inativo' }}">
@@ -44,7 +44,7 @@
                 </div>
             </div>
         </div>
-
+<br>
         <!-- Hardware -->
         <div class="details-section">
             <div class="section-header">
@@ -66,7 +66,7 @@
                 </div>
             </div>
         </div>
-
+<br>
         <!-- Network Interfaces -->
         <div class="details-section">
             <div class="section-header">
@@ -98,6 +98,7 @@
                 </table>
             </div>
         </div>
+<br>
 
         <!-- Network Ports -->
         <div class="details-section">
@@ -132,6 +133,7 @@
                 </table>
             </div>
         </div>
+<br>
 
         <!-- Network Settings -->
         <div class="details-section">
@@ -184,7 +186,7 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 2rem;
+        margin-bottom: 20px;
     }
 
     .details-header h2 {
@@ -236,7 +238,7 @@
     }
 
     .section-header {
-        padding: 1rem 1.5rem;
+        padding: 0.5rem 1.5rem;
         background: var(--light);
         border-bottom: 1px solid #e2e8f0;
         display: flex;
@@ -303,7 +305,7 @@
 
     .back-button {
         margin-top: 2rem;
-        text-align: center;
+        text-align: right;
     }
 
     .btn {
