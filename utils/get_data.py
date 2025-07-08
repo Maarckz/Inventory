@@ -15,9 +15,9 @@ DEFAULT_STATUS = "Desligado"
 ENDPOINTS = [
     'hardware', 
     'os', 
-    #'packages', 
+    'packages', 
     'ports', 
-    #'processes',
+    'processes',
     'netaddr', 
     'netiface', 
     'netproto'

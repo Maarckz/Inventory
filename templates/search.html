@@ -15,6 +15,9 @@
                 Pesquisar
             </button>
         </form>
+        <div class="results-count">
+            {{ results|length }} resultado(s) encontrado(s)
+        </div>
     </div>
 
     {% if results %}
@@ -37,12 +40,17 @@
             <tbody>
                 {% for machine in results %}
                 <tr class="machine-row" data-href="{{ url_for('machine_details', hostname=machine.hostname) }}">
-                    <td>{{ machine.hostname.upper() }}</td>
+                    <td>
+                        <div class="os-info">
+                            <strong>{{ machine.hostname.upper() }}</strong>
+                            <small>ID: {{ machine.id }}</small>
+                        </div>
+                    </td>
                     <td>{{ machine.ip_address }}</td>
                     <td>
                         <div class="os-info">
-                            <strong>{{ machine.os_name }}</strong>
-                            <small>{{ machine.os_version }}</small>
+                            <strong>{{ machine.os_sysname }}</strong>
+                            <small>{{ machine.os_name }} {{ machine.os_version }}</small>
                         </div>
                     </td>
                     <td>{{ machine.os_kernel }}</td>
@@ -64,9 +72,7 @@
     </div>
 
     <div class="search-footer">
-        <div class="results-count">
-            {{ results|length }} resultado(s) encontrado(s)
-        </div>
+
     </div>
     {% else %}
     <div class="no-results">
@@ -94,14 +100,11 @@
         gap: 1rem;
     }
 
-    .search-header h2 {
-        font-size: 1.5rem;
-        color: var(--dark);
-    }
-
     .search-form {
         display: flex;
         gap: 0.5rem;
+        flex-grow: 1;
+        max-width: 800px;
     }
 
     .search-input {
@@ -120,7 +123,14 @@
         padding: 0.5rem 1rem 0.5rem 2.5rem;
         border: 1px solid var(--light-gray);
         border-radius: 8px;
-        min-width: 355px;
+    }
+
+    .results-count {
+        font-size: 0.875rem;
+        color: var(--gray);
+        white-space: nowrap;
+        margin-left: auto;
+        padding-left: 1rem;
     }
 
     .table-responsive {
@@ -138,16 +148,16 @@
 
     .machine-table th {
         background: var(--light);
-        padding: 1rem;
         font-weight: 600;
         color: var(--dark-gray);
         text-transform: uppercase;
         font-size: 0.75rem;
-        letter-spacing: 0.05em;
-        text-align: left;
         position: relative;
         cursor: pointer;
         user-select: none;
+        white-space: nowrap;
+        max-width: 1550px;
+
     }
 
     .machine-table th:hover {
@@ -162,19 +172,23 @@
         opacity: 0.5;
     }
 
-    .sort-icon.asc::after {
-        content: '▲';
+    th::after {
+        content: '↕';
+        opacity: 0.5;
         display: inline-block;
         font-size: 10px;
-        margin-left: 5px;
     }
 
-    .sort-icon.desc::after {
-        content: '▼';
-        display: inline-block;
-        font-size: 10px;
-        margin-left: 5px;
+    th.asc::after {
+        content: '↑';
+        opacity: 1;
     }
+
+    th.desc::after {
+        content: '↓';
+        opacity: 1;
+    }
+
 
     .machine-table td {
         padding: 1rem;
@@ -233,11 +247,6 @@
         justify-content: flex-end;
     }
 
-    .results-count {
-        font-size: 0.875rem;
-        color: var(--gray);
-    }
-
     .no-results {
         text-align: center;
         padding: 3rem;
@@ -257,32 +266,13 @@
     @media (max-width: 768px) {
         .search-header {
             flex-direction: column;
-            align-items: flex-start;
+            align-items: stretch;
         }
-
-        .search-form {
-            width: 100%;
-        }
-
-        .search-input {
-            flex: 1;
-        }
-
-        .search-input input {
-            min-width: auto;
-            width: 100%;
-        }
-
-        .machine-table th,
-        .machine-table td {
-            padding: 0.75rem 0.5rem;
-        }
-
-        .sort-icon {
-            position: absolute;
-            right: 5px;
-            top: 50%;
-            transform: translateY(-50%);
+        
+        .results-count {
+            margin-left: 0;
+            padding-left: 0;
+            text-align: right;
         }
     }
 </style>
@@ -309,17 +299,17 @@
             if (idx === 9) { // Coluna Última Atividade (converte formato BR)
                 const dateText = cell.textContent.trim();
                 if (!dateText) return 0;
-                
+
                 // Converte formato "dd/mm/yyyy HH:MM" para timestamp
                 try {
                     const [datePart, timePart] = dateText.split(' ');
                     const [day, month, year] = datePart.split('/').map(Number);
                     let hours = 0, minutes = 0;
-                    
+
                     if (timePart) {
                         [hours, minutes] = timePart.split(':').map(Number);
                     }
-                    
+
                     // Cria objeto Date (mês começa em 0)
                     const dateObj = new Date(year, month - 1, day, hours, minutes);
                     return dateObj.getTime();
@@ -358,7 +348,7 @@
                 const tbody = table.querySelector('tbody');
                 const columnIndex = Array.from(th.parentNode.children).indexOf(th);
                 const isAsc = th.classList.contains('asc');
-                
+
                 // Remove classes de ordenação de todos os cabeçalhos
                 table.querySelectorAll('th').forEach(header => {
                     header.classList.remove('asc', 'desc');
@@ -367,17 +357,17 @@
                         icon.className = 'sort-icon';
                     }
                 });
-                
+
                 // Define nova direção
                 const newDir = !isAsc;
                 th.classList.toggle('asc', newDir);
                 th.classList.toggle('desc', !newDir);
-                
+
                 // Atualiza ícone
                 if (sortIcon) {
                     sortIcon.className = 'sort-icon ' + (newDir ? 'asc' : 'desc');
                 }
-                
+
                 // Ordena as linhas
                 Array.from(tbody.querySelectorAll('tr'))
                     .sort(comparer(columnIndex, newDir))

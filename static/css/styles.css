@@ -29,7 +29,6 @@ body {
     font-family: 'Inter', sans-serif;
     background-color: #F1F5F9;
     color: var(--dark);
-    line-height: 1.5;
 }
 
 .app-container {

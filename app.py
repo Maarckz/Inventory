@@ -3,7 +3,6 @@ TO DO LIST:
 Alterar a Estrutura Para POO
 Criar painel de admin
 Verificar se o usuário é admin
-Testar binario compilado
 Implementacao com docker image
 '''
 
@@ -361,6 +360,7 @@ def process_machine_data(raw_data):
         'ip_address': raw_data['agent_info'].get('ip', 'N/A'),
         'device_status': 'Ativo' if raw_data['agent_info'].get('status') == 'active' else 'Inativo',
         'last_seen': raw_data['agent_info'].get('lastKeepAlive', 'N/A'),
+        'id': raw_data['agent_info'].get('id', 'N/A'),
     }
     
     # Hardware info
@@ -425,6 +425,32 @@ def process_machine_data(raw_data):
                 'proto': addr.get('proto', 'N/A'),
                 'broadcast': addr.get('broadcast', 'N/A')
             })
+    # Pacotes instalados
+    processed['packages'] = []
+    if raw_data.get('inventory', {}).get('packages'):
+        for pkg in raw_data['inventory']['packages']:
+            processed['packages'].append({
+                'name': pkg.get('name', 'N/A'),
+                'version': pkg.get('version', 'N/A'),
+                'description': pkg.get('description', 'N/A'),
+                'install_time': pkg.get('install_time', 'N/A'),
+                'architecture': pkg.get('architecture', 'N/A'),
+                'format': pkg.get('format', 'N/A')
+            })
+
+    # Processos em execução
+    processed['processes'] = []
+    if raw_data.get('inventory', {}).get('processes'):
+        for proc in raw_data['inventory']['processes']:
+            processed['processes'].append({
+                'pid': proc.get('pid', 'N/A'),
+                'name': proc.get('name', 'N/A'),
+                'state': proc.get('state', 'N/A'),
+                'pid': proc.get('pid', 'N/A'),
+                'euser': proc.get('euser', 'N/A'),
+                'cmd': proc.get('cmd', 'N/A')
+            })
+    
     
     return processed
 
@@ -651,6 +677,26 @@ def search():
                         found = True
                         break
                         
+            # Busca em processos
+            if not found:
+                for proc in m.get('processes', []):
+                    if (query in str(proc.get('pid', '')).lower() or
+                        query in proc.get('name', '').lower() or
+                        query in proc.get('euser', '').lower() or
+                        query in proc.get('cmd', '').lower()):
+                        found = True
+                        break
+
+            # Busca em pacotes instalados
+            if not found:
+                for pkg in m.get('packages', []):
+                    if (query in pkg.get('name', '').lower() or
+                        query in pkg.get('version', '').lower() or
+                        query in pkg.get('description', '').lower() or
+                        query in pkg.get('architecture', '').lower() or
+                        query in pkg.get('format', '').lower()):
+                        found = True
+                        break
             # Busca em campos detalhados do sistema
             if not found:
                 if (query in m.get('os_version', '').lower() or

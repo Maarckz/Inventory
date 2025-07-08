@@ -17,14 +17,19 @@
     <div class="details-grid">
         <!-- Informações Básicas -->
         <div class="details-section">
-            <div class="section-header">
+            <div class="section-header" onclick="toggleSection(this)">
                 <i class="fas fa-info-circle"></i>
                 <h3>Informações Básicas</h3>
+                <i class="toggle-icon fas fa-chevron-down"></i>
             </div>
             <div class="section-body">
                 <div class="detail-row">
                     <span class="detail-label">Host name</span>
-                    <span class="detail-value">{{ machine.hostname }}</span>
+                    <span class="detail-value">{{ machine.hostname.upper() }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Agent ID</span>
+                    <span class="detail-value">{{ machine.id }}</span>
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">Operating system</span>
@@ -47,9 +52,10 @@
 <br>
         <!-- Hardware -->
         <div class="details-section">
-            <div class="section-header">
+            <div class="section-header" onclick="toggleSection(this)">
                 <i class="fas fa-microchip"></i>
                 <h3>Hardware</h3>
+                <i class="toggle-icon fas fa-chevron-down"></i>
             </div>
             <div class="section-body">
                 <div class="detail-row">
@@ -69,19 +75,20 @@
 <br>
         <!-- Network Interfaces -->
         <div class="details-section">
-            <div class="section-header">
+            <div class="section-header" onclick="toggleSection(this)">
                 <i class="fas fa-network-wired"></i>
                 <h3>Network interfaces ({{ machine.netiface|length }})</h3>
+                <i class="toggle-icon fas fa-chevron-down"></i>
             </div>
             <div class="section-body">
-                <table class="interface-table">
+                <table class="interface-table sortable">
                     <thead>
                         <tr>
-                            <th>Interface</th>
-                            <th>MAC</th>
-                            <th>State</th>
-                            <th>MTU</th>
-                            <th>Type</th>
+                            <th data-sort="string">Interface</th>
+                            <th data-sort="string">MAC</th>
+                            <th data-sort="string">State</th>
+                            <th data-sort="number">MTU</th>
+                            <th data-sort="string">Type</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -102,20 +109,21 @@
 
         <!-- Network Ports -->
         <div class="details-section">
-            <div class="section-header">
+            <div class="section-header" onclick="toggleSection(this)">
                 <i class="fas fa-plug"></i>
                 <h3>Network ports ({{ machine.ports|length }})</h3>
+                <i class="toggle-icon fas fa-chevron-down"></i>
             </div>
             <div class="section-body">
-                <table class="port-table">
+                <table class="port-table sortable">
                     <thead>
                         <tr>
-                            <th>Local port</th>
-                            <th>Local IP</th>
-                            <th>Process</th>
-                            <th>PID</th>
-                            <th>State</th>
-                            <th>Protocol</th>
+                            <th data-sort="number">Local port</th>
+                            <th data-sort="string">Local IP</th>
+                            <th data-sort="string">Process</th>
+                            <th data-sort="number">PID</th>
+                            <th data-sort="string">State</th>
+                            <th data-sort="string">Protocol</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -137,19 +145,20 @@
 
         <!-- Network Settings -->
         <div class="details-section">
-            <div class="section-header">
+            <div class="section-header" onclick="toggleSection(this)">
                 <i class="fas fa-cog"></i>
                 <h3>Network settings ({{ machine.netaddr|length }})</h3>
+                <i class="toggle-icon fas fa-chevron-down"></i>
             </div>
             <div class="section-body">
-                <table class="network-table">
+                <table class="network-table sortable">
                     <thead>
                         <tr>
-                            <th>Interface</th>
-                            <th>Address</th>
-                            <th>Netmask</th>
-                            <th>Type</th>
-                            <th>Broadcast</th>
+                            <th data-sort="string">Interface</th>
+                            <th data-sort="string">Address</th>
+                            <th data-sort="string">Netmask</th>
+                            <th data-sort="string">Type</th>
+                            <th data-sort="string">Broadcast</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -167,6 +176,76 @@
             </div>
         </div>
     </div>
+<!-- Installed Packages -->
+<div class="details-section">
+    <div class="section-header" onclick="toggleSection(this)">
+        <i class="fas fa-box"></i>
+        <h3>Installed Packages ({{ machine.packages|length }})</h3>
+        <i class="toggle-icon fas fa-chevron-down"></i>
+    </div>
+    <div class="section-body">
+        <div class="table-container">
+            <table class="packages-table sortable">
+                <thead>
+                    <tr>
+                        <th data-sort="string">Name</th>
+                        <th data-sort="string">Version</th>
+                        <th data-sort="string">description</th>
+                        <th data-sort="string">Architecture</th>
+                        <th data-sort="string">Format</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pkg in machine.packages %}
+                    <tr>
+                        <td>{{ pkg.name }}</td>
+                        <td>{{ pkg.version }}</td>
+                        <td>{{ pkg.description }}</td>
+                        <td>{{ pkg.architecture }}</td>
+                        <td>{{ pkg.format }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<br>
+<!-- Running Processes -->
+<div class="details-section">
+    <div class="section-header" onclick="toggleSection(this)">
+        <i class="fas fa-cogs"></i>
+        <h3>Running Processes ({{ machine.processes|length }})</h3>
+        <i class="toggle-icon fas fa-chevron-down"></i>
+    </div>
+    <div class="section-body">
+        <div class="table-container">
+            <table class="processes-table sortable">
+                <thead>
+                    <tr>
+                        <th data-sort="number">PID</th>
+                        <th data-sort="string">Name</th>
+                        <th data-sort="string">State</th>
+                        <th data-sort="string">User</th>
+                        <th data-sort="string">Command</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for proc in machine.processes %}
+                    <tr>
+                        <td>{{ proc.pid }}</td>
+                        <td>{{ proc.name }}</td>
+                        <td>{{ proc.state }}</td>
+                        <td>{{ proc.euser }}</td>
+                        <td>{{ proc.cmd }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
 
     <div class="back-button">
         <a href="{{ url_for('painel') }}" class="btn">
@@ -179,7 +258,7 @@
     .machine-details-container {
         max-width: 1200px;
         margin: 0 auto;
-        padding: 20px;
+        padding: 0 2rem 2rem 2rem;
     }
 
     .details-header {
@@ -244,16 +323,23 @@
         display: flex;
         align-items: center;
         gap: 0.75rem;
+        cursor: pointer;
+        justify-content: space-between;
     }
 
     .section-header h3 {
         font-size: 1.125rem;
         font-weight: 600;
         color: var(--dark);
+        margin: 0;
     }
 
     .section-header i {
         color: var(--primary);
+    }
+
+    .toggle-icon {
+        transition: transform 0.3s ease;
     }
 
     .section-body {
@@ -301,6 +387,21 @@
         text-transform: uppercase;
         font-size: 0.75rem;
         letter-spacing: 0.05em;
+        cursor: pointer;
+        position: relative;
+    }
+
+    th::after {
+        content: '↕';
+        opacity: 0.5;
+    }
+
+    th.asc::after {
+        content: '↑';
+    }
+
+    th.desc::after {
+        content: '↓';
     }
 
     .back-button {
@@ -343,4 +444,83 @@
         }
     }
 </style>
+
+<script>
+    // Função para alternar seções (expandir/retrair)
+    function toggleSection(header) {
+        const section = header.parentElement;
+        const body = section.querySelector('.section-body');
+        const icon = section.querySelector('.toggle-icon');
+        
+        if (body.style.display === 'none') {
+            body.style.display = 'block';
+            icon.classList.remove('fa-chevron-right');
+            icon.classList.add('fa-chevron-down');
+        } else {
+            body.style.display = 'none';
+            icon.classList.remove('fa-chevron-down');
+            icon.classList.add('fa-chevron-right');
+        }
+    }
+
+    // Função para ordenar tabelas
+    function sortTable(table, columnIndex, sortType) {
+        const tbody = table.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        const header = table.querySelectorAll('th')[columnIndex];
+        const isAscending = !header.classList.contains('asc');
+
+        // Remover classes de ordenação de todos os cabeçalhos
+        table.querySelectorAll('th').forEach(th => {
+            th.classList.remove('asc', 'desc');
+        });
+
+        // Adicionar classe ao cabeçalho atual
+        header.classList.add(isAscending ? 'asc' : 'desc');
+
+        rows.sort((a, b) => {
+            const aValue = a.children[columnIndex].textContent;
+            const bValue = b.children[columnIndex].textContent;
+            
+            if (sortType === 'number') {
+                const numA = parseFloat(aValue) || 0;
+                const numB = parseFloat(bValue) || 0;
+                return isAscending ? numA - numB : numB - numA;
+            } else {
+                return isAscending 
+                    ? aValue.localeCompare(bValue) 
+                    : bValue.localeCompare(aValue);
+            }
+        });
+
+        // Remover todas as linhas
+        rows.forEach(row => tbody.removeChild(row));
+        
+        // Adicionar linhas ordenadas
+        rows.forEach(row => tbody.appendChild(row));
+    }
+
+    // Inicialização quando a página carregar
+    document.addEventListener('DOMContentLoaded', () => {
+        // Adicionar eventos de clique aos cabeçalhos das tabelas
+        document.querySelectorAll('.sortable th[data-sort]').forEach(th => {
+            th.addEventListener('click', () => {
+                const table = th.closest('table');
+                const columnIndex = Array.from(th.parentElement.children).indexOf(th);
+                const sortType = th.getAttribute('data-sort');
+                sortTable(table, columnIndex, sortType);
+            });
+        });
+
+        // Adicionar eventos de clique aos cabeçalhos das seções
+        document.querySelectorAll('.section-header').forEach(header => {
+            header.addEventListener('click', (e) => {
+                // Não disparar se o clique foi em um elemento filho que não deve ativar o toggle
+                if (e.target.tagName !== 'TH' && !e.target.classList.contains('section-header')) {
+                    toggleSection(header);
+                }
+            });
+        });
+    });
+</script>
 {% endblock %}
