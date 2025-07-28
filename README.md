@@ -167,6 +167,43 @@ WAZUH_PASSWORD=ma?Pt3XvLxQzpU8.dYhxzV?pT
    ```
 OBS: É possivel criar e remover usuãrios pelo "./utils/man_users.py" 
 
+
+## Service Configuration
+
+1. Create a file to service
+  ```bash
+   sudo nano /etc/systemd/system/inventory.service
+   ```
+2. Paste the content:
+
+```ini
+[Unit]
+Description=Flask Inventory Application
+After=network.target
+
+[Service]
+Type=simple
+#User=sicdc
+WorkingDirectory=/opt/Inventory
+ExecStart=/usr/bin/python3 /opt/Inventory/app.py
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+```
+3. Reload System Daemon
+```bash
+sudo systemctl daemon-reload
+```
+4. Enable and Start Inventory.service
+
+```bash
+ sudo systemctl enable inventory.service && sudo systemctl start inventory.service
+ ```
+
 ## Monitoring & Maintenance
 
 - **Recommended Routines**  
