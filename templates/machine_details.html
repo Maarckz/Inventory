@@ -123,18 +123,16 @@
                             <th data-sort="string">Process</th>
                             <th data-sort="number">PID</th>
                             <th data-sort="string">State</th>
-                            <th data-sort="string">Protocol</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for port in machine.ports %}
                         <tr>
-                            <td>{{ port.local.port }}</td>
+                            <td>{{ port.local.port }} / {{ port.protocol }}</td>
                             <td>{{ port.local.ip }}</td>
                             <td>{{ port.process }}</td>
                             <td>{{ port.pid }}</td>
                             <td>{{ port.state if port.state else '-' }}</td>
-                            <td>{{ port.protocol }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
