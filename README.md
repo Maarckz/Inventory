@@ -183,7 +183,7 @@ After=network.target
 
 [Service]
 Type=simple
-#User=sicdc
+#User=YOUR USER NAME
 WorkingDirectory=/opt/Inventory
 ExecStart=/usr/bin/python3 /opt/Inventory/app.py
 Restart=always
