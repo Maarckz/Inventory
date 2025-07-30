@@ -204,6 +204,17 @@ sudo systemctl daemon-reload
  sudo systemctl enable inventory.service && sudo systemctl start inventory.service
  ```
 
+##Search Feature
+
+Now is possible use tags to filter search requests:
+```ìni
+ports:445                 # Pesquisa por número de porta
+agent_info:10.7.6.20      # Pesquisa em hostname, IP, status ou ID
+inventory:os:Windows      # Pesquisa em campos do sistema operacional
+inventory:hardware:i7     # Pesquisa em CPU, RAM ou serial da placa
+inventory:packages:chrome # Pesquisa em pacotes instalados
+inventory:processes:python # Pesquisa em processos em execução
+```
 ## Monitoring & Maintenance
 
 - **Recommended Routines**  
