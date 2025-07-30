@@ -204,7 +204,7 @@ sudo systemctl daemon-reload
  sudo systemctl enable inventory.service && sudo systemctl start inventory.service
  ```
 
-##Search Feature
+## Search Feature
 
 Now is possible use tags to filter search requests:
 ```ìni
