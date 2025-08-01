@@ -1,12 +1,3 @@
-'''
-TO DO LIST:
-Alterar a Estrutura Para POO
-Criar painel de admin
-Verificar se o usuário é admin
-Implementacao com docker image
-'''
-
-
 #########################
 ## IMPORTING LIBRARIES ##
 #########################
@@ -26,6 +17,7 @@ import math
 import time
 import json
 import os
+from datetime import timedelta
 
 # Carregar variáveis de ambiente
 load_dotenv()
@@ -286,6 +278,50 @@ def load_all_json_files(directory):
         app.logger.error(f"Erro ao listar arquivos: {str(e)}")
     return data
 
+# Cache para máquinas e estatísticas
+MACHINES_CACHE = {'data': None, 'last_update': 0}
+STATS_CACHE = {'data': None, 'last_update': 0}
+CACHE_TIMEOUT = 300  # 5 minutos
+
+def get_cached_machines():
+    """Obtém máquinas com cache"""
+    current_time = time.time()
+    if not MACHINES_CACHE['data'] or (current_time - MACHINES_CACHE['last_update']) > CACHE_TIMEOUT:
+        MACHINES_CACHE['data'] = get_all_machines()
+        MACHINES_CACHE['last_update'] = current_time
+    return MACHINES_CACHE['data']
+
+def get_cached_stats():
+    """Obtém estatísticas com cache"""
+    current_time = time.time()
+    if not STATS_CACHE['data'] or (current_time - STATS_CACHE['last_update']) > CACHE_TIMEOUT:
+        machines = get_cached_machines()
+        STATS_CACHE['data'] = get_machine_stats(machines)
+        STATS_CACHE['last_update'] = current_time
+    return STATS_CACHE['data']
+
+# Pré-compilar redes permitidas
+compiled_allowed_networks = []
+if ALLOWED_IP_RANGES and any(ALLOWED_IP_RANGES):
+    for ip_range in ALLOWED_IP_RANGES:
+        if ip_range.strip():
+            try:
+                network = ipaddress.ip_network(ip_range.strip(), strict=False)
+                compiled_allowed_networks.append(network)
+            except ValueError as e:
+                app.logger.error(f"Rede inválida {ip_range}: {str(e)}")
+
+# Cache para IPs bloqueados em memória
+blocked_ips_cache = {'data': None, 'last_update': 0}
+
+def load_blocked_ips_cached():
+    """Carrega IPs bloqueados com cache"""
+    current_time = time.time()
+    if not blocked_ips_cache['data'] or (current_time - blocked_ips_cache['last_update']) > 30:
+        blocked_ips_cache['data'] = load_blocked_ips()
+        blocked_ips_cache['last_update'] = current_time
+    return blocked_ips_cache['data']
+
 def formatar_data(data_iso):
     """Formata data ISO para formato legível"""
     try:
@@ -303,6 +339,8 @@ def get_machine_stats(machines):
         'cpu': defaultdict(int),
         'ram': defaultdict(int),
         'status': {'Ativo': 0, 'Inativo': 0},
+        'ports': defaultdict(int),
+        'processes': defaultdict(int),
         'total': 0
     }
     
@@ -346,9 +384,25 @@ def get_machine_stats(machines):
         status = machine.get('device_status', 'Inativo')
         stats['status'][status] += 1
         
+         # Process port stats
+        for port in machine.get('ports', []):
+            ip = port.get('local', {}).get('ip', '')
+            # Verificar se é IPv4: se contém ponto ou se é um endereço IPv4 válido
+            if ip and '.' in ip:  # Simplificação, mas eficaz
+                port_number = port.get('local', {}).get('port', 'Unknown')
+                if port_number != 'N/A' and port_number != 'Unknown':
+                    stats['ports'][str(port_number)] += 1
+        
+        # Process process stats
+        for proc in machine.get('processes', []):
+            proc_name = proc.get('name', 'Unknown')
+            if proc_name != 'N/A' and proc_name != 'Unknown':
+                stats['processes'][proc_name] += 1
+        
         stats['total'] += 1
     
     return stats
+        
 
 def process_machine_data(raw_data):
     """Processa dados brutos da máquina para formato de exibição"""
@@ -476,7 +530,7 @@ def verify_password(stored_hash, password):
 
 def is_ip_allowed(ip):
     """Verifica se o IP está em um dos ranges permitidos"""
-    if not ALLOWED_IP_RANGES or not any(ALLOWED_IP_RANGES):
+    if not compiled_allowed_networks:
         return True  # Permite todos se não houver ranges definidos
     
     # Sempre permitir IPs do servidor
@@ -485,14 +539,9 @@ def is_ip_allowed(ip):
         
     try:
         ip_addr = ipaddress.ip_address(ip)
-        for ip_range in ALLOWED_IP_RANGES:
-            if ip_range.strip():
-                try:
-                    network = ipaddress.ip_network(ip_range.strip(), strict=False)
-                    if ip_addr in network:
-                        return True
-                except ValueError as e:
-                    app.logger.error(f"Rede inválida {ip_range}: {str(e)}")
+        for network in compiled_allowed_networks:
+            if ip_addr in network:
+                return True
     except ValueError as e:
         app.logger.error(f"Erro ao verificar IP {ip}: {str(e)}")
     
@@ -533,8 +582,7 @@ def dashboard():
     if 'username' not in session:
         return redirect(url_for('login'))
     
-    machines = get_all_machines()
-    stats = get_machine_stats(machines)
+    stats = get_cached_stats()
     
     return render_template('dashboard.html', 
                          stats=stats,
@@ -546,8 +594,17 @@ def get_chart_data():
     if 'username' not in session:
         return redirect(url_for('login'))
     
-    machines = get_all_machines()
-    stats = get_machine_stats(machines)
+    stats = get_cached_stats()
+    
+    # Ordenar e pegar as top 10 portas
+    sorted_ports = sorted(stats['ports'].items(), key=lambda x: x[1], reverse=True)[:10]
+    port_labels = [f"{port}" for port, count in sorted_ports]
+    port_data = [count for port, count in sorted_ports]
+    
+    # Ordenar e pegar os top 10 processos
+    sorted_processes = sorted(stats['processes'].items(), key=lambda x: x[1], reverse=True)[:10]
+    process_labels = [proc for proc, count in sorted_processes]
+    process_data = [count for proc, count in sorted_processes]
     
     return jsonify({
         'os_labels': list(stats['os'].keys()),
@@ -556,6 +613,10 @@ def get_chart_data():
         'cpu_data': list(stats['cpu'].values()),
         'ram_labels': list(stats['ram'].keys()),
         'ram_data': list(stats['ram'].values()),
+        'port_labels': port_labels,
+        'port_data': port_data,
+        'process_labels': process_labels,
+        'process_data': process_data
     })
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -621,8 +682,22 @@ def painel():
     if 'username' not in session:
         return redirect(url_for('login'))
     
-    machines = get_all_machines()
-    return render_template('painel.html', machines=machines)
+    page = request.args.get('page', 1, type=int)
+    per_page = 50
+    
+    machines = get_cached_machines()
+    total_machines = len(machines)
+    
+    # Paginação simples
+    start_idx = (page - 1) * per_page
+    end_idx = start_idx + per_page
+    paginated_machines = machines[start_idx:end_idx]
+    
+    return render_template('painel.html', 
+                          machines=paginated_machines,
+                          page=page,
+                          per_page=per_page,
+                          total=total_machines)
 
 @app.route('/search')
 def search():
@@ -630,86 +705,171 @@ def search():
         return redirect(url_for('login'))
     
     # Validar e sanitizar entrada
-    query = request.args.get('query', '')[:100].lower()
-    machines = get_all_machines()
+    query = request.args.get('query', '')[:100].strip().lower()
+    machines = get_cached_machines()
     
     if query:
-        results = []
-        added_hostnames = set()  # Conjunto para controlar máquinas já adicionadas
-        
-        for m in machines:
-            hostname = m.get('hostname', '')
+        # Verificar se é uma pesquisa por tag (ex: "ports:445")
+        if ':' in query:
+            tag_parts = query.split(':', 2)
+            tag = tag_parts[0].strip()
+            search_term = tag_parts[-1].strip()
             
-            # Verificar se a máquina já foi adicionada
-            if hostname in added_hostnames:
-                continue
-                
-            found = False
+            # Para tags com dois níveis (inventory:os)
+            sub_tag = tag_parts[1].strip() if len(tag_parts) > 2 else None
             
-            # Busca em campos básicos
-            if (query in m.get('hostname', '').lower() or
-                query in m.get('ip_address', '').lower() or
-                query in m.get('os_name', '').lower() or
-                query in m.get('cpu_name', '').lower() or
-                query in m.get('device_status', '').lower() or
-                query in str(m.get('ram_gb', 0))):
-                found = True
+            results = []
+            added_hostnames = set()
+            
+            for m in machines:
+                hostname = m.get('hostname', '')
                 
-            # Busca em campos de rede
-            if not found:
-                for iface in m.get('netiface', []):
-                    if (query in iface.get('name', '').lower() or
-                        query in iface.get('mac', '').lower()):
+                if hostname in added_hostnames:
+                    continue
+                    
+                found = False
+                
+                # Pesquisa por tag específica
+                if tag == 'ports':
+                    for port in m.get('ports', []):
+                        if search_term == str(port.get('local', {}).get('port', '')):
+                            found = True
+                            break
+                            
+                elif tag == 'agent_info':
+                    # Pesquisar em campos básicos do agent_info
+                    if (search_term in m.get('hostname', '').lower() or
+                        search_term in m.get('ip_address', '').lower() or
+                        search_term in m.get('id', '').lower()):
                         found = True
-                        break
-                        
-            if not found:
-                for addr in m.get('netaddr', []):
-                    if (query in addr.get('iface', '').lower() or
-                        query in addr.get('address', '').lower()):
-                        found = True
-                        break
-                        
-            if not found:
-                for port in m.get('ports', []):
-                    if (query in str(port.get('local', {}).get('port', '')) or
-                        query in port.get('process', '').lower()):
-                        found = True
-                        break
-                        
-            # Busca em processos
-            if not found:
-                for proc in m.get('processes', []):
-                    if (query in str(proc.get('pid', '')).lower() or
-                        query in proc.get('name', '').lower() or
-                        query in proc.get('euser', '').lower() or
-                        query in proc.get('cmd', '').lower()):
-                        found = True
-                        break
-
-            # Busca em pacotes instalados
-            if not found:
-                for pkg in m.get('packages', []):
-                    if (query in pkg.get('name', '').lower() or
-                        query in pkg.get('version', '').lower() or
-                        query in pkg.get('description', '').lower() or
-                        query in pkg.get('architecture', '').lower() or
-                        query in pkg.get('format', '').lower()):
-                        found = True
-                        break
-            # Busca em campos detalhados do sistema
-            if not found:
-                if (query in m.get('os_version', '').lower() or
-                    query in m.get('os_platform', '').lower() or
-                    query in m.get('os_architecture', '').lower() or
-                    query in m.get('board_serial', '').lower() or
-                    query in m.get('os_kernel', '').lower()):
+                    
+                    # Pesquisa especial para status (case-insensitive)
+                    elif sub_tag == 'status':
+                        status_map = {
+                            'active': 'ativo',
+                            'disconnected': 'inativo'
+                        }
+                        machine_status = m.get('device_status', '').lower()
+                        if status_map.get(search_term) == machine_status:
+                            found = True
+                
+                # Tags com sub-tags (inventory:xxx)
+                elif tag == 'inventory' and sub_tag:
+                    if sub_tag == 'os':
+                        # Pesquisar em campos do sistema operacional
+                        if (search_term in m.get('os_name', '').lower() or
+                            search_term in m.get('os_version', '').lower() or
+                            search_term in m.get('os_architecture', '').lower() or
+                            search_term in m.get('os_kernel', '').lower() or
+                            search_term in m.get('os_platform', '').lower()):
+                            found = True
+                    
+                    elif sub_tag == 'hardware':
+                        # Pesquisar em campos de hardware
+                        if (search_term in m.get('cpu_name', '').lower() or
+                            search_term in str(m.get('cpu_cores', '')).lower() or
+                            search_term in str(m.get('ram_gb', '')).lower() or
+                            search_term in m.get('board_serial', '').lower()):
+                            found = True
+                    
+                    elif sub_tag == 'packages':
+                        # Pesquisar em pacotes instalados
+                        for pkg in m.get('packages', []):
+                            if (search_term in pkg.get('name', '').lower() or
+                                search_term in pkg.get('version', '').lower()):
+                                found = True
+                                break
+                    
+                    elif sub_tag == 'processes':
+                        # Pesquisar em processos
+                        for proc in m.get('processes', []):
+                            if (search_term in proc.get('name', '').lower() or
+                                search_term in str(proc.get('pid', '')).lower() or
+                                search_term in proc.get('cmd', '').lower()):
+                                found = True
+                                break
+                
+                # Adicionar máquina se encontrada
+                if found:
+                    results.append(m)
+                    added_hostnames.add(hostname)
+        else:
+            # Pesquisa geral (sem tag)
+            results = []
+            added_hostnames = set()
+            
+            for m in machines:
+                hostname = m.get('hostname', '')
+                
+                if hostname in added_hostnames:
+                    continue
+                    
+                found = False
+                
+                # Busca em campos básicos
+                if (query in m.get('hostname', '').lower() or
+                    query in m.get('ip_address', '').lower() or
+                    query in m.get('os_name', '').lower() or
+                    query in m.get('cpu_name', '').lower() or
+                    query in m.get('device_status', '').lower() or
+                    query in str(m.get('ram_gb', 0))):
                     found = True
-            
-            # Adicionar máquina se encontrada e ainda não estiver na lista
-            if found:
-                results.append(m)
-                added_hostnames.add(hostname)
+                    
+                # Busca em campos de rede
+                if not found:
+                    for iface in m.get('netiface', []):
+                        if (query in iface.get('name', '').lower() or
+                            query in iface.get('mac', '').lower()):
+                            found = True
+                            break
+                            
+                if not found:
+                    for addr in m.get('netaddr', []):
+                        if (query in addr.get('iface', '').lower() or
+                            query in addr.get('address', '').lower()):
+                            found = True
+                            break
+                            
+                if not found:
+                    for port in m.get('ports', []):
+                        if (query in str(port.get('local', {}).get('port', '')) or
+                            query in port.get('process', '').lower()):
+                            found = True
+                            break
+                            
+                # Busca em processos
+                if not found:
+                    for proc in m.get('processes', []):
+                        if (query in str(proc.get('pid', '')).lower() or
+                            query in proc.get('name', '').lower() or
+                            query in proc.get('euser', '').lower() or
+                            query in proc.get('cmd', '').lower()):
+                            found = True
+                            break
+
+                # Busca em pacotes instalados
+                if not found:
+                    for pkg in m.get('packages', []):
+                        if (query in pkg.get('name', '').lower() or
+                            query in pkg.get('version', '').lower() or
+                            query in pkg.get('description', '').lower() or
+                            query in pkg.get('architecture', '').lower() or
+                            query in pkg.get('format', '').lower()):
+                            found = True
+                            break
+                # Busca em campos detalhados do sistema
+                if not found:
+                    if (query in m.get('os_version', '').lower() or
+                        query in m.get('os_platform', '').lower() or
+                        query in m.get('os_architecture', '').lower() or
+                        query in m.get('board_serial', '').lower() or
+                        query in m.get('os_kernel', '').lower()):
+                        found = True
+                
+                # Adicionar máquina se encontrada
+                if found:
+                    results.append(m)
+                    added_hostnames.add(hostname)
     else:
         results = machines
     
@@ -725,7 +885,7 @@ def machine_details(hostname):
         flash('Nome de host inválido', 'error')
         return redirect(url_for('painel'))
     
-    machines = get_all_machines()
+    machines = get_cached_machines()
     machine = next((m for m in machines if m.get('hostname') == hostname), None)
     
     if not machine:
@@ -739,7 +899,7 @@ def settings():
     if 'username' not in session:
         return redirect(url_for('login'))
     
-    machines = get_all_machines()
+    machines = get_cached_machines()
     return render_template('settings.html', machines=machines)
 
 @app.route('/get_data')
