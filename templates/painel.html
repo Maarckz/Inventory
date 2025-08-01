@@ -14,7 +14,7 @@
     <div class="machine-card">
         <div class="machine-header">
             <a class="hostname-btn"
-                style="background-color: #6366F1; color: #fff; padding: 0.5rem 0.5rem; border-radius: 6px; font-size: 12px; font-weight: bold; text-decoration: none; display: inline-block;">
+                style="background-color: #6366F1; color: #fff; width: 100px; padding: 0.5rem 0.5rem; border-radius: 6px; font-size: 12px; font-weight: bold; text-decoration: none; display: inline-block;">
                 {{ machine.hostname.upper() }} ({{ machine.id }})
             </a>
             <span class="status status-{{ 'ativo' if machine.device_status == 'Ativo' else 'inativo' }}">

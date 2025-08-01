@@ -301,7 +301,6 @@
 
     .details-grid {
         display: block;
-        /*display: grid;*/
         grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
         gap: 1.5rem;
         margin-bottom: 2rem;
@@ -519,6 +518,12 @@
                 }
             });
         });
+
+        // Ordenar automaticamente a tabela de portas por número de porta (ordem crescente)
+        const portTable = document.querySelector('.port-table');
+        if (portTable) {
+            sortTable(portTable, 0, 'number');
+        }
     });
 </script>
 {% endblock %}
