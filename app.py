@@ -281,7 +281,7 @@ def load_all_json_files(directory):
 # Cache para máquinas e estatísticas
 MACHINES_CACHE = {'data': None, 'last_update': 0}
 STATS_CACHE = {'data': None, 'last_update': 0}
-CACHE_TIMEOUT = 300  # 5 minutos
+CACHE_TIMEOUT = 30
 
 def get_cached_machines():
     """Obtém máquinas com cache"""
