@@ -103,6 +103,8 @@ Accessible via browser, with:
 SECRET_KEY=suachavesupersecreta_altere_esta_chave!
 INVENTORY_DIR=data/inventory
 AUTH_FILE=data/auth/logins.json
+LOG_DIR=logs
+
 
 # Configurações de rede
 HOST=0.0.0.0
@@ -122,13 +124,14 @@ LOGIN_BLOCK_TIME=60
 ALLOWED_IP_RANGES =192.168.0.0/16
 
 #ARQUIVO DE IPs BLOQUEADOS
-BLOCKED_IPS_FILE = logs/blocked_ips.json 
+BLOCKED_IPS_FILE=${LOG_DIR}/blocked_ips.json
 
 WAZUH_PROTOCOL=https
 WAZUH_HOST=192.168.56.210
 WAZUH_PORT=55000
 WAZUH_USER=wazuh-wui
-WAZUH_PASSWORD=ma?Pt3XvLxQzpU8.dYhxzV?pT
+WAZUH_PASSWORD=ma?Pt3XvLxQzpU8.J3rIQ8.dYhxzV?pT
+
 ```
 
 ## Installation & Execution
