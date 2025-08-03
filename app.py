@@ -480,7 +480,7 @@ def get_chart_data():
         '27017': 'MongoDB',
         '6379': 'Redis',
         '11211': 'Memcached',
-        '9200': 'Elasticsearch'
+        '9200': 'Elk'
     }
     
     # Coletar informações sobre as portas
