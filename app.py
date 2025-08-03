@@ -1,6 +1,6 @@
-#########################
+###########################
 ## IMPORTING BIBLIOTECAS ##
-#########################
+###########################
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from logging.handlers import RotatingFileHandler
 from collections import defaultdict
@@ -465,16 +465,64 @@ def get_chart_data():
         return redirect(url_for('login'))
     
     stats = get_cached_stats()
+    machines = get_cached_machines()
+    
+    # Mapeamento de serviços conhecidos
+    common_services = {
+        '22': 'SSH',
+        '80': 'HTTP',
+        '443': 'HTTPS',
+        '21': 'FTP',
+        '25': 'SMTP',
+        '53': 'DNS',
+        '3306': 'MySQL',
+        '5432': 'PostgreSQL',
+        '27017': 'MongoDB',
+        '6379': 'Redis',
+        '11211': 'Memcached',
+        '9200': 'Elasticsearch'
+    }
+    
+    # Coletar informações sobre as portas
+    port_details = defaultdict(lambda: {'count': 0, 'protocol': 'tcp'})
+    
+    for machine in machines:
+        for port in machine.get('ports', []):
+            port_num = str(port.get('local', {}).get('port', ''))
+            protocol = port.get('protocol', 'tcp').lower()
+            
+            if port_num and port_num != 'N/A':
+                port_details[port_num]['count'] += 1
+                # Manter o protocolo mais comum
+                if protocol == 'udp':  # Sobrescreve apenas se for UDP (para simplificar)
+                    port_details[port_num]['protocol'] = protocol
     
     # Ordenar e pegar as top 10 portas
-    sorted_ports = sorted(stats['ports'].items(), key=lambda x: x[1], reverse=True)[:10]
-    port_labels = [f"{port}" for port, count in sorted_ports]
-    port_data = [count for port, count in sorted_ports]
+    sorted_ports = sorted(port_details.items(), key=lambda x: x[1]['count'], reverse=True)[:10]
+    
+    # Preparar dados para o gráfico
+    port_labels = []
+    port_data = []
+    port_protocols = []  # Nova lista para armazenar os protocolos
+    
+    for port, details in sorted_ports:
+        service = common_services.get(port, '')
+        protocol = details['protocol'].upper()
+        
+        if service:
+            label = f"{service} - {port}/{protocol}"
+        else:
+            label = f"{port}/{protocol}"
+        
+        port_labels.append(label)
+        port_data.append(details['count'])
+        port_protocols.append(details['protocol'])  # 'tcp' ou 'udp'
     
     # Ordenar e pegar os top 10 processos
     sorted_processes = sorted(stats['processes'].items(), key=lambda x: x[1], reverse=True)[:10]
     process_labels = [proc for proc, count in sorted_processes]
     process_data = [count for proc, count in sorted_processes]
+    
     
     return jsonify({
         'os_labels': list(stats['os'].keys()),
@@ -485,6 +533,7 @@ def get_chart_data():
         'ram_data': list(stats['ram'].values()),
         'port_labels': port_labels,
         'port_data': port_data,
+        'port_protocols': port_protocols,  # Enviar os protocolos para o frontend
         'process_labels': process_labels,
         'process_data': process_data
     })
@@ -565,13 +614,69 @@ def search():
     machines = get_cached_machines()
     
     if query:
-        # Verificar se é uma pesquisa por tag (ex: "ports:445")
+        # Verificar se é uma pesquisa por RAM (ex: "ram_gb:3-4gb")
+        if query.startswith('ram_gb:'):
+            ram_query = query[7:]  # Remove 'ram_gb:'
+            results = []
+            added_hostnames = set()
+            
+            # Definir os ranges de RAM
+            ram_ranges = {
+                "0-2gb": (0, 2),
+                "3-4gb": (3, 4),
+                "5-6gb": (5, 6),
+                "7-8gb": (7, 8),
+                "9-12gb": (9, 12),
+                "13-16gb": (13, 16),
+                "17-24gb": (17, 24),
+                "25-32gb": (25, 32),
+                "33-64gb": (33, 64),
+                "64+gb": (65, float('inf'))
+            }
+            
+            # Verificar se o query é um range válido
+            if ram_query in ram_ranges:
+                min_ram, max_ram = ram_ranges[ram_query]
+                
+                for m in machines:
+                    hostname = m.get('hostname', '')
+                    
+                    if hostname in added_hostnames:
+                        continue
+                        
+                    ram_gb = m.get('ram_gb', 0)
+                    
+                    # Verificar se a RAM está no range
+                    if ram_gb >= min_ram and ram_gb <= max_ram:
+                        results.append(m)
+                        added_hostnames.add(hostname)
+            else:
+                # Se não for um range válido, tentar como valor exato
+                try:
+                    ram_value = float(ram_query.replace('gb', ''))
+                    for m in machines:
+                        hostname = m.get('hostname', '')
+                        
+                        if hostname in added_hostnames:
+                            continue
+                            
+                        ram_gb = m.get('ram_gb', 0)
+                        
+                        if ram_gb == ram_value:
+                            results.append(m)
+                            added_hostnames.add(hostname)
+                except ValueError:
+                    # Se não for um número válido, retornar vazio
+                    pass
+            
+            return render_template('search.html', results=results)
+        
+        # Restante da função original para outros tipos de pesquisa
         if ':' in query:
             tag_parts = query.split(':', 2)
             tag = tag_parts[0].strip()
             search_term = tag_parts[-1].strip()
             
-            # Para tags com dois níveis (inventory:os)
             sub_tag = tag_parts[1].strip() if len(tag_parts) > 2 else None
             
             results = []
@@ -585,7 +690,6 @@ def search():
                     
                 found = False
                 
-                # Pesquisa por tag específica
                 if tag == 'ports':
                     for port in m.get('ports', []):
                         if search_term == str(port.get('local', {}).get('port', '')):
@@ -593,13 +697,11 @@ def search():
                             break
                             
                 elif tag == 'agent_info':
-                    # Pesquisar em campos básicos do agent_info
                     if (search_term in m.get('hostname', '').lower() or
                         search_term in m.get('ip_address', '').lower() or
                         search_term in m.get('id', '').lower()):
                         found = True
                     
-                    # Pesquisa especial para status (case-insensitive)
                     elif sub_tag == 'status':
                         status_map = {
                             'active': 'ativo',
@@ -609,10 +711,8 @@ def search():
                         if status_map.get(search_term) == machine_status:
                             found = True
                 
-                # Tags com sub-tags (inventory:xxx)
                 elif tag == 'inventory' and sub_tag:
                     if sub_tag == 'os':
-                        # Pesquisar em campos do sistema operacional
                         if (search_term in m.get('os_name', '').lower() or
                             search_term in m.get('os_version', '').lower() or
                             search_term in m.get('os_architecture', '').lower() or
@@ -621,7 +721,6 @@ def search():
                             found = True
                     
                     elif sub_tag == 'hardware':
-                        # Pesquisar em campos de hardware
                         if (search_term in m.get('cpu_name', '').lower() or
                             search_term in str(m.get('cpu_cores', '')).lower() or
                             search_term in str(m.get('ram_gb', '')).lower() or
@@ -629,7 +728,6 @@ def search():
                             found = True
                     
                     elif sub_tag == 'packages':
-                        # Pesquisar em pacotes instalados
                         for pkg in m.get('packages', []):
                             if (search_term in pkg.get('name', '').lower() or
                                 search_term in pkg.get('version', '').lower()):
@@ -637,7 +735,6 @@ def search():
                                 break
                     
                     elif sub_tag == 'processes':
-                        # Pesquisar em processos
                         for proc in m.get('processes', []):
                             if (search_term in proc.get('name', '').lower() or
                                 search_term in str(proc.get('pid', '')).lower() or
@@ -645,7 +742,6 @@ def search():
                                 found = True
                                 break
                 
-                # Adicionar máquina se encontrada
                 if found:
                     results.append(m)
                     added_hostnames.add(hostname)
@@ -662,7 +758,6 @@ def search():
                     
                 found = False
                 
-                # Busca em campos básicos
                 if (query in m.get('hostname', '').lower() or
                     query in m.get('ip_address', '').lower() or
                     query in m.get('os_name', '').lower() or
@@ -671,7 +766,6 @@ def search():
                     query in str(m.get('ram_gb', 0))):
                     found = True
                     
-                # Busca em campos de rede
                 if not found:
                     for iface in m.get('netiface', []):
                         if (query in iface.get('name', '').lower() or
@@ -693,7 +787,6 @@ def search():
                             found = True
                             break
                             
-                # Busca em processos
                 if not found:
                     for proc in m.get('processes', []):
                         if (query in str(proc.get('pid', '')).lower() or
@@ -703,7 +796,6 @@ def search():
                             found = True
                             break
 
-                # Busca em pacotes instalados
                 if not found:
                     for pkg in m.get('packages', []):
                         if (query in pkg.get('name', '').lower() or
@@ -713,7 +805,7 @@ def search():
                             query in pkg.get('format', '').lower()):
                             found = True
                             break
-                # Busca em campos detalhados do sistema
+                
                 if not found:
                     if (query in m.get('os_version', '').lower() or
                         query in m.get('os_platform', '').lower() or
@@ -722,7 +814,6 @@ def search():
                         query in m.get('os_kernel', '').lower()):
                         found = True
                 
-                # Adicionar máquina se encontrada
                 if found:
                     results.append(m)
                     added_hostnames.add(hostname)
@@ -767,7 +858,7 @@ def get_data():
     try:
         os.popen(f'python3 {script_path} &')
         app.logger.info("Coleta de dados iniciada")
-        flash('Coleta de dados iniciada', 'success')
+        flash('Coleta de dados iniciada, aguarde alguns minutos.', 'success')
         return redirect(url_for('dashboard'))
     except Exception as e:
         app.logger.error(f"Erro ao iniciar coleta: {str(e)}")
