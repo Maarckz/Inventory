@@ -66,7 +66,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Adicionar eventos de clique aos cabeçalhos das seções
     document.querySelectorAll('.section-header').forEach(header => {
         header.addEventListener('click', (e) => {
-            if (e.target.tagName !== 'TH' && !e.target.classList.contains('section-header')) {
+            const target = e.target;
+            if (target.tagName === 'TH' || target.classList.contains('section-header') || target.classList.contains('toggle-icon')) {
                 toggleSection(header);
             }
         });

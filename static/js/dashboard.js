@@ -180,48 +180,61 @@ document.addEventListener('DOMContentLoaded', function() {
                     options: chartOptions
                 });
             });
-
-            // Gráfico de Portas de Rede
-            createChartIfExists('portChart', (element) => {
-                new Chart(element.getContext('2d'), {
-                    type: 'bar',
-                    data: {
-                        labels: data.port_labels,
-                        datasets: [{
-                            label: 'Ocorrências',
-                            data: data.port_data,
-                            backgroundColor: '#3B82F6',
-                            borderRadius: 6,
-                            borderWidth: 0
-                        }]
-                    },
-                    options: {
-                        ...chartOptions,
-                        indexAxis: 'y',
-                        plugins: {
-                            legend: {
-                                display: false
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    title: function(tooltipItems) {
-                                        return 'Porta ' + tooltipItems[0].label.replace(/\D/g, '');
-                                    }
-                                }
-                            }
+// Gráfico de Portas de Rede
+createChartIfExists('portChart', (element) => {
+    new Chart(element.getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: data.port_labels,
+            datasets: [{
+                label: 'Ocorrências',
+                data: data.port_data,
+                backgroundColor: data.port_labels.map((label, index) => {
+                    return data.port_protocols[index] === 'tcp' ? '#3B82F6' : '#10B981';
+                }),
+                borderRadius: 6,
+                borderWidth: 0
+            }]
+        },
+        options: {
+            ...chartOptions,
+            indexAxis: 'y',
+            plugins: {
+                legend: {
+                    display: false // Removendo a legenda
+                },
+                tooltip: {
+                    callbacks: {
+                        title: function(tooltipItems) {
+                            const label = data.port_labels[tooltipItems[0].dataIndex];
+                            const portMatch = label.match(/(\d+)\/(TCP|UDP)/);
+                            return portMatch ? `Porta ${portMatch[1]}` : label;
                         },
-                        scales: {
-                            x: {
-                                beginAtZero: true,
-                                grid: {
-                                    drawBorder: false
-                                }
-                            }
+                        afterBody: function(tooltipItems) {
+                            const label = data.port_labels[tooltipItems[0].dataIndex];
+                            return [label.replace(' - ', ': ')];
+                        },
+                        labelColor: function(context) {
+                            return {
+                                borderColor: 'transparent',
+                                backgroundColor: context.dataset.backgroundColor[context.dataIndex],
+                                borderRadius: 2
+                            };
                         }
                     }
-                });
-            });
-
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    grid: {
+                        drawBorder: false
+                    }
+                }
+            }
+        }
+    });
+});
             // Gráfico de Processos em Execução
             createChartIfExists('processChart', (element) => {
                 new Chart(element.getContext('2d'), {
