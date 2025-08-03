@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Inventário TI{% endblock %}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="{{ url_for('static', filename='js/chart.js') }}"></script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.png') }}">
     {% block extra_css %}{% endblock %}
 </head>
@@ -14,8 +13,8 @@
     <div class="app-container">
         <header class="app-header">
             <div class="header-content">
-                <a href="{{ url_for('get_data') }}">
-                    <img src="{{ url_for('static', filename='mlogo.svg') }}" alt="Logo" class="app-logo" style="height: 40px;margin-top: 5px;">
+                <a href="{{ url_for('dashboard') }}">
+                    <img src="{{ url_for('static', filename='mlogo.svg') }}" alt="Logo" class="app-logo">
                 </a>
                 <nav class="app-nav">
                     <a href="{{ url_for('dashboard') }}" class="nav-link">
@@ -59,6 +58,7 @@
         </main>
     </div>
     
+    <script src="{{ url_for('static', filename='js/base.js') }}"></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

@@ -1,0 +1,36 @@
+/* error.css e settings.css são basicamente iguais */
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+}
+
+.container h1 {
+    font-size: 1.75rem;
+    margin-bottom: 1rem;
+    color: var(--dark);
+}
+
+.container p {
+    margin-bottom: 1.5rem;
+    color: var(--dark-gray);
+}
+
+.error-details {
+    margin: 1.5rem 0;
+    padding: 1rem;
+    background: #FEE2E2;
+    border-radius: var(--border-radius);
+    color: #B91C1C;
+}
+
+.error-details p {
+    margin-bottom: 0.5rem;
+}
+
+.error-details p:last-child {
+    margin-bottom: 0;
+}

@@ -1,5 +1,5 @@
 #########################
-## IMPORTING LIBRARIES ##
+## IMPORTING BIBLIOTECAS ##
 #########################
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from logging.handlers import RotatingFileHandler
@@ -17,10 +17,10 @@ import math
 import time
 import json
 import os
-from datetime import timedelta
 
 # Carregar variáveis de ambiente
 load_dotenv()
+
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY')
 app.config['STATIC_FOLDER'] = 'static'
@@ -36,52 +36,69 @@ app.config.update(
 
 # Configurações do .env
 INVENTORY_DIR = os.getenv('INVENTORY_DIR')
+LOG_DIR = os.getenv('LOG_DIR')
 AUTH_FILE = os.getenv('AUTH_FILE')
 SSL_CERT = os.getenv('SSL_CERT_PATH')
 SSL_KEY = os.getenv('SSL_KEY_PATH')
 USE_HTTPS = os.getenv('USE_HTTPS').lower() == 'true'
-MAX_LOGIN_ATTEMPTS = int(os.getenv('MAX_LOGIN_ATTEMPTS'))
-LOGIN_BLOCK_TIME = int(os.getenv('LOGIN_BLOCK_TIME')) 
 ALLOWED_IP_RANGES = os.getenv('ALLOWED_IP_RANGES').split(',')
-BLOCKED_IPS_FILE = "logs/blocked_ips.json"
-blocked_ips_lock = threading.Lock()
-
-# Obter IPs do servidor (apenas interfaces UP, somente IPv4)
-def get_server_ips():
-    """Obtém todos os IPs IPv4 das interfaces UP do servidor"""
-    server_ips = {'127.0.0.1', 'localhost'}
-    try:
-        for iface in os.listdir('/sys/class/net'):
-            try:
-                # Verifica se a interface está UP
-                with open(f'/sys/class/net/{iface}/operstate') as f:
-                    if f.read().strip() != 'up':
-                        continue
-                # Obtém o IP IPv4 da interface
-                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                try:
-                    ip = socket.inet_ntoa(fcntl.ioctl(
-                        s.fileno(),
-                        0x8915,  # SIOCGIFADDR
-                        struct.pack('256s', iface[:15].encode('utf-8'))
-                    )[20:24])
-                    if ip and ip != '127.0.0.1':
-                        server_ips.add(ip)
-                except OSError:
-                    continue
-                finally:
-                    s.close()
-            except Exception:
-                continue
-    except Exception as e:
-        app.logger.error(f"Erro ao obter IPs do servidor: {str(e)}")
-    return list(server_ips)
-
-SERVER_IPS = get_server_ips()
 
 # Configurar sistema de logs
-LOG_DIR = 'logs'
+# Criar diretórios necessários
+os.makedirs(INVENTORY_DIR, exist_ok=True)
 os.makedirs(LOG_DIR, exist_ok=True)
+os.makedirs(os.path.dirname(AUTH_FILE), exist_ok=True)
+
+# Configuração SSL
+ssl_context = None
+if USE_HTTPS:
+    if os.path.exists(SSL_CERT) and os.path.exists(SSL_KEY):
+        ssl_context = (SSL_CERT, SSL_KEY)
+    else:
+        app.logger.warning("Certificado SSL não encontrado. Executando HTTP")
+
+    
+# Obter IPs do servidor (apenas interfaces UP, somente IPv4)
+server_ips = {'127.0.0.1', 'localhost'}
+try:
+    for iface in os.listdir('/sys/class/net'):
+        try:
+            # Verifica se a interface está UP
+            with open(f'/sys/class/net/{iface}/operstate') as f:
+                if f.read().strip() != 'up':
+                    continue
+            # Obtém o IP IPv4 da interface
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            try:
+                ip = socket.inet_ntoa(fcntl.ioctl(
+                    s.fileno(),
+                    0x8915,  # SIOCGIFADDR
+                    struct.pack('256s', iface[:15].encode('utf-8'))
+                )[20:24])
+                if ip and ip != '127.0.0.1':
+                    server_ips.add(ip)
+            except OSError:
+                continue
+            finally:
+                s.close()
+        except Exception:
+            continue
+except Exception as e:
+    app.logger.error(f"Erro ao obter IPs do servidor: {str(e)}")
+    
+SERVER_IPS = list(server_ips)
+
+
+# Pré-compilar redes permitidas
+compiled_allowed_networks = []
+if ALLOWED_IP_RANGES and any(ALLOWED_IP_RANGES):
+    for ip_range in ALLOWED_IP_RANGES:
+        if ip_range.strip():
+            try:
+                network = ipaddress.ip_network(ip_range.strip(), strict=False)
+                compiled_allowed_networks.append(network)
+            except ValueError as e:
+                app.logger.error(f"Rede inválida {ip_range}: {str(e)}")
 
 # Configurar loggers para diferentes níveis
 def setup_logging():
@@ -134,124 +151,6 @@ setup_logging()
 security_logger = logging.getLogger('security')
 audit_logger = logging.getLogger('audit')
 
-# Funções para gerenciar IPs bloqueados
-def load_blocked_ips():
-    """Carrega IPs bloqueados do arquivo com tratamento robusto"""
-    try:
-        if os.path.exists(BLOCKED_IPS_FILE) and os.path.getsize(BLOCKED_IPS_FILE) > 0:
-            with open(BLOCKED_IPS_FILE, 'r') as f:
-                try:
-                    data = json.load(f)
-                    # Se o arquivo estiver no formato antigo, converter
-                    if isinstance(data, dict) and 'blocked_ips' not in data:
-                        # Converter para novo formato
-                        new_data = {
-                            'blocked_ips': {},
-                            'login_attempts': {}
-                        }
-                        for ip, value in data.items():
-                            if isinstance(value, (int, float)):
-                                # É um timestamp de bloqueio
-                                new_data['blocked_ips'][ip] = value
-                            elif isinstance(value, dict) and 'timestamp' in value:
-                                # É uma entrada de bloqueio
-                                new_data['blocked_ips'][ip] = value['timestamp']
-                            elif isinstance(value, int):
-                                # É uma tentativa de login
-                                new_data['login_attempts'][ip] = value
-                        # Salvar novo formato
-                        save_blocked_ips(new_data)
-                        return new_data
-                    return data
-                except json.JSONDecodeError:
-                    app.logger.error(f"Arquivo de IPs bloqueados corrompido. Recriando.")
-                    # Criar novo arquivo vazio
-                    return {'blocked_ips': {}, 'login_attempts': {}}
-        return {'blocked_ips': {}, 'login_attempts': {}}
-    except (json.JSONDecodeError, IOError) as e:
-        app.logger.error(f"Erro ao carregar IPs bloqueados: {str(e)}")
-        return {'blocked_ips': {}, 'login_attempts': {}}
-
-def save_blocked_ips(data):
-    """Salva IPs bloqueados no arquivo"""
-    try:
-        with blocked_ips_lock:
-            with open(BLOCKED_IPS_FILE, 'w') as f:
-                json.dump(data, f)
-    except IOError as e:
-        app.logger.error(f"Erro ao salvar IPs bloqueados: {str(e)}")
-
-def is_ip_blocked(ip):
-    """Verifica se o IP está bloqueado, ignorando IPs do servidor"""
-    # Nunca bloquear IPs do próprio servidor
-    if ip in SERVER_IPS:
-        return False
-        
-    data = load_blocked_ips()
-    blocked_ips = data.get('blocked_ips', {})
-    
-    if ip in blocked_ips:
-        block_time = blocked_ips[ip]
-        # Garantir que block_time é numérico
-        if isinstance(block_time, (int, float)):
-            current_time = time.time()
-            # Verifica se o tempo de bloqueio expirou
-            if current_time - block_time < LOGIN_BLOCK_TIME:
-                return True
-            else:
-                # Remove bloqueio expirado
-                remove_blocked_ip(ip)
-        else:
-            # Formato inválido - remover entrada
-            app.logger.error(f"Formato inválido de timestamp para IP {ip}: {block_time}")
-            remove_blocked_ip(ip)
-    return False
-
-def add_blocked_ip(ip):
-    """Adiciona um IP à lista de bloqueados com timestamp atual"""
-    # Nunca bloquear IPs do próprio servidor
-    if ip in SERVER_IPS:
-        app.logger.info(f"Tentativa de bloquear IP do servidor ignorada: {ip}")
-        return
-        
-    data = load_blocked_ips()
-    data['blocked_ips'][ip] = time.time()  # Armazena apenas o timestamp
-    save_blocked_ips(data)
-    minutes = math.ceil(LOGIN_BLOCK_TIME / 60)
-    security_logger.warning(f"IP BLOQUEADO: {ip} por {minutes} minutos")
-
-def remove_blocked_ip(ip):
-    """Remove um IP da lista de bloqueados"""
-    data = load_blocked_ips()
-    if ip in data.get('blocked_ips', {}):
-        del data['blocked_ips'][ip]
-        save_blocked_ips(data)
-        security_logger.info(f"IP DESBLOQUEADO: {ip}")
-
-def increment_login_attempt(ip):
-    """Incrementa a contagem de tentativas de login para um IP, ignorando IPs do servidor"""
-    # Nunca contar tentativas para IPs do servidor
-    if ip in SERVER_IPS:
-        return 0
-        
-    data = load_blocked_ips()
-    attempts = data.get('login_attempts', {}).get(ip, 0) + 1
-    data.setdefault('login_attempts', {})[ip] = attempts
-    save_blocked_ips(data)
-    return attempts
-
-def get_login_attempts(ip):
-    """Obtém o número de tentativas de login para um IP"""
-    data = load_blocked_ips()
-    return data.get('login_attempts', {}).get(ip, 0)
-
-def reset_login_attempts(ip):
-    """Reseta a contagem de tentativas de login para um IP"""
-    data = load_blocked_ips()
-    if ip in data.get('login_attempts', {}):
-        del data['login_attempts'][ip]
-        save_blocked_ips(data)
-
 # Funções auxiliares
 def load_json(file_path):
     """Carrega dados JSON de um arquivo com tratamento de erros"""
@@ -281,7 +180,7 @@ def load_all_json_files(directory):
 # Cache para máquinas e estatísticas
 MACHINES_CACHE = {'data': None, 'last_update': 0}
 STATS_CACHE = {'data': None, 'last_update': 0}
-CACHE_TIMEOUT = 30
+CACHE_TIMEOUT = 15
 
 def get_cached_machines():
     """Obtém máquinas com cache"""
@@ -300,27 +199,6 @@ def get_cached_stats():
         STATS_CACHE['last_update'] = current_time
     return STATS_CACHE['data']
 
-# Pré-compilar redes permitidas
-compiled_allowed_networks = []
-if ALLOWED_IP_RANGES and any(ALLOWED_IP_RANGES):
-    for ip_range in ALLOWED_IP_RANGES:
-        if ip_range.strip():
-            try:
-                network = ipaddress.ip_network(ip_range.strip(), strict=False)
-                compiled_allowed_networks.append(network)
-            except ValueError as e:
-                app.logger.error(f"Rede inválida {ip_range}: {str(e)}")
-
-# Cache para IPs bloqueados em memória
-blocked_ips_cache = {'data': None, 'last_update': 0}
-
-def load_blocked_ips_cached():
-    """Carrega IPs bloqueados com cache"""
-    current_time = time.time()
-    if not blocked_ips_cache['data'] or (current_time - blocked_ips_cache['last_update']) > 30:
-        blocked_ips_cache['data'] = load_blocked_ips()
-        blocked_ips_cache['last_update'] = current_time
-    return blocked_ips_cache['data']
 
 def formatar_data(data_iso):
     """Formata data ISO para formato legível"""
@@ -562,14 +440,6 @@ def check_access():
     
     audit_logger.info(f"ACESSO - IP: {client_ip}, Usuário: {username}, Endpoint: {request.endpoint}, Método: {request.method}")
     
-    # Verificar se o IP está bloqueado para login (exceto servidor)
-    if request.endpoint == 'login' and request.method == 'POST' and client_ip not in SERVER_IPS:
-        if is_ip_blocked(client_ip):
-            security_logger.warning(f"TENTATIVA BLOQUEADA - IP bloqueado: {client_ip}")
-            minutes = math.ceil(LOGIN_BLOCK_TIME / 60)
-            flash(f'Muitas tentativas falhas. Tente novamente em {minutes} minutos.', 'error')
-            return redirect(url_for('login'))
-    
     # Verificar se o IP está permitido (exceto para arquivos estáticos)
     if not request.path.startswith('/static'):
         if not is_ip_allowed(client_ip):
@@ -642,27 +512,13 @@ def login():
         # Verificar credenciais
         if user and verify_password(user['password_hash'], password):
             session['username'] = username
-            reset_login_attempts(client_ip)  # Resetar tentativas após login bem-sucedido
             # Registrar login bem-sucedido
             security_logger.info(f"LOGIN BEM-SUCEDIDO - Usuário: {username}, IP: {client_ip}")
             return redirect(url_for('dashboard'))
         else:
-            # Registrar tentativa falha (exceto para IP do servidor)
-            if client_ip not in SERVER_IPS:
-                security_logger.warning(f"TENTATIVA DE LOGIN FALHA - Usuário: {username}, IP: {client_ip}")
-                
-                # Incrementar tentativa
-                attempts = increment_login_attempt(client_ip)
-                
-                # Verificar se atingiu o limite de tentativas
-                if attempts >= MAX_LOGIN_ATTEMPTS:
-                    add_blocked_ip(client_ip)
-                    minutes = math.ceil(LOGIN_BLOCK_TIME / 60)
-                    flash(f'Muitas tentativas falhas. Tente novamente em {minutes} minutos.', 'error')
-                else:
-                    flash('Credenciais inválidas', 'error')
-            else:
-                flash('Credenciais inválidas', 'error')
+            # Registrar tentativa falha
+            security_logger.warning(f"TENTATIVA DE LOGIN FALHA - Usuário: {username}, IP: {client_ip}")
+            flash('Credenciais inválidas', 'error')
     
     return render_template('login.html')
 
@@ -954,29 +810,14 @@ def handle_errors(error):
 
 
 if __name__ == '__main__':
-    # Criar diretórios necessários
-    os.makedirs(INVENTORY_DIR, exist_ok=True)
-    os.makedirs(os.path.dirname(AUTH_FILE), exist_ok=True)
-    os.makedirs(LOG_DIR, exist_ok=True)
-    
-    # Configuração SSL
-    ssl_context = None
-    if USE_HTTPS:
-        if os.path.exists(SSL_CERT) and os.path.exists(SSL_KEY):
-            ssl_context = (SSL_CERT, SSL_KEY)
-        else:
-            app.logger.warning("Certificado SSL não encontrado. Executando HTTP")
     
     # Configurações do servidor
     host = os.getenv('HOST', '0.0.0.0')
     port = int(os.getenv('PORT'))
     debug = os.getenv('DEBUG', 'False').lower() == 'true'
     
-    # Inicializar sistema de bloqueio
-    load_blocked_ips()  # Converter formato se necessário
-    
-    app.logger.info(f"IPs do servidor: {SERVER_IPS}")
-    app.logger.info(f"Redes permitidas: {ALLOWED_IP_RANGES}")
+    print(f" * IPs do servidor: {SERVER_IPS}")
+    print(f" * Redes permitidas: {ALLOWED_IP_RANGES}")
     
     app.run(
         debug=debug,

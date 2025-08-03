@@ -1,17 +1,20 @@
 {% extends "base.html" %}
 
-{% block title %}Painel de Máquinas{% endblock %}
+{% block title %}Erro{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/error.css') }}">
+{% endblock %}
 
 {% block content %}
-
-    <div class="container">
-        <h1>{{ title }}</h1>
-        <p>{{ message }}</p>
-        {% if error_details %}
-        <div class="error-details"></div>
-            <p><strong>Detalhes:</strong> {{ error_details }}</p>
-        </div>
-        {% endif %}
-        <a href="/" class="btn">Voltar à página inicial</a>
+<div class="container">
+    <h1>{{ title }}</h1>
+    <p>{{ message }}</p>
+    {% if error_details %}
+    <div class="error-details">
+        <p><strong>Detalhes:</strong> {{ error_details }}</p>
     </div>
+    {% endif %}
+    <a href="/" class="btn">Voltar à página inicial</a>
+</div>
 {% endblock %}

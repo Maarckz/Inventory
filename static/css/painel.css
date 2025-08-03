@@ -1,0 +1,144 @@
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.machines-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.machine-card {
+    background-color: var(--white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    overflow: hidden;
+    transition: var(--transition);
+    opacity: 0;
+    transform: translateY(30px);
+    animation: fadeInUp 0.4s ease forwards;
+}
+
+.machine-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 15px -3px rgba(99, 101, 241, 0.7), 0 4px 6px -2px rgba(99, 102, 241, 0.7);
+}
+
+.machine-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--light-gray);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.machine-header h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--dark);
+}
+
+.machine-info {
+    padding: 1.5rem;
+}
+
+.info-item {
+    margin-bottom: 1rem;
+}
+
+.info-item:last-child {
+    margin-bottom: 0;
+}
+
+.info-label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--dark-gray);
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+}
+
+.info-value {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--dark);
+    font-weight: 500;
+}
+
+.machine-actions {
+    padding: 0 1.5rem 1.5rem;
+}
+
+.search-container {
+    display: none;
+    opacity: 0;
+    transition: opacity 0.4s;
+}
+
+@keyframes fadeIn {
+    to {
+        opacity: 1;
+    }
+}
+
+.fade-in {
+    opacity: 0;
+    animation: fadeIn 0.6s ease-out forwards;
+}
+.hostname-btn {
+    background-color: #6366F1;
+    color: #fff;
+    width: 145px;
+    text-align: center;
+    padding: 0.5rem 0.5rem;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.search-container {
+    max-width: 1500px;
+    margin: 0 auto;
+    animation: fadeIn 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.search-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.search-form {
+    display: flex;
+    gap: 0.5rem;
+    flex-grow: 1;
+    max-width: 800px;
+}
+
+.search-input {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-input i {
+    position: absolute;
+    left: 12px;
+    color: var(--gray);
+}
+
+.search-input input {
+    padding: 0.5rem 1rem 0.5rem 2.5rem;
+    border: 1px solid var(--light-gray);
+    border-radius: 8px;
+}

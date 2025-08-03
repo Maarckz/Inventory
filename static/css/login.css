@@ -1,0 +1,65 @@
+.login-container {
+    width: 100%;
+    max-width: 400px;
+    animation: fadeIn 0.4s ease forwards;
+    animation-delay: 0.1s;
+}
+
+.login-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    padding: 0 2rem 2rem 2rem;
+    text-align: center;
+    animation: fadeIn 0.4s ease forwards;
+}
+
+.login-logo {
+    margin-bottom: 2rem;
+    color: var(--primary);
+    animation: fadeIn 0.4s ease forwards;
+}
+
+.login-logo img {
+    max-width: 100%;
+    height: auto;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+    text-align: left;
+    animation: fadeIn 0.4s ease forwards;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--dark);
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.alert {
+    animation: fadeIn 0.4s ease forwards;
+    animation-delay: 0.1s;
+}
+
+@keyframes fadeIn {
+    to {
+        opacity: 1;
+    }
+}

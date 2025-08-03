@@ -1,18 +1,100 @@
 {% extends "base.html" %}
 
-{% block title %}Painel de Máquinas{% endblock %}
+{% block title %}Configurações{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}">
+{% endblock %}
 
 {% block content %}
-
-    <div class="container">
-        <h1>{{ title }}</h1>
-        <p>{{ message }}</p>
-        {% if error_details %}
-        <div class="error-details"></div>
-            <p><strong>Detalhes:</strong> {{ error_details }}</p>
+        <div class="settings-card">
+            <div class="settings-card-header">
+                <i class="fas fa-sync-alt"></i>
+                <h3>Sincronização com Wazuh</h3>
+            </div>
+            <div class="settings-card-body">
+                <p>Sincronize os dados do inventário com o Wazuh Manager.</p>
+                <a href="{{ url_for('get_data') }}" class="btn btn-primary">
+                    <i class="fas fa-sync"></i> Sincronizar com Wazuh
+                </a>
+            </div>
         </div>
-        {% endif %}
-        <p>Em breve, envie sua sugestão!</p>
-        <a href="/" class="btn">Voltar à página inicial</a>
-    </div>
+        
+        <div class="settings-card">
+            <div class="settings-card-header">
+                <i class="fas fa-bell"></i>
+                <h3>Notificações</h3>
+            </div>
+            <div class="settings-card-body">
+                <p>Configure suas preferências de notificação.</p>
+                <button class="btn btn-outline" disabled>
+                    Em breve
+                </button>
+            </div>
+        </div>
+
+        <div class="settings-card">
+            <div class="settings-card-header">
+                <i class="fas fa-shield-alt"></i>
+                <h3>Segurança</h3>
+            </div>
+            <div class="settings-card-body">
+                <p>Configurações de segurança e autenticação.</p>
+                <button class="btn btn-outline" disabled>
+                    Em breve
+                </button>
+            </div>
+        </div>
+
+<style>
+    .settings-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-top: 2rem;
+    }
+
+    .settings-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        overflow: hidden;
+        transition: var(--transition);
+    }
+
+    .settings-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 15px -3px rgba(99, 101, 241, 0.6), 0 4px 6px -2px rgba(99, 102, 241, 0.6);
+    }
+
+    .settings-card-header {
+        padding: 1.25rem 1.5rem;
+        background: var(--light);
+        border-bottom: 1px solid var(--light-gray);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .settings-card-header i {
+        color: var(--primary);
+        font-size: 1.25rem;
+    }
+
+    .settings-card-header h3 {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--dark);
+        margin: 0;
+    }
+
+    .settings-card-body {
+        padding: 1.5rem;
+    }
+
+    .settings-card-body p {
+        margin-bottom: 1rem;
+        color: var(--dark-gray);
+    }
+</style>
 {% endblock %}

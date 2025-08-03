@@ -1,0 +1,134 @@
+.machine-details-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem 2rem 2rem;
+}
+
+.details-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.hostname-btn {
+    background-color: #6366F1;
+    color: #fff;
+    padding: 0.5rem 1.15rem;
+    border-radius: 6px;
+    font-size: 1.25rem;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.details-grid {
+    display: block;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.details-section {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+.section-header {
+    padding: 0.5rem 1.5rem;
+    background: var(--light);
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    justify-content: space-between;
+}
+
+.section-header h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--dark);
+    margin: 0;
+}
+
+.section-header i {
+    color: var(--primary);
+}
+
+.toggle-icon {
+    transition: transform 0.3s ease;
+}
+
+.section-body {
+    padding: 1.5rem;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.detail-row:last-child {
+    margin-bottom: 0;
+}
+
+.detail-label {
+    font-weight: 500;
+    color: var(--dark-gray);
+}
+
+.detail-value {
+    font-weight: 600;
+    color: var(--dark);
+    text-align: right;
+}
+
+.table-container {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+th, td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+th {
+    background: var(--light);
+    font-weight: 600;
+    color: var(--dark-gray);
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    position: relative;
+}
+
+th::after {
+    content: '↕';
+    opacity: 0.5;
+}
+
+th.asc::after {
+    content: '↑';
+}
+
+th.desc::after {
+    content: '↓';
+}
+
+.back-button {
+    margin-top: 2rem;
+    text-align: right;
+}
