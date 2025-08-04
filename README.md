@@ -190,17 +190,17 @@ WAZUH_PASSWORD=ma?Pt3XvLxQzpU8.J3rIQ8.dYhxzV?pT
 
 ```
 
-## Installation & Execution
+## Instalação & Execução
 
-1. Clone the repository and configure `.env` as above.
+1. Clone o repositório e configure o arquivo `.env` conforme descrito acima.
    ```bash
    https://github.com/Maarckz/Inventory.git
    ```
-2. Install dependencies:
+3. Install dependencies:
    ```bash
    pip install flask bcrypt requests python-dotenv
    ```
-3. Run the collector (manually or via a button in the UI):
+4. Run the collector (manually or via a button in the UI):
    ```bash
    python3 utils/get_data.py
    ```
@@ -209,9 +209,9 @@ WAZUH_PASSWORD=ma?Pt3XvLxQzpU8.J3rIQ8.dYhxzV?pT
    ```bash
    sudo tar -axf wazuh-install-files.tar wazuh-install-files/wazuh-passwords.txt -O
    ```
-4. Set credentials on utils/get_data.py
+5. Set credentials on utils/get_data.py
 
-5. Create TLS/SSL Cert:
+6. Create TLS/SSL Cert:
   ```bash
   openssl req -x509 -newkey rsa:4096 -nodes -out ssl/cert.pem -keyout ssl/key.pem -days 365 
   ```
@@ -227,13 +227,13 @@ WAZUH_PASSWORD=ma?Pt3XvLxQzpU8.J3rIQ8.dYhxzV?pT
 OBS: É possivel criar e remover usuãrios pelo "./utils/man_users.py" 
 
 
-## Service Configuration
+## Configuração de Serviço
 
-1. Create a file to service
+1. Crie um arquivo para o serviço  
   ```bash
    sudo nano /etc/systemd/system/inventory.service
    ```
-2. Paste the content:
+2. Cole o conteúdo:
 
 ```ini
 [Unit]
@@ -253,19 +253,18 @@ StandardError=journal
 [Install]
 WantedBy=multi-user.target
 ```
-3. Reload System Daemon
+3. Recarregue o daemon do sistema 
 ```bash
 sudo systemctl daemon-reload
 ```
-4. Enable and Start Inventory.service
+4. Habilite e inicie o Inventory.service  
 
 ```bash
  sudo systemctl enable inventory.service && sudo systemctl start inventory.service
  ```
+## Funcionalidade de Pesquisa
+Agora é possível usar tags para filtrar as requisições de busca:
 
-## Search Feature
-
-Now is possible use tags to filter search requests:
 ```ìni
 ports:445                 # Pesquisa por número de porta
 agent_info:10.7.6.20      # Pesquisa em hostname, IP, status ou ID
@@ -274,30 +273,25 @@ inventory:hardware:i7     # Pesquisa em CPU, RAM ou serial da placa
 inventory:packages:chrome # Pesquisa em pacotes instalados
 inventory:processes:python # Pesquisa em processos em execução
 ```
-## Monitoring & Maintenance
+## Monitoramento & Manutenção
+- **Rotinas Recomendadas**  
+  - Execução diária do coletor  
+  - Auditoria periódica do arquivo de usuários (ex: `users.json` ou similar)  
+  - Renovação regular dos certificados SSL  
 
-- **Recommended Routines**  
-  - Daily execution of the collector  
-  - Periodic audit of the user file (e.g., `users.json` or similar)  
-  - Regular renewal of SSL certificates  
 
-## Future Improvements
-
+## Melhorias Futuras
 - **Docker**  
-  - Deploy with docker image
-  - Automation with docker compose (dockerfile)  
-- **Collector**  
-  - Externalize credentials via environment variables  
-  - Parallel execution for scale  
-  - Customizable SSL verification  
-- **Web Application**  
-  - Caching for static data  
-  - Report export (PDF/CSV)  
-  - REST API for external integrations  
-- **Security**  
-  - Multi-factor authentication (MFA)  
-  - Encryption of JSON inventory files  
-  - Detailed access auditing  
-- **Export Relatory**  
-  - Export to PDF or CSV File
-  - Integration with another tool
+  - Implantação com imagem Docker  
+  - Automação com Docker Compose (Dockerfile)  
+
+- **Aplicação Web**  
+  - API REST para integrações externas  
+
+- **Segurança**  
+  - Autenticação multifator (MFA)  
+  - Criptografia dos arquivos JSON do inventário  
+
+- **Exportação de Relatórios**  
+  - Exportar para arquivos PDF ou CSV  
+
