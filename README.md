@@ -217,7 +217,7 @@ pip install flask bcrypt requests python-dotenv
 python3 utils/get_data.py
 ```
 
-6. Criar TLS/SSL Cert:
+5. Criar TLS/SSL Cert:
 ```bash
 openssl req -x509 -newkey rsa:4096 -nodes -out ssl/cert.pem -keyout ssl/key.pem -days 365 
 ```
