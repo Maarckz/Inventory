@@ -158,14 +158,14 @@ INVENTORY
 ## Instalação & Execução
 
 1. Clonar o repositório
-   ```bash
-   git clone https://github.com/Maarckz/Inventory.git
-   ```
+```bash
+git clone https://github.com/Maarckz/Inventory.git
+```
 
 2.Criar o `.env` dentro de Inventory e colar o conteúdo abaixo
-  ```bash
-  cd Inventory && nano .env
-  ```
+```bash
+cd Inventory && nano .env
+```
 
 ## Environment (`.env`)
 ```ini
@@ -209,36 +209,36 @@ sudo tar -axf wazuh-install-files.tar wazuh-install-files/wazuh-passwords.txt -O
 ```
 
 3. Instalar dependências:
-   ```bash
-   pip install flask bcrypt requests python-dotenv
-   ```
+```bash
+pip install flask bcrypt requests python-dotenv
+```
 4. Rodar o coletor (via Painel do Sistema ou Manualmente):
-   ```bash
-   python3 utils/get_data.py
-   ```
+```bash
+python3 utils/get_data.py
+```
 
 6. Criar TLS/SSL Cert:
-  ```bash
-  openssl req -x509 -newkey rsa:4096 -nodes -out ssl/cert.pem -keyout ssl/key.pem -days 365 
-  ```
+```bash
+openssl req -x509 -newkey rsa:4096 -nodes -out ssl/cert.pem -keyout ssl/key.pem -days 365 
+```
 6. Iniciar a aplicação WEB:
-   ```bash
-   python app.py
-   ```
+```bash
+python app.py
+```
 7. Login e Password padrão:
-   ```bash
-   Login: admin
-   Password: Meuadmin123
-   ```
+```bash
+Login: admin
+Password: Meuadmin123
+```
 OBS: É possivel criar e remover usuãrios pelo "./utils/man_users.py" 
 
 
 ## Configuração de Serviço
 
 1. Crie um arquivo para o serviço  
-  ```bash
-   sudo nano /etc/systemd/system/inventory.service
-   ```
+```bash
+sudo nano /etc/systemd/system/inventory.service
+```
 2. Cole o conteúdo:
 
 ```ini
