@@ -89,6 +89,7 @@ Acessível via navegador, com as seguintes funcionalidades:
 ## Estrutura de Pastas
 
 ```
+INVENTORY
 ├── app.py
 ├── data
 │   ├── auth
