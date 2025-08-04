@@ -23,7 +23,7 @@ Wazuh Collector → JSON Data → Flask App → Dashboard / Panel
        └─→ Coleta via API: hardware, SO, rede, portas abertas
 ```
 
-## Core Components
+## Componentes Principais
 
 ### 1. Collector Module
 
@@ -35,30 +35,30 @@ Interage com a API do Wazuh seguindo os passos abaixo:
 - **Classificação de Status**: Marca os dispositivos de acordo com status da última sincronização, entre ativos e inativos.
 - **Local Storage**: Grava arquivos JSON estruturados, nomeados de acordo com o hostname de cada dispositivo.
 
-´´´
-    Dados Coletados
+```
+Dados Coletados
 
-    Informações Básicas
-        Hostname
-        Agent ID
-        Sistema Operacional
-        Arquitetura
-        Serial da placa
-        Última varredura
-    Hardware
-        CPU
-        Núcleos
-        Memória RAM
-    Rede
-        Interfaces de rede
-        Portas de rede abertas
-        Configurações de rede
-    Software
-        Pacotes instalados
-        Processos em execução
-    Classificação de Atividade
-        Dispositivos classificados como ativos ou inativos conforme a última sincronização.
-´´´
+Informações Básicas
+    Hostname
+    Agent ID
+    Sistema Operacional
+    Arquitetura
+    Serial da placa
+    Última varredura
+Hardware
+    CPU
+    Núcleos
+    Memória RAM
+Rede
+    Interfaces de rede
+    Portas de rede abertas
+    Configurações de rede
+Software
+    Pacotes instalados
+    Processos em execução
+Classificação de Atividade
+    Dispositivos classificados como ativos ou inativos conforme a última sincronização.
+```
 
 ### 2. Web Application (Flask)
 
