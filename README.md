@@ -17,10 +17,10 @@ O sistema realiza o inventário dos dispositivos com agentes Wazuh em duas camad
 **Operation Flow**:
 ```
 Wazuh Collector → JSON Data → Flask App → Dashboard / Panel
-       │               │              │             └─→ Visualização por máquina
-       │               │              └─→ Leitura e parsing dos arquivos
-       │               └─→ Armazenamento estruturado por hostname
-       └─→ Coleta via API: hardware, SO, rede, portas abertas
+       │               │              │             └─ Visualização por máquina
+       │               │              └─ Leitura e parsing dos arquivos
+       │               └─ Armazenamento estruturado por hostname
+       └─ Coleta via API: hardware, SO, rede, portas abertas
 ```
 
 ## Componentes Principais
@@ -36,7 +36,7 @@ Interage com a API do Wazuh seguindo os passos abaixo:
 - **Local Storage**: Grava arquivos JSON estruturados, nomeados de acordo com o hostname de cada dispositivo.
 
 ```
-Dados Coletados
+Dados Coletados:
 
 Informações Básicas
     Hostname
@@ -147,13 +147,26 @@ Acessível via navegador, com as seguintes funcionalidades:
 ```
 
 ## Pré-requisitos
-
+- Linux
 - Python 3.8+
 - SIEM WAZUH + Agents Deploy
 - Dependencias: `Flask`, `bcrypt`, `python-dotenv`
 
-## Environment (`.env`)
 
+
+## Instalação & Execução
+
+1. Clonar o repositório
+   ```bash
+   git clone https://github.com/Maarckz/Inventory.git
+   ```
+
+2.Criar o `.env` dentro de Inventory e colar o conteúdo abaixo
+  ```bash
+  cd Inventory && nano .env
+  ```
+
+## Environment (`.env`)
 ```ini
 # Configurações de segurança
 SECRET_KEY=suachavesupersecreta_altere_esta_chave!
@@ -187,39 +200,31 @@ WAZUH_HOST=192.168.56.210
 WAZUH_PORT=55000
 WAZUH_USER=wazuh-wui
 WAZUH_PASSWORD=ma?Pt3XvLxQzpU8.J3rIQ8.dYhxzV?pT
-
 ```
 
-## Instalação & Execução
+Você pode recuperar as credenciais a partir do arquivo .tar do WAZUH com o seguinte comando:
+```bash
+sudo tar -axf wazuh-install-files.tar wazuh-install-files/wazuh-passwords.txt -O
+```
 
-1. Clone o repositório e configure o arquivo `.env` conforme descrito acima.
-   ```bash
-   https://github.com/Maarckz/Inventory.git
-   ```
-3. Install dependencies:
+3. Instalar dependências:
    ```bash
    pip install flask bcrypt requests python-dotenv
    ```
-4. Run the collector (manually or via a button in the UI):
+4. Rodar o coletor (via Painel do Sistema ou Manualmente):
    ```bash
    python3 utils/get_data.py
    ```
-   Here you need to configure wazuh-wui credentials.
-   You can retrieve the credentials from the .tar with the command:
-   ```bash
-   sudo tar -axf wazuh-install-files.tar wazuh-install-files/wazuh-passwords.txt -O
-   ```
-5. Set credentials on utils/get_data.py
 
-6. Create TLS/SSL Cert:
+6. Criar TLS/SSL Cert:
   ```bash
   openssl req -x509 -newkey rsa:4096 -nodes -out ssl/cert.pem -keyout ssl/key.pem -days 365 
   ```
-6. Start the web application:
+6. Iniciar a aplicação WEB:
    ```bash
    python app.py
    ```
-7. Default Login and Password:
+7. Login e Password padrão:
    ```bash
    Login: admin
    Password: Meuadmin123
