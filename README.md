@@ -151,7 +151,7 @@ INVENTORY
 - Linux
 - Python 3.8+
 - SIEM WAZUH + Agents Deploy
-- Dependencias: `Flask`, `bcrypt`, `python-dotenv`
+- Dependencias: `Flask`, `bcrypt`, `python-dotenv`, `qrcode`, `pyotp`, `flask_session`
 
 
 
