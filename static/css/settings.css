@@ -10,7 +10,7 @@
 
 .container > * {
     flex: 1 0 380px; /* Define a fixed size for each card */
-    max-width: 380px;
+    max-width: 1400px;
 }
 
 .container h1 {
@@ -20,7 +20,7 @@
 }
 
 .container p {
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.5rem;
     color: var(--dark-gray);
 }
 
