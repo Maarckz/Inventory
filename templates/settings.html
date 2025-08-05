@@ -4,16 +4,75 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}">
+
+{% endblock %}
+
+{% block extra_js %}
+
 {% endblock %}
 
 {% block content %}
+    <div class="user-info" style="margin: 0 20px;">
+        <div class="user-avatar" >
+            {{ session.username[0] | upper }}
+        </div>
+        <div class="user-details">
+            <div><strong>{{ session.username | upper }}</strong></div>
+            <div class="status-indicator" id="mfa-status">
+                <i class="fas fa-spinner fa-spin"></i>
+                Verificando...
+            </div>
+        </div>
+    </div>
+    <style>
+        .user-info {
+            transition: box-shadow 0.3s;
+        }
+        .user-info:hover {
+            box-shadow: 0 10px 15px -3px rgba(99, 101, 241, 0.7), 0 4px 6px -2px rgba(99, 102, 241, 0.7);
+        }
+    </style>
+
+    <style>
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .user-info {
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        .user-details {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+    </style>
+
+    <script>
+        fetchMfaStatus();
+        function fetchMfaStatus() {
+            fetch('/mfa_status')
+                .then(r => r.json())
+                .then(data => {
+                    const statusElement = document.getElementById('mfa-status');
+                    statusElement.innerHTML = `
+                        <i class="fas fa-${data.enabled ? 'check-circle' : 'times-circle'}"></i>
+                        MFA ${data.enabled ? 'Ativo' : 'Desativado'}
+                    `;
+                    statusElement.className = data.enabled ? 'status-enabled' : 'status-disabled';
+                });
+        }
+    </script>
+
+    <div class="settings-grid">
         <div class="settings-card">
             <div class="settings-card-header">
                 <i class="fas fa-sync-alt"></i>
-                <h3>Sincronização com Wazuh</h3>
+                <h3>SYNC com Wazuh</h3>
             </div>
             <div class="settings-card-body">
-                <p>Sincronize os dados do inventário com o Wazuh Manager.</p>
+                <p>Sincronize os dados do inventário com o Wazuh Manager para manter todas as informações atualizadas.</p>
                 <a href="{{ url_for('get_data') }}" class="btn btn-primary">
                     <i class="fas fa-sync"></i> Sincronizar com Wazuh
                 </a>
@@ -26,32 +85,216 @@
                 <h3>Notificações</h3>
             </div>
             <div class="settings-card-body">
-                <p>Configure suas preferências de notificação.</p>
+                <p>Configure suas preferências de notificação para receber alertas importantes.</p>
                 <button class="btn btn-outline" disabled>
-                    Em breve
+                    <i class="fas fa-clock"></i> Em breve
                 </button>
             </div>
         </div>
 
         <div class="settings-card">
             <div class="settings-card-header">
+                <i class="fas fa-file-pdf"></i>
+                <h3>Exportar Relatório</h3>
+            </div>
+            <div class="settings-card-body">
+                <p>Exporte um relatório completo em PDF com todas as informações do sistema.</p>
+                <button class="btn btn-outline" id="export-pdf-btn">
+                    <i class="fas fa-download"></i> Exportar PDF
+                </button>
+            </div>
+        </div>
+        
+        <div class="settings-card">
+            <div class="settings-card-header">
                 <i class="fas fa-shield-alt"></i>
                 <h3>Segurança</h3>
             </div>
             <div class="settings-card-body">
-                <p>Configurações de segurança e autenticação.</p>
-                <button class="btn btn-outline" disabled>
-                    Em breve
+                <p>Configure a autenticação de dois fatores (MFA) para aumentar a segurança.</p>
+                <button class="btn btn-outline" id="mfa-settings-btn">
+                    <i class="fas fa-lock"></i> Configurar MFA
                 </button>
             </div>
         </div>
+    </div>
 
+    <!-- Modal para MFA -->
+    <div id="mfaModal" class="modal" style="opacity: 0; transition: opacity 0.3s;">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2><i class="fas fa-shield-alt"></i> Autenticação em Duas Etapas</h2>
+            <div id="mfa-modal-body"></div>
+        </div>
+    </div>
+    <script>
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', e => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                    setTimeout(() => modal.style.opacity = 0, 200);
+                }
+            });
+            modal.addEventListener('click', e => {
+                if (!e.target.closest('.modal-content')) {
+                    modal.classList.remove('active');
+                    setTimeout(() => modal.style.opacity = 0, 200);
+                }
+            });
+        });
+    </script>
+
+    <!-- Modal para exportar PDF -->
+    <div id="exportPDFModal" class="modal" style="opacity: 0; transition: opacity 0.3s;">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2><i class="fas fa-file-pdf"></i> Exportar Relatório PDF</h2>
+            <p>Escolha as opções para o relatório:</p>
+            <div class="form-group">
+                <label><input type="checkbox" id="include-details" checked> Incluir detalhes completos</label>
+            </div>
+           <!-- <div class="form-group">
+                <label><input type="checkbox" id="include-charts" checked> Incluir gráficos de análise</label>
+            </div>-->
+            <div class="actions">
+                <button class="btn btn-primary" id="generate-pdf-btn">
+                    <i class="fas fa-file-download"></i> Gerar PDF
+                </button>
+                <button class="btn btn-outline" onclick="document.getElementById('exportPDFModal').classList.remove('active')">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const modals = {
+        mfa: document.getElementById('mfaModal'),
+        pdf: document.getElementById('exportPDFModal')
+    };
+    const closeButtons = document.querySelectorAll('.modal .close');
+
+    // Abre MFA
+    document.getElementById('mfa-settings-btn')
+        .addEventListener('click', () => {
+            fetchMfaStatus();
+            modals.mfa.classList.add('active');
+        });
+    // Abre PDF
+    document.getElementById('export-pdf-btn')
+        .addEventListener('click', () => {
+            modals.pdf.classList.add('active');
+        });
+
+    // Fecha ao clicar no "x"
+    closeButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            btn.closest('.modal').classList.remove('active');
+        });
+    });
+
+    // Fecha ao clicar fora
+    window.addEventListener('click', e => {
+        Object.values(modals).forEach(modal => {
+            if (e.target === modal) {
+                modal.classList.remove('active');
+            }
+        });
+    });
+
+    // Gera PDF
+    document.getElementById('generate-pdf-btn')
+        .addEventListener('click', () => {
+            const include = document.getElementById('include-details').checked ? '1' : '0';
+            window.location.href = `/export_pdf?include_details=${include}`;
+        });
+});
+
+// Funções de MFA...
+function fetchMfaStatus() {
+    fetch('/mfa_status')
+        .then(r => r.json())
+        .then(data => {
+            const body = document.getElementById('mfa-modal-body');
+            if (data.enabled) {
+                body.innerHTML = `
+                    <p>MFA está <strong>habilitada</strong>.</p>
+                    <button class="btn btn-danger" onclick="disableMfa()">Desabilitar MFA</button>`;
+            } else {
+                body.innerHTML = `
+                    <p>MFA está <strong>desabilitada</strong>.</p>
+                    <button class="btn btn-primary" onclick="enableMfa()">Habilitar MFA</button>
+                    <div id="mfa-setup-container" style="display:none;margin-top:1rem;">
+                        <div id="qr-code-container"></div>
+                        <p>Secret: <span id="mfa-secret"></span></p>
+                        <input type="text" id="mfa-code" placeholder="Código de 6 dígitos" class="form-control"/>
+                        <button class="btn btn-success" onclick="verifyMfaSetup()">Verificar</button>
+                    </div>`;
+            }
+        });
+}
+
+function enableMfa() {
+    fetch('/toggle_mfa', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ action:'enable' })
+    }).then(r => r.json()).then(data => {
+        if (data.success) {
+            document.getElementById('mfa-setup-container').style.display = 'block';
+            document.getElementById('qr-code-container')
+                .innerHTML = `<img src="${data.qr_code}" alt="QR Code">`;
+            document.getElementById('mfa-secret').textContent = data.secret;
+        } else {
+            alert('Erro: ' + (data.error||'desconhecido'));
+        }
+    });
+}
+
+function disableMfa() {
+    if (!confirm('Desabilitar MFA?')) return;
+    fetch('/toggle_mfa', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ action:'disable' })
+    }).then(r=>r.json()).then(data=>{
+        if (data.success) {
+            fetchMfaStatus();
+            location.reload();
+
+        } else {
+            alert('Erro: ' + (data.error||'desconhecido'));
+        }
+    });
+}
+
+function verifyMfaSetup() {
+    const code = document.getElementById('mfa-code').value;
+    fetch('/verify_mfa_setup', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ code })
+    }).then(r=>r.json()).then(data=>{
+        if (data.success) {
+            alert('MFA habilitada!');
+            document.getElementById('mfaModal').classList.remove('active');
+            fetchMfaStatus();
+            location.reload();
+            
+        } else {
+            document.getElementById('mfa-error').textContent = 'Erro: ' + (data.error||'código inválido');
+        }
+    });
+}
+</script>
 <style>
+    /* Grid responsivo */
     .settings-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
         gap: 1.5rem;
         margin-top: 2rem;
+        padding: 0 1rem;
     }
 
     .settings-card {
@@ -64,7 +307,8 @@
 
     .settings-card:hover {
         transform: translateY(-3px);
-        box-shadow: 0 10px 15px -3px rgba(99, 101, 241, 0.6), 0 4px 6px -2px rgba(99, 102, 241, 0.6);
+        box-shadow: 0 10px 15px -3px rgba(99, 101, 241, 0.7), 0 4px 6px -2px rgba(99, 102, 241, 0.7);
+
     }
 
     .settings-card-header {
@@ -95,6 +339,166 @@
     .settings-card-body p {
         margin-bottom: 1rem;
         color: var(--dark-gray);
+        line-height: 1.5;
+    }
+
+    /* Modal centralizado */
+    .modal {
+        display: none;
+        position: fixed;
+        /*top: 0;
+        left: 1;*/
+        width: 77%;
+        height: 77%;
+        backdrop-filter: blur(5px);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .modal.active {
+        display: flex;
+        opacity: 1;
+    }
+
+    .modal-content {
+        background: #fff;
+        padding: 2rem;
+        border-radius: 0.75rem;
+        width: 100%;
+        max-width: 600px;
+        position: relative;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        transform: translateY(20px);
+        transition: transform 0.3s ease;
+    }
+
+    .modal.active .modal-content {
+        transform: translateY(0);
+    }
+
+    .close {
+        position: absolute;
+        top: 1rem;
+        right: 1.25rem;
+        font-size: 1.75rem;
+        color: #888;
+        cursor: pointer;
+        transition: color 0.2s;
+        background: none;
+        border: none;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .close:hover {
+        color: #333;
+    }
+
+    .modal h2 {
+        margin-bottom: 1.5rem;
+        color: var(--dark);
+        font-size: 1.5rem;
+        padding-right: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom:0.5rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--light-gray);
+        border-radius: 0.375rem;
+        font-size: 1rem;
+        transition: border-color 0.3s;
+        margin-bottom: 15px;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+    }
+
+    label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        color: var(--dark-gray);
+    }
+
+    #qr-code-container {
+        text-align: center;
+        margin: 1.5rem 0;
+    }
+
+    #qr-code-container img {
+        max-width: 200px;
+        border: 1px solid var(--light-gray);
+        padding: 0.5rem;
+        border-radius: 0.5rem;
+    }
+
+    .actions {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+    }
+
+    /* Status do MFA */
+    .status-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 999px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    .status-enabled {
+        background-color: #dcfce7;
+        color: #166534;
+        padding: 5px;
+        border-radius: 10px;
+    }
+
+    .status-disabled {
+        background-color: #fee2e2;
+        color: #b91c1c;
+        padding: 5px;
+        border-radius: 10px;
+    }
+
+    /* Info do usuário */
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 1rem;
+        padding: 1rem;
+        background: var(--light);
+        border-radius: var(--border-radius);
+    }
+
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: var(--primary);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
     }
 </style>
 {% endblock %}
