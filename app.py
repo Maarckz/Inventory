@@ -1,22 +1,26 @@
 ###########################
 ## IMPORTING BIBLIOTECAS ##
 ###########################
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, make_response
 from logging.handlers import RotatingFileHandler
 from collections import defaultdict
 from dotenv import load_dotenv
 from datetime import datetime
 import ipaddress
-import threading
 import logging
 import bcrypt
 import socket
 import struct
 import fcntl
-import math
 import time
 import json
 import os
+import pyotp
+import qrcode
+from io import BytesIO
+import base64
+from utils.pdf_export import generate_pdf_report
+from flask_session import Session  # Adicionado para sessões server-side
 
 # Carregar variáveis de ambiente
 load_dotenv()
@@ -32,7 +36,14 @@ app.config.update(
     SESSION_COOKIE_SAMESITE='Strict',
     PERMANENT_SESSION_LIFETIME=900,
     MAX_CONTENT_LENGTH=1024 * 1024,
+    SESSION_SALT=os.getenv('SESSION_SALT', 'default_salt_value')
 )
+
+# Configurações de sessão server-side
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_FILE_DIR'] = os.path.join(os.getenv('LOG_DIR'), 'flask_sessions')
+app.config['SESSION_PERMANENT'] = True
+Session(app)
 
 # Configurações do .env
 INVENTORY_DIR = os.getenv('INVENTORY_DIR')
@@ -43,11 +54,11 @@ SSL_KEY = os.getenv('SSL_KEY_PATH')
 USE_HTTPS = os.getenv('USE_HTTPS').lower() == 'true'
 ALLOWED_IP_RANGES = os.getenv('ALLOWED_IP_RANGES').split(',')
 
-# Configurar sistema de logs
 # Criar diretórios necessários
 os.makedirs(INVENTORY_DIR, exist_ok=True)
 os.makedirs(LOG_DIR, exist_ok=True)
 os.makedirs(os.path.dirname(AUTH_FILE), exist_ok=True)
+os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)  # Diretório para sessões
 
 # Configuração SSL
 ssl_context = None
@@ -57,7 +68,6 @@ if USE_HTTPS:
     else:
         app.logger.warning("Certificado SSL não encontrado. Executando HTTP")
 
-    
 # Obter IPs do servidor (apenas interfaces UP, somente IPv4)
 server_ips = {'127.0.0.1', 'localhost'}
 try:
@@ -87,7 +97,6 @@ except Exception as e:
     app.logger.error(f"Erro ao obter IPs do servidor: {str(e)}")
     
 SERVER_IPS = list(server_ips)
-
 
 # Pré-compilar redes permitidas
 compiled_allowed_networks = []
@@ -430,7 +439,7 @@ def is_ip_allowed(ip):
 def check_access():
     """Verifica restrições de IP e registra acesso"""
     client_ip = request.remote_addr
-    user_agent = request.headers.get('User-Agent', 'Desconhecido')
+    #user_agent = request.headers.get('User-Agent', 'Desconhecido')
     
     # Registrar acesso em log de auditoria
     if 'username' in session:
@@ -560,8 +569,19 @@ def login():
         
         # Verificar credenciais
         if user and verify_password(user['password_hash'], password):
+            # Verificar se o usuário tem MFA habilitado
+            if user.get('mfa_enabled', False):
+                # Armazenar temporariamente na sessão que o usuário passou pela primeira etapa
+                session['mfa_username'] = username
+                session['mfa_expire'] = time.time() + 300  # 5 minutos
+                return redirect(url_for('verify_mfa'))
+            
+            # Login sem MFA
             session['username'] = username
-            # Registrar login bem-sucedido
+            session['user_ip'] = client_ip  # Registrar IP de login
+            session['user_agent'] = request.headers.get('User-Agent', '')  # Registrar User-Agent
+            session['login_time'] = time.time()  # Registrar timestamp do login
+            
             security_logger.info(f"LOGIN BEM-SUCEDIDO - Usuário: {username}, IP: {client_ip}")
             return redirect(url_for('dashboard'))
         else:
@@ -570,6 +590,39 @@ def login():
             flash('Credenciais inválidas', 'error')
     
     return render_template('login.html')
+
+@app.route('/verify_mfa', methods=['GET', 'POST'])
+def verify_mfa():
+    """Página de verificação do código MFA"""
+    # Verificar se a sessão de primeira etapa está ativa
+    if 'mfa_username' not in session or time.time() > session.get('mfa_expire', 0):
+        flash('Sessão expirada. Faça login novamente', 'error')
+        session.pop('mfa_username', None)
+        return redirect(url_for('login'))
+    
+    username = session['mfa_username']
+    
+    if request.method == 'POST':
+        code = request.form.get('code', '')
+        users = load_json(AUTH_FILE) or []
+        user = next((u for u in users if u['username'] == username), None)
+        
+        if user and user.get('mfa_enabled', False) and user.get('mfa_secret'):
+            totp = pyotp.TOTP(user['mfa_secret'])
+            if totp.verify(code, valid_window=1):
+                # Login bem-sucedido com MFA
+                session.pop('mfa_username', None)
+                session['username'] = username
+                session['user_ip'] = request.remote_addr  # Registrar IP de login
+                session['user_agent'] = request.headers.get('User-Agent', '')  # Registrar User-Agent
+                session['login_time'] = time.time()  # Registrar timestamp do login
+                
+                security_logger.info(f"LOGIN MFA BEM-SUCEDIDO - Usuário: {username}, IP: {request.remote_addr}")
+                return redirect(url_for('dashboard'))
+        
+        flash('Código MFA inválido', 'error')
+    
+    return render_template('verify_mfa.html')
 
 @app.route('/logout')
 def logout():
@@ -863,6 +916,129 @@ def get_data():
     except Exception as e:
         app.logger.error(f"Erro ao iniciar coleta: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
+# MFA Routes
+@app.route('/mfa_status')
+def mfa_status():
+    if 'username' not in session:
+        return jsonify({'error': 'Não autenticado'}), 401
+    
+    username = session['username']
+    users = load_json(AUTH_FILE) or []
+    user = next((u for u in users if u['username'] == username), None)
+    
+    if user:
+        return jsonify({
+            'enabled': user.get('mfa_enabled', False),
+            'configured': bool(user.get('mfa_secret', ''))
+        })
+    return jsonify({'error': 'Usuário não encontrado'}), 404
+
+@app.route('/toggle_mfa', methods=['POST'])
+def toggle_mfa():
+    if 'username' not in session:
+        return jsonify({'success': False, 'error': 'Não autenticado'}), 401
+    
+    username = session['username']
+    users = load_json(AUTH_FILE) or []
+    user_index = next((i for i, u in enumerate(users) if u['username'] == username), None)
+    
+    if user_index is None:
+        return jsonify({'success': False, 'error': 'Usuário não encontrado'}), 404
+    
+    user = users[user_index]
+    action = request.json.get('action')
+    
+    if action == 'enable':
+        # Gerar novo segredo MFA
+        secret = pyotp.random_base32()
+        user['mfa_secret'] = secret
+        # Não ativa o MFA ainda, aguarda verificação
+        user['mfa_enabled'] = False
+        
+        # Salvar alterações
+        try:
+            with open(AUTH_FILE, 'w') as f:
+                json.dump(users, f)
+            # Gerar QR code
+            totp_uri = pyotp.totp.TOTP(secret).provisioning_uri(
+                name=username,
+                issuer_name="Inventory System"
+            )
+            img = qrcode.make(totp_uri)
+            buffered = BytesIO()
+            img.save(buffered, format="PNG")
+            img_str = base64.b64encode(buffered.getvalue()).decode()
+            qr_code = f"data:image/png;base64,{img_str}"
+            return jsonify({'success': True, 'qr_code': qr_code, 'secret': secret})
+        except Exception as e:
+            app.logger.error(f"Erro ao gerar segredo MFA: {str(e)}")
+            return jsonify({'success': False, 'error': 'Erro ao gerar segredo MFA'}), 500
+    
+    elif action == 'disable':
+        user['mfa_enabled'] = False
+        user['mfa_secret'] = ''
+        try:
+            with open(AUTH_FILE, 'w') as f:
+                json.dump(users, f)
+            return jsonify({'success': True})
+        except Exception as e:
+            app.logger.error(f"Erro ao desabilitar MFA: {str(e)}")
+            return jsonify({'success': False, 'error': 'Erro ao desabilitar MFA'}), 500
+    
+    return jsonify({'success': False, 'error': 'Ação inválida'}), 400
+
+@app.route('/verify_mfa_setup', methods=['POST'])
+def verify_mfa_setup():
+    if 'username' not in session:
+        return jsonify({'success': False, 'error': 'Não autenticado'}), 401
+    
+    username = session['username']
+    code = request.json.get('code', '')
+    
+    users = load_json(AUTH_FILE) or []
+    user_index = next((i for i, u in enumerate(users) if u['username'] == username), None)
+    if user_index is None:
+        return jsonify({'success': False, 'error': 'Usuário não encontrado'}), 404
+    
+    user = users[user_index]
+    if not user.get('mfa_secret'):
+        return jsonify({'success': False, 'error': 'Segredo MFA não encontrado'}), 400
+    
+    totp = pyotp.TOTP(user['mfa_secret'])
+    if totp.verify(code, valid_window=1):
+        # Ativar MFA
+        user['mfa_enabled'] = True
+        users[user_index] = user
+        
+        try:
+            with open(AUTH_FILE, 'w') as f:
+                json.dump(users, f)
+            return jsonify({'success': True})
+        except Exception as e:
+            app.logger.error(f"Erro ao ativar MFA: {str(e)}")
+            return jsonify({'success': False, 'error': 'Erro ao ativar MFA'}), 500
+    else:
+        return jsonify({'success': False, 'error': 'Código inválido'}), 400
+
+# PDF Export
+@app.route('/export_pdf')
+def export_pdf():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+    
+    include_details = request.args.get('include_details', '0') == '1'
+    stats = get_cached_stats()
+    machines = get_cached_machines()
+    
+    # Gerar PDF
+    pdf_buffer = generate_pdf_report(stats, machines, include_details)
+    
+    # Criar resposta
+    response = make_response(pdf_buffer.getvalue())
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = 'attachment; filename=inventory_report.pdf'
+    return response
 
 # Template de erro básico para evitar falhas
 @app.errorhandler(404)
