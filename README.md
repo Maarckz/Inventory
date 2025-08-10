@@ -187,13 +187,6 @@ USE_HTTPS=True
 SSL_CERT_PATH=ssl/cert.pem
 SSL_KEY_PATH=ssl/key.pem
 
-# Proteção contra força bruta
-MAX_LOGIN_ATTEMPTS=3
-LOGIN_BLOCK_TIME=60
-
-# Permitir apenas IPs de uma faixa específica
-ALLOWED_IP_RANGES =192.168.0.0/16
-
 #ARQUIVO DE IPs BLOQUEADOS
 BLOCKED_IPS_FILE=${LOG_DIR}/blocked_ips.json
 
@@ -296,7 +289,7 @@ inventory:processes:python # Pesquisa em processos em execução
 
 - **BackEnd**
   - Filtros por Grupos de Agentes   
-
+  - Proteção contra força bruta
 
 - **Aplicação Web**
   - Exibição de Grupos de Agentes 
