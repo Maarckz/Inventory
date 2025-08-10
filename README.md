@@ -151,7 +151,7 @@ INVENTORY
 - Linux
 - Python 3.8+
 - SIEM WAZUH + Agents Deploy
-- Dependencias: `Flask`, `bcrypt`, `python-dotenv`, `qrcode`, `pyotp`, `flask_session`
+- Dependencias: `Flask`, `bcrypt`, `python-dotenv`, `qrcode`, `pyotp`, `flask_session`, `reportlab`
 
 
 
@@ -209,7 +209,7 @@ sudo tar -axf wazuh-install-files.tar wazuh-install-files/wazuh-passwords.txt -O
 
 3. Instalar dependências:
 ```bash
-pip3 install flask flask_session bcrypt requests python-dotenv qrcode pyotp
+pip3 install flask flask_session bcrypt requests python-dotenv qrcode pyotp reportlab
 ```
 4. Rodar o coletor (via Painel do Sistema ou Manualmente):
 ```bash
