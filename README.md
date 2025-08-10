@@ -187,8 +187,8 @@ USE_HTTPS=True
 SSL_CERT_PATH=ssl/cert.pem
 SSL_KEY_PATH=ssl/key.pem
 
-#ARQUIVO DE IPs BLOQUEADOS
-BLOCKED_IPS_FILE=${LOG_DIR}/blocked_ips.json
+# Permitir apenas IPs de uma faixa específica
+ALLOWED_IP_RANGES =192.168.0.0/16
 
 WAZUH_PROTOCOL=https
 WAZUH_HOST=192.168.56.210
