@@ -210,7 +210,7 @@ sudo tar -axf wazuh-install-files.tar wazuh-install-files/wazuh-passwords.txt -O
 
 3. Instalar dependências:
 ```bash
-pip install flask bcrypt requests python-dotenv
+pip install flask flask_session bcrypt requests python-dotenv qrcode pyotp
 ```
 4. Rodar o coletor (via Painel do Sistema ou Manualmente):
 ```bash
@@ -230,7 +230,9 @@ python app.py
 Login: admin
 Password: Meuadmin123
 ```
-OBS: É possivel criar e remover usuãrios pelo "./utils/man_users.py" 
+OBSERVAÇÕES: 
+1. É possivel criar e remover usuãrios pelo "./utils/man_users.py"
+2. Os dados contidos inicialmente no dahsboard são apenas DEMOS, realize a sincronização para obter os dados reais.
 
 
 ## Configuração de Serviço
