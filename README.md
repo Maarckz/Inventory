@@ -294,11 +294,15 @@ inventory:processes:python # Pesquisa em processos em execução
   - Implantação com imagem Docker  
   - Automação com Docker Compose (Dockerfile)  
 
-- **Aplicação Web**  
+- **BackEnd**
+  - Filtros por Grupos de Agentes   
+
+
+- **Aplicação Web**
+  - Exibição de Grupos de Agentes 
   - API REST para integrações externas  
 
 - **Segurança**  
-  - Autenticação multifator (MFA)  
   - Criptografia dos arquivos JSON do inventário  
 
 - **Exportação de Relatórios**  
