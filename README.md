@@ -20,7 +20,7 @@ Wazuh Collector → JSON Data → Flask App → Dashboard / Panel
        │               │              │             └─ Visualização por máquina
        │               │              └─ Leitura e parsing dos arquivos
        │               └─ Armazenamento estruturado por hostname
-       └─ Coleta via API: hardware, SO, rede, portas abertas
+       └─ Coleta via API: hardware, SO, rede, portas abertas, programas e processos.
 ```
 
 ## Componentes Principais
