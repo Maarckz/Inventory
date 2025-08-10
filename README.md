@@ -68,12 +68,14 @@ Acessível via navegador, com as seguintes funcionalidades:
   - Senhas protegidas com hash bcrypt
   - Bloqueio de IP após tentativas falhas configuráveis
   - Expiração automática da sessão (ex: 30 minutos)
+  - MFA TOTP
 - **Statistical Dashboard**  
   - Total de máquinas cadastradas, ativas e inativas
   - Distribuição de Sistemas Operacionais
   - Tipos de processadores e memória RAM
-  - Portas de Rede mais comun e Serviços
-  - 
+  - Portas de Rede mais comun
+  - Serviços
+  - Processos com maior repetição
 - **Painel de Máquinas**  
   - Lista completa de dispositivos com filtros avançados
 - **Busca Avançada**  
