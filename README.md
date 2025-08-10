@@ -233,7 +233,7 @@ Password: Meuadmin123
 ```
 OBSERVAÇÕES: 
 1. É possivel criar e remover usuãrios pelo "./utils/man_users.py"
-2. Os dados contidos inicialmente no dahsboard são apenas DEMOS, realize a sincronização para obter os dados reais.
+2. Os dados contidos inicialmente sem o SYNC,no dahsboard, são apenas DEMOS, realize o SYNC para obter os dados reais.
 
 
 ## Configuração de Serviço
