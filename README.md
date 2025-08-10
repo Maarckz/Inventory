@@ -175,7 +175,6 @@ INVENTORY_DIR=data/inventory
 AUTH_FILE=data/auth/logins.json
 LOG_DIR=logs
 
-
 # Configurações de rede
 HOST=0.0.0.0
 PORT=8000
