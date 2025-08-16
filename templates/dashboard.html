@@ -19,7 +19,7 @@
                 <i class="fas fa-laptop"></i>
             </div>
             <div class="stat-info">
-                <span class="stat-label">Total de Máquinas</span>
+                <span class="stat-label">{{ translate('Total de Máquinas') }}</span>
                 <span class="stat-value">{{ active_count + inactive_count }}</span>
             </div>
         </div>
@@ -30,7 +30,7 @@
                     <i class="fas fa-check-circle"></i>
                 </div>
                 <div class="stat-info">
-                    <span class="stat-label">Ativas</span>
+                    <span class="stat-label">{{ translate('Ativas') }}</span>
                     <span class="stat-value">
                         {{ active_count }}
                     </span>
@@ -44,7 +44,7 @@
                     <i class="fas fa-times-circle"></i>
                 </div>
                 <div class="stat-info">
-                    <span class="stat-label">Inativas</span>
+                    <span class="stat-label">{{ translate('Inativas') }}</span>
                     <span class="stat-value">
                         {{ inactive_count }}
                     </span>
@@ -57,7 +57,7 @@
 <div class="chart-grid">
     <div class="chart-container">
         <div class="chart-header">
-            <h3>Sistemas Operacionais</h3>
+            <h3>{{ translate('Sistemas Operacionais') }}</h3>
         </div>
         <div class="chart-wrapper">
             <canvas id="osChart"></canvas>
@@ -66,7 +66,7 @@
 
     <div class="chart-container">
         <div class="chart-header">
-            <h3>Processadores</h3>
+            <h3>{{ translate('Processadores') }}</h3>
         </div>
         <div class="chart-wrapper">
             <canvas id="cpuChart"></canvas>
@@ -75,7 +75,7 @@
 
     <div class="chart-container">
         <div class="chart-header">
-            <h3>Memória RAM</h3>
+            <h3>{{ translate('Memória RAM') }}</h3>
         </div>
         <div class="chart-wrapper">
             <canvas id="ramChart"></canvas>
@@ -87,7 +87,7 @@
 <div class="chart-grid">
     <div class="chart-container">
         <div class="chart-header">
-            <h3>Portas de Rede Mais Comuns</h3>
+            <h3>{{ translate('Portas de Rede Mais Comuns') }}</h3>
         </div>
         <div class="chart-wrapper">
             <canvas id="portChart"></canvas>
@@ -96,7 +96,7 @@
 
     <div class="chart-container">
         <div class="chart-header">
-            <h3>Processos Mais Comuns</h3>
+            <h3>{{ translate('Processos Mais Comuns') }}</h3>
         </div>
         <div class="chart-wrapper">
             <canvas id="processChart"></canvas>

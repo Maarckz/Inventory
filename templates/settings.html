@@ -1,16 +1,10 @@
 {% extends "base.html" %}
-
 {% block title %}Configurações{% endblock %}
-
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}">
-
 {% endblock %}
-
 {% block extra_js %}
-
 {% endblock %}
-
 {% block content %}
     <div class="user-info" style="margin: 0 20px;">
         <div class="user-avatar" >
@@ -69,12 +63,12 @@
         <div class="settings-card">
             <div class="settings-card-header">
                 <i class="fas fa-sync-alt"></i>
-                <h3>SYNC com Wazuh</h3>
+                <h3>{{ translate('SYNC com Wazuh') }}</h3>
             </div>
             <div class="settings-card-body">
-                <p>Sincronize os dados do inventário com o Wazuh Manager para manter todas as informações atualizadas.</p>
+                <p>{{ translate('Sincronize os dados do inventário com o Wazuh Manager para manter todas as informações atualizadas.') }}</p>
                 <a href="{{ url_for('get_data') }}" class="btn btn-primary">
-                    <i class="fas fa-sync"></i> Sincronizar com Wazuh
+                    <i class="fas fa-sync"></i>{{ translate('Sincronizar com Wazuh') }}
                 </a>
             </div>
         </div>
@@ -82,12 +76,12 @@
         <div class="settings-card">
             <div class="settings-card-header">
                 <i class="fas fa-bell"></i>
-                <h3>Notificações</h3>
+                <h3>{{ translate('Notificações') }}</h3>
             </div>
             <div class="settings-card-body">
-                <p>Configure suas preferências de notificação para receber alertas importantes.</p>
+                <p>{{ translate('Configure suas preferências de notificação para receber alertas importantes.') }}</p>
                 <button class="btn btn-outline" disabled>
-                    <i class="fas fa-clock"></i> Em breve
+                    <i class="fas fa-clock"></i>{{ translate('Em breve') }}
                 </button>
             </div>
         </div>
@@ -95,12 +89,12 @@
         <div class="settings-card">
             <div class="settings-card-header">
                 <i class="fas fa-file-pdf"></i>
-                <h3>Exportar Relatório</h3>
+                <h3>{{ translate('Exportar Relatório') }}</h3>
             </div>
             <div class="settings-card-body">
-                <p>Exporte um relatório completo em PDF com todas as informações do sistema.</p>
+                <p>{{ translate('Exportar um relatório completo em PDF com todas as informações do sistema') }}</p>
                 <button class="btn btn-outline" id="export-pdf-btn">
-                    <i class="fas fa-download"></i> Exportar PDF
+                    <i class="fas fa-download"></i> {{ translate('Exportar PDF') }}
                 </button>
             </div>
         </div>
@@ -108,22 +102,21 @@
         <div class="settings-card">
             <div class="settings-card-header">
                 <i class="fas fa-shield-alt"></i>
-                <h3>Segurança</h3>
+                <h3>{{ translate('Segurança') }}</h3>
             </div>
             <div class="settings-card-body">
-                <p>Configure a autenticação de dois fatores (MFA) para aumentar a segurança.</p>
+                <p>{{ translate('Configure a autenticação de dois fatores (MFA) para aumentar a segurança.') }}</p>
                 <button class="btn btn-outline" id="mfa-settings-btn">
-                    <i class="fas fa-lock"></i> Configurar MFA
+                    <i class="fas fa-lock"></i> {{ translate('Configurar MFA') }}
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Modal para MFA -->
     <div id="mfaModal" class="modal" style="opacity: 0; transition: opacity 0.3s;">
         <div class="modal-content">
             <span class="close">&times;</span>
-            <h2><i class="fas fa-shield-alt"></i> Autenticação em Duas Etapas</h2>
+            <h2><i class="fas fa-shield-alt"></i>{{ translate('Autenticação em Duas Etapas') }}</h2>
             <div id="mfa-modal-body"></div>
         </div>
     </div>
@@ -144,21 +137,20 @@
         });
     </script>
 
-    <!-- Modal para exportar PDF -->
     <div id="exportPDFModal" class="modal" style="opacity: 0; transition: opacity 0.3s;">
         <div class="modal-content">
             <span class="close">&times;</span>
-            <h2><i class="fas fa-file-pdf"></i> Exportar Relatório PDF</h2>
-            <p>Escolha as opções para o relatório:</p>
+            <h2><i class="fas fa-file-pdf"></i>{{ translate('Exportar Relatório PDF') }}</h2>
+            <p>{{ translate('Escolha as opções para o relatório:') }}</p>
             <div class="form-group">
-                <label><input type="checkbox" id="include-details" checked> Incluir detalhes completos</label>
+                <label><input type="checkbox" id="include-details" checked> {{ translate('Incluir detalhes completos') }}</label>
             </div>
            <!-- <div class="form-group">
                 <label><input type="checkbox" id="include-charts" checked> Incluir gráficos de análise</label>
             </div>-->
             <div class="actions">
                 <button class="btn btn-primary" id="generate-pdf-btn">
-                    <i class="fas fa-file-download"></i> Gerar PDF
+                    <i class="fas fa-file-download"></i> {{ translate('Gerar PDF') }}
                 </button>
                 <button class="btn btn-outline" onclick="document.getElementById('exportPDFModal').classList.remove('active')">
                     Cancelar
@@ -174,26 +166,22 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     const closeButtons = document.querySelectorAll('.modal .close');
 
-    // Abre MFA
     document.getElementById('mfa-settings-btn')
         .addEventListener('click', () => {
             fetchMfaStatus();
             modals.mfa.classList.add('active');
         });
-    // Abre PDF
     document.getElementById('export-pdf-btn')
         .addEventListener('click', () => {
             modals.pdf.classList.add('active');
         });
 
-    // Fecha ao clicar no "x"
     closeButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             btn.closest('.modal').classList.remove('active');
         });
     });
 
-    // Fecha ao clicar fora
     window.addEventListener('click', e => {
         Object.values(modals).forEach(modal => {
             if (e.target === modal) {
@@ -202,7 +190,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Gera PDF
     document.getElementById('generate-pdf-btn')
         .addEventListener('click', () => {
             const include = document.getElementById('include-details').checked ? '1' : '0';
@@ -210,7 +197,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 });
 
-// Funções de MFA...
 function fetchMfaStatus() {
     fetch('/mfa_status')
         .then(r => r.json())

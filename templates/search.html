@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Pesquisa de Máquinas{% endblock %}
+{% block title %}{{ translate('Pesquisa de Máquinas') }}{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/search.css') }}">
@@ -16,15 +16,15 @@
         <form method="GET" action="{{ url_for('search') }}" class="search-form">
             <div class="search-input">
                 <i class="fas fa-search"></i>
-                <input type="text" name="query" placeholder="Pesquisar por hostname, SO ou processador..."
+                <input type="text" name="query" placeholder="{{ translate('Pesquisar por hostname, SO ou processador...') }}"
                     value="{{ request.args.get('query', '') }}">
             </div>
             <button type="submit" class="btn btn-primary">
-                Pesquisar
+                {{ translate('Pesquisar') }}
             </button>
         </form>
         <div class="results-count">
-            {{ results|length }} resultado(s) encontrado(s)
+            {{ results|length }} {{ translate('resultado(s) encontrado(s)') }}
         </div>
     </div>
 
@@ -33,16 +33,16 @@
         <table class="machine-table">
             <thead>
                 <tr>
-                    <th data-sort="hostname">Hostname <i class="sort-icon"></i></th>
-                    <th data-sort="ip">IP Address <i class="sort-icon"></i></th>
-                    <th data-sort="os">Sistema Operacional <i class="sort-icon"></i></th>
-                    <th data-sort="kernel">Kernel <i class="sort-icon"></i></th>
-                    <th data-sort="arch">Arch <i class="sort-icon"></i></th>
-                    <th data-sort="cpu">CPU <i class="sort-icon"></i></th>
-                    <th data-sort="cores">Núcleos <i class="sort-icon"></i></th>
-                    <th data-sort="ram">Memória (GB) <i class="sort-icon"></i></th>
-                    <th data-sort="status">Status <i class="sort-icon"></i></th>
-                    <th data-sort="lastseen">Última Atividade <i class="sort-icon"></i></th>
+                    <th data-sort="hostname">{{ translate('Hostname') }} <i class="sort-icon"></i></th>
+                    <th data-sort="ip">{{ translate('IP Address') }} <i class="sort-icon"></i></th>
+                    <th data-sort="os">{{ translate('Sistema Operacional') }} <i class="sort-icon"></i></th>
+                    <th data-sort="kernel">{{ translate('Kernel') }} <i class="sort-icon"></i></th>
+                    <th data-sort="arch">{{ translate('Arch') }} <i class="sort-icon"></i></th>
+                    <th data-sort="cpu">{{ translate('CPU') }} <i class="sort-icon"></i></th>
+                    <th data-sort="cores">{{ translate('Núcleos') }} <i class="sort-icon"></i></th>
+                    <th data-sort="ram">{{ translate('Memória (GB)') }} <i class="sort-icon"></i></th>
+                    <th data-sort="status">{{ translate('Status') }} <i class="sort-icon"></i></th>
+                    <th data-sort="lastseen">{{ translate('Última Atividade') }} <i class="sort-icon"></i></th>
                 </tr>
             </thead>
             <tbody>
@@ -82,9 +82,9 @@
     {% else %}
     <div class="no-results">
         <i class="fas fa-search"></i>
-        <p>Nenhum resultado encontrado</p>
+        <p>{{ translate('Nenhum resultado encontrado') }}</p>
         {% if request.args.get('query') %}
-        <p>Tente ajustar sua pesquisa</p>
+        <p>{{ translate('Tente ajustar sua pesquisa') }}</p>
         {% endif %}
     </div>
     {% endif %}

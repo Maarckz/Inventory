@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Painel de Máquinas{% endblock %}
+{% block title %}{{ translate('Painel de Máquinas') }}{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/painel.css') }}">
@@ -13,7 +13,7 @@
 {% block content %}
 <div class="panel-header">
     <a href="#" id="show-search" class="btn btn-primary fade-in">
-        <i class="fas fa-search"></i> Pesquisar Máquinas
+        <i class="fas fa-search"></i> {{ translate('Pesquisar Máquinas') }}
     </a>
     <style>
     .fade-in {
@@ -32,11 +32,11 @@
         <form method="GET" action="{{ url_for('search') }}" class="search-form">
             <div class="search-input">
                 <i class="fas fa-search"></i>
-                <input type="text" name="query" placeholder="Pesquisar por hostname, SO ou processador..."
+                <input type="text" name="query" placeholder="{{ translate('Pesquisar por hostname, SO ou processador...') }}"
                     value="{{ request.args.get('query', '') }}">
             </div>
             <button type="submit" class="btn btn-primary">
-                Pesquisar
+                {{ translate('Pesquisar') }}
             </button>
         </form>
     </div>
@@ -57,29 +57,29 @@
 
         <div class="machine-info">
             <div class="info-item">
-                <span class="info-label">Sistema Operacional</span>
+                <span class="info-label">{{ translate('Sistema Operacional') }}</span>
                 <span class="info-value">{{ machine.os_name }}</span>
             </div>
 
             <div class="info-item">
-                <span class="info-label">Processador</span>
+                <span class="info-label">{{ translate('Processador') }}</span>
                 <span class="info-value">{{ machine.cpu_name }}</span>
             </div>
 
             <div class="info-item">
-                <span class="info-label">Memória RAM</span>
+                <span class="info-label">{{ translate('Memória RAM') }}</span>
                 <span class="info-value">{{ machine.ram_total }} GB</span>
             </div>
 
             <div class="info-item">
-                <span class="info-label">Última Atividade</span>
+                <span class="info-label">{{ translate('Última Atividade') }}</span>
                 <span class="info-value">{{ machine.last_seen | formatar_data }}</span>
             </div>
         </div>
 
         <div class="machine-actions">
             <a href="{{ url_for('machine_details', hostname=machine.hostname) }}" class="btn btn-sm btn-primary">
-                <i class="fas fa-eye"></i> Detalhes
+                <i class="fas fa-eye"></i> {{ translate('Detalhes') }}
             </a>
         </div>
     </div>

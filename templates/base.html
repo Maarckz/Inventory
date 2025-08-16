@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.png') }}">
     {% block extra_css %}{% endblock %}
+    
 </head>
 <body>
     <div class="app-container">
@@ -17,24 +18,43 @@
                     <img src="{{ url_for('static', filename='mlogo.svg') }}" alt="Logo" class="app-logo">
                 </a>
                 <nav class="app-nav">
-                    <a href="{{ url_for('dashboard') }}" class="nav-link">
-                        <i class="fas fa-chart-pie"></i> Dashboard
+                    <a href="{{ url_for('dashboard') }}" class="nav-link {{ 'active' if request.endpoint == 'dashboard' }}">
+                        <i class="fas fa-chart-pie"></i> {{ translate('Dashboard') }}
                     </a>
-                    <a href="{{ url_for('painel') }}" class="nav-link">
-                        <i class="fas fa-laptop"></i> Painel
+                    <a href="{{ url_for('painel') }}" class="nav-link {{ 'active' if request.endpoint == 'painel' }}">
+                        <i class="fas fa-laptop"></i> {{ translate('Painel') }}
                     </a>
-                    <a href="{{ url_for('search') }}" class="nav-link">
-                        <i class="fas fa-search"></i> Pesquisa
+                    <a href="{{ url_for('search') }}" class="nav-link {{ 'active' if request.endpoint == 'search' }}">
+                        <i class="fas fa-search"></i> {{ translate('Pesquisa') }}
                     </a>
-                    <a href="{{ url_for('settings') }}" class="nav-link">
-                        <i class="fas fa-cog"></i> Configurações
+                    <a href="{{ url_for('settings') }}" class="nav-link {{ 'active' if request.endpoint == 'settings' }}">
+                        <i class="fas fa-cog"></i> {{ translate('Configurações') }}
                     </a>
+
+                    <!-- Seletor de idiomas -->
+                <div class="language-selector">
+                    <select onchange="window.location.href='/set_language/' + this.value">
+                        <option value="pt" {% if session.get('language', 'pt') == 'pt' %}selected{% endif %}>
+                            🇧🇷 Português
+                        </option>
+                        <option value="en" {% if session.get('language', 'pt') == 'en' %}selected{% endif %}>
+                            🇺🇸 English
+                        </option>
+                        <option value="es" {% if session.get('language', 'pt') == 'es' %}selected{% endif %}>
+                            🇪🇸 Español
+                        </option>
+                    </select>
+                </div>
+
+
                     {% if 'username' in session %}
                         <a href="{{ url_for('logout') }}" class="nav-link">
-                            <i class="fas fa-sign-out-alt"></i> Sair
+                            <i class="fas fa-sign-out-alt"></i> {{ translate('Sair') }}
                         </a>
                     {% endif %}
                 </nav>
+                
+                
             </div>
         </header>
         
@@ -44,7 +64,7 @@
                     {% if messages %}
                         {% for category, message in messages %}
                             <div class="alert alert-{{ category }}">
-                                {{ message }}
+                                <span>{{ message }}</span>
                                 <button class="alert-close" onclick="this.parentElement.remove()">
                                     <i class="fas fa-times"></i>
                                 </button>
