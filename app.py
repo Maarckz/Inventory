@@ -3,9 +3,13 @@
 ###########################
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, make_response
 from logging.handlers import RotatingFileHandler
+from utils.pdf_export import generate_pdf_report
+from utils.language import LANGUAGES
 from collections import defaultdict
+from flask_session import Session
 from dotenv import load_dotenv
 from datetime import datetime
+from io import BytesIO
 import ipaddress
 import logging
 import bcrypt
@@ -17,19 +21,14 @@ import json
 import os
 import pyotp
 import qrcode
-from io import BytesIO
 import base64
-from utils.pdf_export import generate_pdf_report
-from flask_session import Session  # Adicionado para sessões server-side
 
-# Carregar variáveis de ambiente
 load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY')
 app.config['STATIC_FOLDER'] = 'static'
 
-# Configurações de hardening
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SECURE=True,
@@ -39,13 +38,11 @@ app.config.update(
     SESSION_SALT=os.getenv('SESSION_SALT', 'default_salt_value')
 )
 
-# Configurações de sessão server-side
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SESSION_FILE_DIR'] = os.path.join(os.getenv('LOG_DIR'), 'flask_sessions')
 app.config['SESSION_PERMANENT'] = True
 Session(app)
 
-# Configurações do .env
 INVENTORY_DIR = os.getenv('INVENTORY_DIR')
 LOG_DIR = os.getenv('LOG_DIR')
 AUTH_FILE = os.getenv('AUTH_FILE')
@@ -54,13 +51,11 @@ SSL_KEY = os.getenv('SSL_KEY_PATH')
 USE_HTTPS = os.getenv('USE_HTTPS').lower() == 'true'
 ALLOWED_IP_RANGES = os.getenv('ALLOWED_IP_RANGES').split(',')
 
-# Criar diretórios necessários
 os.makedirs(INVENTORY_DIR, exist_ok=True)
 os.makedirs(LOG_DIR, exist_ok=True)
 os.makedirs(os.path.dirname(AUTH_FILE), exist_ok=True)
 os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)  # Diretório para sessões
 
-# Configuração SSL
 ssl_context = None
 if USE_HTTPS:
     if os.path.exists(SSL_CERT) and os.path.exists(SSL_KEY):
@@ -68,16 +63,13 @@ if USE_HTTPS:
     else:
         app.logger.warning("Certificado SSL não encontrado. Executando HTTP")
 
-# Obter IPs do servidor (apenas interfaces UP, somente IPv4)
 server_ips = {'127.0.0.1', 'localhost'}
 try:
     for iface in os.listdir('/sys/class/net'):
         try:
-            # Verifica se a interface está UP
             with open(f'/sys/class/net/{iface}/operstate') as f:
                 if f.read().strip() != 'up':
                     continue
-            # Obtém o IP IPv4 da interface
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             try:
                 ip = socket.inet_ntoa(fcntl.ioctl(
@@ -98,7 +90,6 @@ except Exception as e:
     
 SERVER_IPS = list(server_ips)
 
-# Pré-compilar redes permitidas
 compiled_allowed_networks = []
 if ALLOWED_IP_RANGES and any(ALLOWED_IP_RANGES):
     for ip_range in ALLOWED_IP_RANGES:
@@ -109,44 +100,35 @@ if ALLOWED_IP_RANGES and any(ALLOWED_IP_RANGES):
             except ValueError as e:
                 app.logger.error(f"Rede inválida {ip_range}: {str(e)}")
 
-# Configurar loggers para diferentes níveis
 def setup_logging():
-    # Formato comum para todos os logs
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
     
-    # Handler para INFO
     info_handler = RotatingFileHandler(os.path.join(LOG_DIR, 'info.log'), maxBytes=10*1024*1024, backupCount=5)
     info_handler.setLevel(logging.INFO)
     info_handler.setFormatter(formatter)
     
-    # Handler para WARNING
     warning_handler = RotatingFileHandler(os.path.join(LOG_DIR, 'warning.log'), maxBytes=10*1024*1024, backupCount=5)
     warning_handler.setLevel(logging.WARNING)
     warning_handler.setFormatter(formatter)
     
-    # Handler para ERROR
     error_handler = RotatingFileHandler(os.path.join(LOG_DIR, 'error.log'), maxBytes=10*1024*1024, backupCount=5)
     error_handler.setLevel(logging.ERROR)
     error_handler.setFormatter(formatter)
     
-    # Handler para SECURITY
     security_handler = RotatingFileHandler(os.path.join(LOG_DIR, 'security.log'), maxBytes=10*1024*1024, backupCount=5)
     security_handler.setLevel(logging.INFO)
     security_handler.setFormatter(logging.Formatter('%(asctime)s - SECURITY - %(message)s'))
     
-    # Logger principal
     app.logger.setLevel(logging.DEBUG)
     app.logger.addHandler(info_handler)
     app.logger.addHandler(warning_handler)
     app.logger.addHandler(error_handler)
     
-    # Logger de segurança
     security_logger = logging.getLogger('security')
     security_logger.setLevel(logging.INFO)
     security_logger.addHandler(security_handler)
     security_logger.propagate = False
     
-    # Logger de auditoria
     audit_logger = logging.getLogger('audit')
     audit_handler = RotatingFileHandler(os.path.join(LOG_DIR, 'audit.log'), maxBytes=10*1024*1024, backupCount=5)
     audit_handler.setFormatter(logging.Formatter('%(asctime)s - %(message)s'))
@@ -156,13 +138,10 @@ def setup_logging():
 
 setup_logging()
 
-# Obter loggers para uso
 security_logger = logging.getLogger('security')
 audit_logger = logging.getLogger('audit')
 
-# Funções auxiliares
 def load_json(file_path):
-    """Carrega dados JSON de um arquivo com tratamento de erros"""
     try:
         if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
             with open(file_path, 'r', encoding='utf-8') as f:
@@ -173,7 +152,6 @@ def load_json(file_path):
         return None
 
 def load_all_json_files(directory):
-    """Carrega todos os arquivos JSON de um diretório"""
     data = []
     try:
         for filename in os.listdir(directory):
@@ -186,13 +164,11 @@ def load_all_json_files(directory):
         app.logger.error(f"Erro ao listar arquivos: {str(e)}")
     return data
 
-# Cache para máquinas e estatísticas
 MACHINES_CACHE = {'data': None, 'last_update': 0}
 STATS_CACHE = {'data': None, 'last_update': 0}
 CACHE_TIMEOUT = 15
 
 def get_cached_machines():
-    """Obtém máquinas com cache"""
     current_time = time.time()
     if not MACHINES_CACHE['data'] or (current_time - MACHINES_CACHE['last_update']) > CACHE_TIMEOUT:
         MACHINES_CACHE['data'] = get_all_machines()
@@ -200,7 +176,6 @@ def get_cached_machines():
     return MACHINES_CACHE['data']
 
 def get_cached_stats():
-    """Obtém estatísticas com cache"""
     current_time = time.time()
     if not STATS_CACHE['data'] or (current_time - STATS_CACHE['last_update']) > CACHE_TIMEOUT:
         machines = get_cached_machines()
@@ -210,7 +185,6 @@ def get_cached_stats():
 
 
 def formatar_data(data_iso):
-    """Formata data ISO para formato legível"""
     try:
         data = datetime.fromisoformat(data_iso)
         return data.strftime('%d/%m/%Y %H:%M')
@@ -220,7 +194,6 @@ def formatar_data(data_iso):
 app.jinja_env.filters['formatar_data'] = formatar_data
 
 def get_machine_stats(machines):
-    """Gera estatísticas das máquinas"""
     stats = {
         'os': defaultdict(int),
         'cpu': defaultdict(int),
@@ -267,20 +240,16 @@ def get_machine_stats(machines):
             ram_range = 'Unknown'
         stats['ram'][ram_range] += 1
         
-        # Process status
         status = machine.get('device_status', 'Inativo')
         stats['status'][status] += 1
         
-         # Process port stats
         for port in machine.get('ports', []):
             ip = port.get('local', {}).get('ip', '')
-            # Verificar se é IPv4: se contém ponto ou se é um endereço IPv4 válido
             if ip and '.' in ip:  # Simplificação, mas eficaz
                 port_number = port.get('local', {}).get('port', 'Unknown')
                 if port_number != 'N/A' and port_number != 'Unknown':
                     stats['ports'][str(port_number)] += 1
         
-        # Process process stats
         for proc in machine.get('processes', []):
             proc_name = proc.get('name', 'Unknown')
             if proc_name != 'N/A' and proc_name != 'Unknown':
@@ -292,7 +261,6 @@ def get_machine_stats(machines):
         
 
 def process_machine_data(raw_data):
-    """Processa dados brutos da máquina para formato de exibição"""
     if not raw_data or 'agent_info' not in raw_data:
         return None
         
@@ -396,7 +364,6 @@ def process_machine_data(raw_data):
     return processed
 
 def get_all_machines():
-    """Obtém e processa todos os dados das máquinas"""
     raw_machines = load_all_json_files(INVENTORY_DIR)
     machines = []
     for machine in raw_machines:
@@ -406,7 +373,6 @@ def get_all_machines():
     return machines
 
 def verify_password(stored_hash, password):
-    """Verifica senha usando bcrypt"""
     try:
         if stored_hash.startswith('$2b$'):
             return bcrypt.checkpw(password.encode('utf-8'), stored_hash.encode('utf-8'))
@@ -416,11 +382,9 @@ def verify_password(stored_hash, password):
         return False
 
 def is_ip_allowed(ip):
-    """Verifica se o IP está em um dos ranges permitidos"""
     if not compiled_allowed_networks:
-        return True  # Permite todos se não houver ranges definidos
+        return True 
     
-    # Sempre permitir IPs do servidor
     if ip in SERVER_IPS:
         return True
         
@@ -434,14 +398,11 @@ def is_ip_allowed(ip):
     
     return False
 
-# Middleware para verificar IP e tentativas de login
 @app.before_request
 def check_access():
-    """Verifica restrições de IP e registra acesso"""
     client_ip = request.remote_addr
     #user_agent = request.headers.get('User-Agent', 'Desconhecido')
     
-    # Registrar acesso em log de auditoria
     if 'username' in session:
         username = session['username']
     else:
@@ -457,7 +418,9 @@ def check_access():
 
 # Rotas
 @app.route('/')
+@app.route('/dashboard')
 def dashboard():
+    
     if 'username' not in session:
         return redirect(url_for('login'))
     
@@ -476,7 +439,6 @@ def get_chart_data():
     stats = get_cached_stats()
     machines = get_cached_machines()
     
-    # Mapeamento de serviços conhecidos
     common_services = {
         '22': 'SSH',
         '80': 'HTTP',
@@ -492,7 +454,6 @@ def get_chart_data():
         '9200': 'Elk'
     }
     
-    # Coletar informações sobre as portas
     port_details = defaultdict(lambda: {'count': 0, 'protocol': 'tcp'})
     
     for machine in machines:
@@ -502,17 +463,14 @@ def get_chart_data():
             
             if port_num and port_num != 'N/A':
                 port_details[port_num]['count'] += 1
-                # Manter o protocolo mais comum
-                if protocol == 'udp':  # Sobrescreve apenas se for UDP (para simplificar)
+                if protocol == 'udp':  
                     port_details[port_num]['protocol'] = protocol
     
-    # Ordenar e pegar as top 10 portas
     sorted_ports = sorted(port_details.items(), key=lambda x: x[1]['count'], reverse=True)[:10]
     
-    # Preparar dados para o gráfico
     port_labels = []
     port_data = []
-    port_protocols = []  # Nova lista para armazenar os protocolos
+    port_protocols = []  
     
     for port, details in sorted_ports:
         service = common_services.get(port, '')
@@ -525,9 +483,8 @@ def get_chart_data():
         
         port_labels.append(label)
         port_data.append(details['count'])
-        port_protocols.append(details['protocol'])  # 'tcp' ou 'udp'
-    
-    # Ordenar e pegar os top 10 processos
+        port_protocols.append(details['protocol'])  
+
     sorted_processes = sorted(stats['processes'].items(), key=lambda x: x[1], reverse=True)[:10]
     process_labels = [proc for proc, count in sorted_processes]
     process_data = [count for proc, count in sorted_processes]
@@ -542,7 +499,7 @@ def get_chart_data():
         'ram_data': list(stats['ram'].values()),
         'port_labels': port_labels,
         'port_data': port_data,
-        'port_protocols': port_protocols,  # Enviar os protocolos para o frontend
+        'port_protocols': port_protocols,  
         'process_labels': process_labels,
         'process_data': process_data
     })
@@ -553,49 +510,42 @@ def login():
         return redirect(url_for('dashboard'))
     
     if request.method == 'POST':
-        # Limitar tamanho das entradas
         username = request.form.get('username', '')[:50]
         password = request.form.get('password', '')[:100]
         client_ip = request.remote_addr
         
-        # Validar entradas
         if not username or not password:
             flash('Preencha todos os campos', 'error')
+            #flash(translate('Preencha todos os campos'), 'categoria')
             return render_template('login.html')
         
-        # Carregar usuários
         users = load_json(AUTH_FILE) or []
         user = next((u for u in users if u['username'] == username), None)
         
-        # Verificar credenciais
         if user and verify_password(user['password_hash'], password):
-            # Verificar se o usuário tem MFA habilitado
             if user.get('mfa_enabled', False):
-                # Armazenar temporariamente na sessão que o usuário passou pela primeira etapa
                 session['mfa_username'] = username
-                session['mfa_expire'] = time.time() + 300  # 5 minutos
+                session['mfa_expire'] = time.time() + 300  
                 return redirect(url_for('verify_mfa'))
             
-            # Login sem MFA
             session['username'] = username
-            session['user_ip'] = client_ip  # Registrar IP de login
-            session['user_agent'] = request.headers.get('User-Agent', '')  # Registrar User-Agent
-            session['login_time'] = time.time()  # Registrar timestamp do login
+            session['user_ip'] = client_ip  
+            session['user_agent'] = request.headers.get('User-Agent', '') 
+            session['login_time'] = time.time() 
             
             security_logger.info(f"LOGIN BEM-SUCEDIDO - Usuário: {username}, IP: {client_ip}")
             return redirect(url_for('dashboard'))
         else:
-            # Registrar tentativa falha
             security_logger.warning(f"TENTATIVA DE LOGIN FALHA - Usuário: {username}, IP: {client_ip}")
+            #flash(translate('Credenciais inválidas'), 'categoria')
             flash('Credenciais inválidas', 'error')
     
     return render_template('login.html')
 
 @app.route('/verify_mfa', methods=['GET', 'POST'])
 def verify_mfa():
-    """Página de verificação do código MFA"""
-    # Verificar se a sessão de primeira etapa está ativa
     if 'mfa_username' not in session or time.time() > session.get('mfa_expire', 0):
+        #flash(translate('Sessão expirada. Faça login novamente'), 'categoria')
         flash('Sessão expirada. Faça login novamente', 'error')
         session.pop('mfa_username', None)
         return redirect(url_for('login'))
@@ -610,16 +560,16 @@ def verify_mfa():
         if user and user.get('mfa_enabled', False) and user.get('mfa_secret'):
             totp = pyotp.TOTP(user['mfa_secret'])
             if totp.verify(code, valid_window=1):
-                # Login bem-sucedido com MFA
                 session.pop('mfa_username', None)
                 session['username'] = username
-                session['user_ip'] = request.remote_addr  # Registrar IP de login
-                session['user_agent'] = request.headers.get('User-Agent', '')  # Registrar User-Agent
-                session['login_time'] = time.time()  # Registrar timestamp do login
+                session['user_ip'] = request.remote_addr  
+                session['user_agent'] = request.headers.get('User-Agent', '') 
+                session['login_time'] = time.time() 
                 
                 security_logger.info(f"LOGIN MFA BEM-SUCEDIDO - Usuário: {username}, IP: {request.remote_addr}")
                 return redirect(url_for('dashboard'))
         
+        #flash(translate('Código MFA inválido'), 'categoria')
         flash('Código MFA inválido', 'error')
     
     return render_template('verify_mfa.html')
@@ -662,18 +612,15 @@ def search():
     if 'username' not in session:
         return redirect(url_for('login'))
     
-    # Validar e sanitizar entrada
     query = request.args.get('query', '')[:100].strip().lower()
     machines = get_cached_machines()
     
     if query:
-        # Verificar se é uma pesquisa por RAM (ex: "ram_gb:3-4gb")
         if query.startswith('ram_gb:'):
-            ram_query = query[7:]  # Remove 'ram_gb:'
+            ram_query = query[7:] 
             results = []
             added_hostnames = set()
             
-            # Definir os ranges de RAM
             ram_ranges = {
                 "0-2gb": (0, 2),
                 "3-4gb": (3, 4),
@@ -687,7 +634,6 @@ def search():
                 "64+gb": (65, float('inf'))
             }
             
-            # Verificar se o query é um range válido
             if ram_query in ram_ranges:
                 min_ram, max_ram = ram_ranges[ram_query]
                 
@@ -699,12 +645,10 @@ def search():
                         
                     ram_gb = m.get('ram_gb', 0)
                     
-                    # Verificar se a RAM está no range
                     if ram_gb >= min_ram and ram_gb <= max_ram:
                         results.append(m)
                         added_hostnames.add(hostname)
             else:
-                # Se não for um range válido, tentar como valor exato
                 try:
                     ram_value = float(ram_query.replace('gb', ''))
                     for m in machines:
@@ -719,12 +663,10 @@ def search():
                             results.append(m)
                             added_hostnames.add(hostname)
                 except ValueError:
-                    # Se não for um número válido, retornar vazio
                     pass
             
             return render_template('search.html', results=results)
         
-        # Restante da função original para outros tipos de pesquisa
         if ':' in query:
             tag_parts = query.split(':', 2)
             tag = tag_parts[0].strip()
@@ -799,7 +741,6 @@ def search():
                     results.append(m)
                     added_hostnames.add(hostname)
         else:
-            # Pesquisa geral (sem tag)
             results = []
             added_hostnames = set()
             
@@ -880,8 +821,8 @@ def machine_details(hostname):
     if 'username' not in session:
         return redirect(url_for('login'))
     
-    # Validar hostname
     if not hostname.replace('.', '').replace('-', '').isalnum():
+        #flash(translate('Nome de host inválido'), 'categoria')
         flash('Nome de host inválido', 'error')
         return redirect(url_for('painel'))
     
@@ -889,6 +830,7 @@ def machine_details(hostname):
     machine = next((m for m in machines if m.get('hostname') == hostname), None)
     
     if not machine:
+        #flash(translate('Máquina não encontrada'), 'categoria')
         flash('Máquina não encontrada', 'error')
         return redirect(url_for('painel'))
     
@@ -911,13 +853,13 @@ def get_data():
     try:
         os.popen(f'python3 {script_path} &')
         app.logger.info("Coleta de dados iniciada")
+        #flash(translate('Coleta de dados iniciada, aguarde alguns minutos.'), 'categoria')
         flash('Coleta de dados iniciada, aguarde alguns minutos.', 'success')
         return redirect(url_for('dashboard'))
     except Exception as e:
         app.logger.error(f"Erro ao iniciar coleta: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
-# MFA Routes
 @app.route('/mfa_status')
 def mfa_status():
     if 'username' not in session:
@@ -950,10 +892,8 @@ def toggle_mfa():
     action = request.json.get('action')
     
     if action == 'enable':
-        # Gerar novo segredo MFA
         secret = pyotp.random_base32()
         user['mfa_secret'] = secret
-        # Não ativa o MFA ainda, aguarda verificação
         user['mfa_enabled'] = False
         
         # Salvar alterações
@@ -1007,7 +947,6 @@ def verify_mfa_setup():
     
     totp = pyotp.TOTP(user['mfa_secret'])
     if totp.verify(code, valid_window=1):
-        # Ativar MFA
         user['mfa_enabled'] = True
         users[user_index] = user
         
@@ -1021,7 +960,6 @@ def verify_mfa_setup():
     else:
         return jsonify({'success': False, 'error': 'Código inválido'}), 400
 
-# PDF Export
 @app.route('/export_pdf')
 def export_pdf():
     if 'username' not in session:
@@ -1031,16 +969,35 @@ def export_pdf():
     stats = get_cached_stats()
     machines = get_cached_machines()
     
-    # Gerar PDF
     pdf_buffer = generate_pdf_report(stats, machines, include_details)
     
-    # Criar resposta
     response = make_response(pdf_buffer.getvalue())
     response.headers['Content-Type'] = 'application/pdf'
     response.headers['Content-Disposition'] = 'attachment; filename=inventory_report.pdf'
     return response
 
-# Template de erro básico para evitar falhas
+
+def translate(key, lang=None):
+    if not lang:
+        lang = session.get('language', 'pt')
+    
+    return LANGUAGES.get(lang, {}).get(key, LANGUAGES['pt'].get(key, key))
+
+# Context processor para templates
+@app.context_processor
+def inject_translations():
+    return dict(
+        translate=translate,
+        language=session.get('language', 'pt')
+    )
+
+# Rota para mudar idioma
+@app.route('/set_language/<language>')
+def set_language(language):
+    if language in LANGUAGES:
+        session['language'] = language
+    return redirect(request.referrer or url_for('dashboard'))
+
 @app.errorhandler(404)
 @app.errorhandler(403)
 @app.errorhandler(500)
@@ -1052,11 +1009,9 @@ def handle_errors(error):
     client_ip = request.remote_addr
     username = session.get('username', 'Desconhecido')
     
-    # Registrar erros no log apropriado
     error_message = f"Erro {code} - IP: {client_ip}, Usuário: {username}, Endpoint: {request.endpoint}"
     app.logger.error(error_message)
     
-    # Criar template de erro dinâmico
     messages = {
         403: "Acesso proibido",
         404: "Página não encontrada",
@@ -1076,9 +1031,8 @@ def handle_errors(error):
                           error_details=error_message), code
 
 
+
 if __name__ == '__main__':
-    
-    # Configurações do servidor
     host = os.getenv('HOST', '0.0.0.0')
     port = int(os.getenv('PORT'))
     debug = os.getenv('DEBUG', 'False').lower() == 'true'
