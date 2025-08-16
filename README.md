@@ -147,6 +147,7 @@ INVENTORY
 └── utils
     ├── create_machines.py
     ├── get_data.py
+    ├── language.py
     ├── man_users.py
     ├── mfa_utils.py
     ├── pdf_export.py
