@@ -5,22 +5,17 @@ from reportlab.lib import colors
 from datetime import datetime
 
 def generate_pdf_report(stats, machines, include_details=False):
-    """Gera um relatório PDF com estatísticas e lista de máquinas"""
-    # Criar buffer para o PDF
     from io import BytesIO
     buffer = BytesIO()
     
-    # Configurar documento
     doc = SimpleDocTemplate(buffer, pagesize=letter)
     elements = []
     styles = getSampleStyleSheet()
     
-    # Título
     elements.append(Paragraph("Relatório de Inventário de TI", styles['Title']))
     elements.append(Paragraph(f"Gerado em: {datetime.now().strftime('%d/%m/%Y %H:%M')}", styles['Normal']))
     elements.append(Spacer(1, 24))
     
-    # Estatísticas
     elements.append(Paragraph("Estatísticas Gerais", styles['Heading2']))
     stats_data = [
         ["Total de Máquinas", stats['status']['Ativo'] + stats['status']['Inativo']],
@@ -40,7 +35,6 @@ def generate_pdf_report(stats, machines, include_details=False):
     elements.append(stats_table)
     elements.append(Spacer(1, 24))
     
-    # Lista de máquinas
     elements.append(Paragraph("Máquinas no Inventário", styles['Heading2']))
     machine_data = [["Hostname", "IP", "Sistema Operacional", "Status"]]
     
@@ -67,12 +61,10 @@ def generate_pdf_report(stats, machines, include_details=False):
     elements.append(machine_table)
     
     if include_details:
-        # Adicionar detalhes de cada máquina
         for machine in machines:
             elements.append(Spacer(1, 24))
             elements.append(Paragraph(f"Detalhes da máquina: {machine['hostname']}", styles['Heading3']))
             
-            # Informações básicas
             details_data = [
                 ["Hostname", machine['hostname']],
                 ["IP Address", machine['ip_address']],
@@ -94,7 +86,6 @@ def generate_pdf_report(stats, machines, include_details=False):
             ]))
             elements.append(details_table)
     
-    # Gerar PDF
     doc.build(elements)
     buffer.seek(0)
     return buffer

@@ -4,8 +4,6 @@ import time
 import shutil
 import random
 import logging
-import queue
-import threading
 import requests
 import urllib3
 from datetime import datetime, timedelta
@@ -14,9 +12,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-#############################################
-## Configurações e Constantes               ##
-#############################################
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, '..', 'data')
 INVENTORY_FOLDER = os.path.join(DATA_DIR, 'inventory')
@@ -27,13 +23,10 @@ ENDPOINTS = [
     'hardware', 'os', 'packages', 'ports',
     'processes', 'netaddr', 'netiface', 'netproto'
 ]
-MIN_REQUEST_INTERVAL = 0.2    # segundos entre requisições
+MIN_REQUEST_INTERVAL = 0.2  
 MAX_RETRIES = 3
-RETRY_DELAY_BASE = 1.0        # base para backoff exponencial
+RETRY_DELAY_BASE = 1.0    
 
-#############################################
-## Funções Auxiliares                       ##
-#############################################
 
 def setup_directories():
     """Cria diretórios necessários se não existirem"""
@@ -57,9 +50,7 @@ def setup_logging():
     fh.setFormatter(fmt)
     logger.addHandler(fh)
 
-#############################################
-## Classe: WazuhAPI                         ##
-#############################################
+
 class WazuhAPI:
     """Encapsula operações de API com rate limiting e retry"""
     def __init__(self, protocol, host, port, user, password):
@@ -120,9 +111,6 @@ class WazuhAPI:
             logging.error(f'Falha ao obter JSON de {url}: {e}')
             return {}
 
-#############################################
-## Classe: InventoryManager                ##
-#############################################
 class InventoryManager:
     """Gerencia extração e armazenamento de inventário"""
     def __init__(self, api: WazuhAPI):
@@ -223,9 +211,6 @@ class InventoryManager:
                 moved += 1
         logging.info(f"{moved} arquivos antigos movidos")
 
-#############################################
-## Função Principal                        ##
-#############################################
 def main():
     setup_directories()
     setup_logging()

@@ -8,17 +8,12 @@ import random
 from datetime import datetime, timezone
 import uuid
 
-# Geração de nomes de pacotes e processos simulados
 FAKE_PACKAGES = [f"package-{i}" for i in range(1, 300)]
 FAKE_PROCESSES = [f"proc{i}" for i in range(1, 300)]
 
 def gerar_agente():
     # Data UTC com timezone-aware
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S+00:00")
-
-    #############################################
-    ## Informações do agente
-    #############################################
     os_info = random.choice([
         {"name": "Ubuntu", "version": "24.04.2 LTS", "platform": "ubuntu", "codename": "noble"},
         {"name": "Debian", "version": "12.1",     "platform": "debian", "codename": "bookworm"},
@@ -51,9 +46,6 @@ def gerar_agente():
         }
     }
 
-    #############################################
-    ## Hardware
-    #############################################
     hardware = [{
         "cpu": {
             "cores": random.choice([2, 4, 8]),
@@ -74,10 +66,7 @@ def gerar_agente():
         },
         "board_serial": str(uuid.uuid4())[:8]
     }]
-
-    #############################################
-    ## Sistema Operacional
-    #############################################
+#
     os_block = [{
         "os": {
             "codename": os_info["codename"],
@@ -98,9 +87,6 @@ def gerar_agente():
         "release": f"{random.randint(5,6)}.{random.randint(0,19)}.{random.randint(0,99)}-generic"
     }]
 
-    #############################################
-    ## Pacotes instalados (200)
-    #############################################
     packages = []
     for _ in range(200):
         pkg = random.choice(FAKE_PACKAGES)
@@ -124,9 +110,6 @@ def gerar_agente():
             "priority": random.choice(["optional", "required", "standard"])
         })
 
-    #############################################
-    ## Processos em execução (181)
-    #############################################
     processes = []
     for _ in range(181):
         name = random.choice(FAKE_PROCESSES)
@@ -144,9 +127,6 @@ def gerar_agente():
             }
         })
 
-    #############################################
-    ## Interfaces de rede (10)
-    #############################################
     netiface = []
     for i in range(10):
         name = f"eth{i}"
@@ -174,9 +154,6 @@ def gerar_agente():
             }
         })
 
-    #############################################
-    ## Endereços de rede (10)
-    #############################################
     netaddr = []
     for i in range(10):
         netaddr.append({
@@ -188,9 +165,6 @@ def gerar_agente():
             "netmask": "255.255.255.0"
         })
 
-    #############################################
-    ## Configurações de rede (13)
-    #############################################
     netproto = []
     for i in range(13):
         netproto.append({
@@ -201,9 +175,6 @@ def gerar_agente():
             "gateway": "192.168.1.1"
         })
 
-    #############################################
-    ## Portas abertas (20)
-    #############################################
     ports = []
     for _ in range(20):
         ports.append({
@@ -228,9 +199,6 @@ def gerar_agente():
             "protocol": random.choice(["tcp", "udp"])
         })
 
-    #############################################
-    ## Montagem final do JSON
-    #############################################
     agent_info["inventory"] = {
         "hardware":  hardware,
         "os":        os_block,
@@ -244,9 +212,6 @@ def gerar_agente():
 
     return agent_info
 
-#############################################
-## Gerar múltiplos agentes e salvar em .json
-#############################################
 if __name__ == "__main__":
     for i in range(1, 25):
         a = gerar_agente()
