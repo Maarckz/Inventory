@@ -142,11 +142,14 @@ INVENTORY
 │   ├── machine_details.html
 │   ├── painel.html
 │   ├── search.html
-│   └── settings.html
+│   ├── settings.html
+│   └── verify_mfa.html
 └── utils
     ├── create_machines.py
     ├── get_data.py
-    └── man_users.py
+    ├── man_users.py
+    ├── mfa_utils.py
+    ├── pdf_export.py
 ```
 
 ## Pré-requisitos
