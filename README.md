@@ -97,16 +97,9 @@ INVENTORY
 │   ├── auth
 │   │   └── logins.json
 │   └── inventory
-│       ├── LEGION.json
-│       ├── SERVER.json
-│       └── SOC1.json
-├── logs
-│   ├── audit.log
-│   ├── error.log
-│   ├── get_data.log
-│   ├── info.log
-│   ├── security.log
-│   └── warning.log
+│       ├── agent_1.json
+│       ├── agent_2.json
+│       ├── agent_3.json
 ├── ssl
 │   ├── cert.pem
 │   └── key.pem
@@ -123,6 +116,7 @@ INVENTORY
 │   │   ├── search.css
 │   │   ├── settings.css
 │   │   └── styles.css
+│   ├── favicon.png
 │   ├── js
 │   │   ├── base.js
 │   │   ├── chart.js
@@ -133,7 +127,6 @@ INVENTORY
 │   │   └── search.js
 │   ├── logo.svg
 │   └── mlogo.svg
-│   ├── favicon.png
 ├── templates
 │   ├── base.html
 │   ├── dashboard.html
@@ -147,10 +140,11 @@ INVENTORY
 └── utils
     ├── create_machines.py
     ├── get_data.py
+    ├── get_groups.py
     ├── language.py
     ├── man_users.py
     ├── mfa_utils.py
-    ├── pdf_export.py
+    └── pdf_export.py
 ```
 
 ## Pré-requisitos
@@ -177,7 +171,9 @@ cd Inventory && nano .env
 ```ini
 # Configurações de segurança
 SECRET_KEY=suachavesupersecreta_altere_esta_chave!
+SESSION_SALT=suachavesupersecreta_altere_esta_chave_salt!
 INVENTORY_DIR=data/inventory
+GROUPS_DIR=data/groups
 AUTH_FILE=data/auth/logins.json
 LOG_DIR=logs
 
@@ -192,10 +188,10 @@ SSL_CERT_PATH=ssl/cert.pem
 SSL_KEY_PATH=ssl/key.pem
 
 # Permitir apenas IPs de uma faixa específica
-ALLOWED_IP_RANGES =192.168.0.0/16
+ALLOWED_IP_RANGES=192.168.0.0/1
 
 WAZUH_PROTOCOL=https
-WAZUH_HOST=192.168.56.210
+WAZUH_HOST=192.168.56.101
 WAZUH_PORT=55000
 WAZUH_USER=wazuh-wui
 WAZUH_PASSWORD=ma?Pt3XvLxQzpU8.J3rIQ8.dYhxzV?pT
