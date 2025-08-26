@@ -903,8 +903,10 @@ def get_data():
         return redirect(url_for('login'))
 
     script_path = os.path.join(os.path.dirname(__file__), 'utils', 'get_data.py')
+    groups_script_path = os.path.join(os.path.dirname(__file__), 'utils', 'get_groups.py')
     try:
         os.popen(f'python3 {script_path} &')
+        os.popen(f'python3 {groups_script_path} &')
         app.logger.info("Coleta de dados iniciada")
         #flash(translate('Coleta de dados iniciada, aguarde alguns minutos.'), 'categoria')
         flash('Coleta de dados iniciada, aguarde alguns minutos.', 'success')
