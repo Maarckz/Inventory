@@ -1,0 +1,22 @@
+[
+  {
+    "grupo": "default",
+    "quantidade_agentes": 0,
+    "agentes": []
+  },
+  {
+    "grupo": "Home",
+    "quantidade_agentes": 1,
+    "agentes": [
+      {
+        "id": "006",
+        "name": "legion"
+      }
+    ]
+  },
+  {
+    "grupo": "Servidores",
+    "quantidade_agentes": 0,
+    "agentes": []
+  }
+]
