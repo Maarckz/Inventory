@@ -1,106 +1,466 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard{% endblock %}
+{% block title %}Dashboard - Sistema de Monitoramento{% endblock %}
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 {% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<style>
+    :root {
+        --primary: #6366F1;
+        --primary-light: #818cf8;
+        --secondary: #64748b;
+        --dark: #1e293b;
+        --light: #f8fafc;
+        --success: #10b981;
+        --danger: #ef4444;
+        --warning: #f59e0b;
+        --info: #0ea5e9;
+        --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --border: #e2e8f0;
+    }
+
+    .dashboard-container {
+        padding: 0.5rem;
+        max-width: 1800px;
+        margin: 0 auto;
+        width: 100%;
+    }
+
+    .kpi-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .kpi-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.25rem;
+        box-shadow: var(--card-shadow);
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        cursor: pointer;
+    }
+
+    .kpi-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3), 0 4px 6px -2px rgba(99, 102, 241, 0.1);
+    }
+
+    .kpi-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+    }
+
+    .kpi-title {
+        font-size: 1rem;
+        font-weight: 500;
+        color: var(--secondary);
+    }
+
+    .kpi-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        transition: transform 0.35s ease, box-shadow 0.35s ease;
+    }
+
+    .kpi-card:hover .kpi-icon {
+        transform: scale(1.08);
+        box-shadow: 0 0 12px rgba(99, 102, 241, 0.4);
+    }
+
+    .kpi-icon.blue { background: var(--primary); }
+    .kpi-icon.green { background: var(--success); }
+    .kpi-icon.orange { background: var(--warning); }
+
+    .kpi-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+        color: var(--dark);
+    }
+
+    .charts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .chart-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: var(--card-shadow);
+        display: flex;
+        flex-direction: column;
+        height: 380px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .chart-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3), 0 4px 6px -2px rgba(99, 102, 241, 0.1);
+    }
+
+    .chart-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .chart-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--dark);
+    }
+
+    .chart-container {
+        flex: 1;
+        position: relative;
+    }
+
+    .detailed-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+
+    .detailed-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: var(--card-shadow);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .detailed-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3), 0 4px 6px -2px rgba(99, 102, 241, 0.1);
+    }
+
+    .detailed-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .detailed-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--dark);
+    }
+
+    .view-all {
+        font-size: 0.875rem;
+        color: var(--primary);
+        text-decoration: none;
+        position: relative;
+        transition: color 0.3s ease;
+    }
+
+    .view-all::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: -2px;
+        width: 0%;
+        height: 2px;
+        background: var(--primary);
+        transition: width 0.3s ease;
+    }
+
+    .view-all:hover {
+        color: var(--dark);
+    }
+
+    .view-all:hover::after {
+        width: 100%;
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .data-table th {
+        text-align: left;
+        padding: 0.75rem;
+        font-weight: 600;
+        color: var(--secondary);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .data-table td {
+        padding: 0.75rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .data-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .badge.blue {
+        background: #dbeafe;
+        color: var(--primary);
+    }
+
+    .badge.green {
+        background: #dcfce7;
+        color: var(--success);
+    }
+
+    .badge.orange {
+        background: #ffedd5;
+        color: var(--warning);
+    }
+
+    .badge.red {
+        background: #fee2e2;
+        color: var(--danger);
+    }
+
+    /* Animações de entrada */
+    @keyframes fadeInUp {
+        0% { opacity: 0; transform: translateY(30px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+
+    .kpi-card, .chart-card, .detailed-card {
+        opacity: 0;
+        transform: translateY(30px);
+        animation: fadeInUp 0.6s ease forwards;
+    }
+
+    /* Delays para entrada sequencial */
+    .kpi-cards .kpi-card:nth-child(1) { animation-delay: 0.1s; }
+    .kpi-cards .kpi-card:nth-child(2) { animation-delay: 0.2s; }
+    .kpi-cards .kpi-card:nth-child(3) { animation-delay: 0.3s; }
+
+    .charts-grid .chart-card:nth-child(1) { animation-delay: 0.4s; }
+    .charts-grid .chart-card:nth-child(2) { animation-delay: 0.5s; }
+    .charts-grid .chart-card:nth-child(3) { animation-delay: 0.6s; }
+    .charts-grid .chart-card:nth-child(4) { animation-delay: 0.7s; }
+
+    .detailed-grid .detailed-card:nth-child(1) { animation-delay: 0.8s; }
+    .detailed-grid .detailed-card:nth-child(2) { animation-delay: 0.9s; }
+
+    @media (max-width: 1024px) {
+        .charts-grid { grid-template-columns: 1fr; }
+        .detailed-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 640px) {
+        .kpi-cards { grid-template-columns: 1fr; }
+        .chart-card { height: 320px; }
+    }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="dashboard-header">
-    <div class="dashboard-stats">
-        <div class="stat-card stat-primary">
-            <div class="stat-icon">
-                <i class="fas fa-laptop"></i>
+<div class="dashboard-container">
+    <!-- KPI Cards -->
+    <div class="kpi-cards">
+        <div class="kpi-card" onclick="window.location.href='/search'">
+            <div class="kpi-header">
+                <div class="kpi-title">Total de Máquinas</div>
+                <div class="kpi-icon blue"><i class="fas fa-laptop"></i></div>
             </div>
-            <div class="stat-info">
-                <span class="stat-label">{{ translate('Total de Máquinas') }}</span>
-                <span class="stat-value">{{ active_count + inactive_count }}</span>
-            </div>
+            <div class="kpi-value">{{ active_count + inactive_count }}</div>
         </div>
-
-        <a href="/search?query=agent_info:status:active" style="color: inherit; text-decoration: none;">
-            <div class="stat-card stat-success" style="cursor: pointer;">
-                <div class="stat-icon">
-                    <i class="fas fa-check-circle"></i>
-                </div>
-                <div class="stat-info">
-                    <span class="stat-label">{{ translate('Ativas') }}</span>
-                    <span class="stat-value">
-                        {{ active_count }}
-                    </span>
-                </div>
+        <div class="kpi-card" onclick="window.location.href='/search?query=agent_info:status:active'">
+            <div class="kpi-header">
+                <div class="kpi-title">Máquinas Ativas</div>
+                <div class="kpi-icon green"><i class="fas fa-check-circle"></i></div>
             </div>
-        </a>
-
-        <a href="/search?query=agent_info:status:disconnected" style="color: inherit; text-decoration: none;">
-            <div class="stat-card stat-danger" style="cursor: pointer;">
-                <div class="stat-icon">
-                    <i class="fas fa-times-circle"></i>
-                </div>
-                <div class="stat-info">
-                    <span class="stat-label">{{ translate('Inativas') }}</span>
-                    <span class="stat-value">
-                        {{ inactive_count }}
-                    </span>
-                </div>
+            <div class="kpi-value">{{ active_count }}</div>
+        </div>
+        <div class="kpi-card" onclick="window.location.href='/search?query=agent_info:status:disconnected'">
+            <div class="kpi-header">
+                <div class="kpi-title">Máquinas Inativas</div>
+                <div class="kpi-icon orange"><i class="fas fa-times-circle"></i></div>
             </div>
-        </a>
+            <div class="kpi-value">{{ inactive_count }}</div>
+        </div>
+    </div>
+
+    <!-- Charts Grid -->
+    <div class="charts-grid">
+        <div class="chart-card">
+            <div class="chart-header"><h3 class="chart-title">Distribuição de Sistemas Operacionais</h3></div>
+            <div class="chart-container"><canvas id="osChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-header"><h3 class="chart-title">Distribuição de RAM</h3></div>
+            <div class="chart-container"><canvas id="ramChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-header"><h3 class="chart-title">Top Processadores</h3></div>
+            <div class="chart-container"><canvas id="cpuChart"></canvas></div>
+        </div>
+    </div>
+
+    <div class="charts-grid">
+        <div class="chart-card">
+            <div class="chart-header"><h3 class="chart-title">Portas de Rede Mais Utilizadas</h3></div>
+            <div class="chart-container"><canvas id="portChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-header"><h3 class="chart-title">Processos Mais Comuns</h3></div>
+            <div class="chart-container"><canvas id="processChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-header"><h3 class="chart-title">Distribuição por Grupos</h3></div>
+            <div class="chart-container"><canvas id="groupsChart"></canvas></div>
+        </div>
+    </div>
+
+    <div class="detailed-grid">
+        <div class="detailed-card">
+            <div class="detailed-header">
+                <h3 class="detailed-title">Máquinas Recentemente Adicionadas</h3>
+                <a href="{{ url_for('search') }}" class="view-all">Ver todas</a>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr><th>Nome</th><th>Sistema</th><th>Status</th></tr>
+                </thead>
+                <tbody id="recent-machines"></tbody>
+            </table>
+        </div>
+        <div class="detailed-card">
+            <div class="detailed-header"><h3 class="detailed-title">Evolução Temporal - Máquinas Ativas e Inativas</h3></div>
+            <div class="chart-container" style="height: 300px;"><canvas id="timelineChart"></canvas></div>
+        </div>
     </div>
 </div>
 
-<div class="chart-grid">
-    <div class="chart-container">
-        <div class="chart-header">
-            <h3>{{ translate('Sistemas Operacionais') }}</h3>
-        </div>
-        <div class="chart-wrapper">
-            <canvas id="osChart"></canvas>
-        </div>
-    </div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                align: 'center',
+                labels: { usePointStyle: true, pointStyle: 'circle', padding: 15 }
+            },
+            tooltip: {
+                callbacks: {
+                    label: ctx => `${ctx.label}: ${ctx.raw}`
+                }
+            }
+        },
+        onClick: (event, elements, chart) => {
+            if (!elements.length) return;
+            const index = elements[0].index;
+            let query = '';
+            switch(chart.canvas.id) {
+                case 'osChart': query = 'inventory:os:' + chart.data.labels[index].toLowerCase(); break;
+                case 'cpuChart': query = 'inventory:hardware:' + chart.data.labels[index].toLowerCase(); break;
+                case 'ramChart': 
+                    const ramLabel = chart.data.labels[index].toLowerCase();
+                    query = ramLabel.includes('+') 
+                        ? 'ram_gb:>' + ramLabel.replace('+','').replace('gb','').trim() 
+                        : 'ram_gb:' + ramLabel;
+                    break;
+                case 'portChart':
+                    const portNum = chart.data.labels[index].replace(/\D/g,'');
+                    query = portNum ? 'ports:' + portNum : 'ports:' + chart.data.labels[index].toLowerCase();
+                    break;
+                case 'processChart': query = 'inventory:processes:' + chart.data.labels[index].toLowerCase(); break;
+                case 'groupsChart': query = 'groups:' + chart.data.labels[index].toLowerCase(); break;
+                default: query = chart.data.labels[index].toLowerCase();
+            }
+            window.location.href = `/search?query=${encodeURIComponent(query)}`;
+        }
+    };
 
-    <div class="chart-container">
-        <div class="chart-header">
-            <h3>{{ translate('Processadores') }}</h3>
-        </div>
-        <div class="chart-wrapper">
-            <canvas id="cpuChart"></canvas>
-        </div>
-    </div>
+    fetch('/get_chart_data')
+        .then(res => res.ok ? res.json() : Promise.reject('Erro ao carregar dados'))
+        .then(data => {
+            // OS Chart
+            new Chart(document.getElementById('osChart').getContext('2d'), {
+                type: 'doughnut',
+                data: { labels: data.os_labels, datasets:[{ data: data.os_data, backgroundColor:['#6366F1','#8B5CF6','#0EA5E9','#EC4899'], borderWidth:0, hoverOffset:10 }] },
+                options: chartOptions
+            });
 
-    <div class="chart-container">
-        <div class="chart-header">
-            <h3>{{ translate('Memória RAM') }}</h3>
-        </div>
-        <div class="chart-wrapper">
-            <canvas id="ramChart"></canvas>
-        </div>
-    </div>
-</div>
-<br>
+            // RAM Chart
+            new Chart(document.getElementById('ramChart').getContext('2d'), {
+                type: 'doughnut',
+                data: { labels: data.ram_labels, datasets:[{ data: data.ram_data, backgroundColor:['#EC4899','#0EA5E9','#F97316','#6366F1','#F59E0B','#10B981'], borderWidth:0, hoverOffset:10 }] },
+                options: chartOptions
+            });
 
-<div class="chart-grid">
-    <div class="chart-container">
-        <div class="chart-header">
-            <h3>{{ translate('Portas de Rede Mais Comuns') }}</h3>
-        </div>
-        <div class="chart-wrapper">
-            <canvas id="portChart"></canvas>
-        </div>
-    </div>
+            // CPU Chart
+            new Chart(document.getElementById('cpuChart').getContext('2d'), {
+                type: 'bar',
+                data: { labels: data.cpu_labels, datasets:[{ label:'Quantidade', data:data.cpu_data, backgroundColor:['#6366F1','#8B5CF6','#0EA5E9','#EC4899','#F43F5E','#F97316','#F59E0B','#10B981','#3B82F6','#EAB308','#A21CAF','#BE185D'], borderRadius:6, borderWidth:0 }] },
+                options: {...chartOptions, scales:{ x:{ticks:{display:false}, grid:{drawTicks:false}}, y:{beginAtZero:true, grid:{drawBorder:false}} }, plugins:{legend:{display:false}}}
+            });
 
-    <div class="chart-container">
-        <div class="chart-header">
-            <h3>{{ translate('Processos Mais Comuns') }}</h3>
-        </div>
-        <div class="chart-wrapper">
-            <canvas id="processChart"></canvas>
-        </div>
-    </div>
-</div>
+            // Port Chart
+            new Chart(document.getElementById('portChart').getContext('2d'), {
+                type:'bar',
+                data:{ labels:data.port_labels, datasets:[{ label:'Ocorrências', data:data.port_data, backgroundColor:data.port_labels.map((l,i)=>data.port_protocols[i]==='tcp'?'#3B82F6':'#10B981'), borderRadius:6, borderWidth:0 }]},
+                options:{...chartOptions, indexAxis:'y', scales:{x:{beginAtZero:true, grid:{drawBorder:false}}}, plugins:{legend:{display:false}}}
+            });
+
+            // Process Chart
+            new Chart(document.getElementById('processChart').getContext('2d'), {
+                type:'bar',
+                data:{ labels:data.process_labels, datasets:[{ label:'Ocorrências', data:data.process_data, backgroundColor:'#F59E0B', borderRadius:6, borderWidth:0 }]},
+                options:{...chartOptions, indexAxis:'y', scales:{x:{beginAtZero:true, grid:{drawBorder:false}}}, plugins:{legend:{display:false}}}
+            });
+
+            // Groups Chart (Polar)
+            if (data.groups?.length){
+                const groupsCtx = document.getElementById('groupsChart').getContext('2d');
+                new Chart(groupsCtx, {
+                    type:'polarArea',
+                    data:{ labels:data.groups.map(g=>g.grupo), datasets:[{ data:data.groups.map(g=>g.quantidade_agentes), backgroundColor:['#6366F1','#8B5CF6','#0EA5E9','#EC4899','#F43F5E','#F97316','#F59E0B','#10B981','#3B82F6','#EAB308','#A21CAF','#BE185D'], borderWidth:0 }]},
+                    options:{ ...chartOptions }
+                });
+            } else document.getElementById('groupsChart').closest('.chart-card').style.display='none';
+
+            // Timeline Chart
+            new Chart(document.getElementById('timelineChart').getContext('2d'), {
+                type:'line',
+                data:{ labels:data.timeline_dates, datasets:[
+                    { label:'Máquinas Ativas', data:data.timeline_active, borderColor:'#10B981', backgroundColor:'rgba(16,185,129,0.1)', fill:true, tension:0.4, pointBackgroundColor:'#10B981', pointBorderColor:'#fff', pointRadius:5, pointHoverRadius:7 },
+                    { label:'Máquinas Inativas', data:data.timeline_inactive, borderColor:'#EF4444', backgroundColor:'rgba(239,68,68,0.1)', fill:true, tension:0.4, pointBackgroundColor:'#EF4444', pointBorderColor:'#fff', pointRadius:5, pointHoverRadius:7 }
+                ]},
+                options:{ ...chartOptions, scales:{y:{beginAtZero:true, title:{display:true,text:'Número de Máquinas'}, grid:{borderDash:[5,5]}}, x:{grid:{display:false}}} }
+            });
+
+            // Recent Machines Table
+            document.getElementById('recent-machines').innerHTML = data.recent_machines.map(m=>`<tr><td>${m.name}</td><td>${m.os}</td><td><span class="badge ${m.status==='Ativo'?'green':'orange'}">${m.status}</span></td></tr>`).join('');
+        })
+        .catch(err => console.error('Erro ao carregar dados:', err));
+});
+</script>
 {% endblock %}

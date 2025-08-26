@@ -11,10 +11,10 @@
 {% endblock %}
 
 {% block content %}
-<div class="panel-header">
+<!-- <div class="panel-header">
     <a href="#" id="show-search" class="btn btn-primary fade-in">
         <i class="fas fa-search"></i> {{ translate('Pesquisar Máquinas') }}
-    </a>
+    </a> 
     <style>
     .fade-in {
         opacity: 0;
@@ -26,7 +26,7 @@
         }
     }
     </style>
-</div>
+</div> -->
 <div class="search-container" id="search-container" style="display: none; opacity: 0; transition: opacity 0.4s;">
     <div class="search-header">
         <form method="GET" action="{{ url_for('search') }}" class="search-form">
