@@ -4,6 +4,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, make_response
 from logging.handlers import RotatingFileHandler
 from utils.pdf_export import generate_pdf_report
+from datetime import datetime, timedelta
 from utils.language import LANGUAGES
 from collections import defaultdict
 from flask_session import Session
@@ -15,13 +16,14 @@ import logging
 import bcrypt
 import socket
 import struct
+import base64
+import qrcode
 import fcntl
+import pyotp
 import time
 import json
 import os
-import pyotp
-import qrcode
-import base64
+
 
 load_dotenv()
 
@@ -44,6 +46,7 @@ app.config['SESSION_PERMANENT'] = True
 Session(app)
 
 INVENTORY_DIR = os.getenv('INVENTORY_DIR')
+GROUPS_DIR = os.getenv('GROUPS_DIR')
 LOG_DIR = os.getenv('LOG_DIR')
 AUTH_FILE = os.getenv('AUTH_FILE')
 SSL_CERT = os.getenv('SSL_CERT_PATH')
@@ -470,7 +473,7 @@ def get_chart_data():
     
     port_labels = []
     port_data = []
-    port_protocols = []  
+    port_protocols = []
     
     for port, details in sorted_ports:
         service = common_services.get(port, '')
@@ -483,12 +486,48 @@ def get_chart_data():
         
         port_labels.append(label)
         port_data.append(details['count'])
-        port_protocols.append(details['protocol'])  
+        port_protocols.append(details['protocol'])
 
     sorted_processes = sorted(stats['processes'].items(), key=lambda x: x[1], reverse=True)[:10]
     process_labels = [proc for proc, count in sorted_processes]
     process_data = [count for proc, count in sorted_processes]
     
+    groups = []
+    with open(os.path.join(GROUPS_DIR, 'groups.json')) as f:
+        groups = json.load(f)
+    
+    # Obter máquinas recentemente adicionadas (últimas 5 por data)
+    recent_machines = sorted(machines, 
+                           key=lambda x: x.get('last_seen', ''),
+                           reverse=True)[:5]
+    
+    # Preparar dados para timeline (últimos 7 dias)
+    timeline_data = {'dates': [], 'active': [], 'inactive': []}
+    today = datetime.now().date()
+    
+    for i in range(6, -1, -1):
+        date = today - timedelta(days=i)
+        date_str = date.strftime('%d/%m')
+        timeline_data['dates'].append(date_str)
+        
+        # Contar máquinas ativas/inativas para cada dia
+        active_count = 0
+        inactive_count = 0
+        
+        for machine in machines:
+            if machine.get('last_seen') != 'N/A':
+                try:
+                    machine_date = datetime.fromisoformat(machine['last_seen']).date()
+                    if machine_date == date:
+                        if machine.get('device_status') == 'Ativo':
+                            active_count += 1
+                        else:
+                            inactive_count += 1
+                except (ValueError, TypeError):
+                    continue
+        
+        timeline_data['active'].append(active_count)
+        timeline_data['inactive'].append(inactive_count)
     
     return jsonify({
         'os_labels': list(stats['os'].keys()),
@@ -499,9 +538,23 @@ def get_chart_data():
         'ram_data': list(stats['ram'].values()),
         'port_labels': port_labels,
         'port_data': port_data,
-        'port_protocols': port_protocols,  
+        'port_protocols': port_protocols,
         'process_labels': process_labels,
-        'process_data': process_data
+        'process_data': process_data,
+        'active_count': stats.get('status', {}).get('Ativo', 0),
+        'inactive_count': stats.get('status', {}).get('Inativo', 0),
+        'last_update': [machine.get('agent_info', {}).get('lastKeepAlive', 0) for machine in machines],
+        'groups': groups,
+        'timeline_dates': timeline_data['dates'],
+        'timeline_active': timeline_data['active'],
+        'timeline_inactive': timeline_data['inactive'],
+        'recent_machines': [
+            {
+                'name': m.get('hostname', 'N/A'),
+                'os': m.get('os_name', 'N/A'),
+                'status': m.get('device_status', 'N/A')
+            } for m in recent_machines
+        ]
     })
 
 @app.route('/login', methods=['GET', 'POST'])
