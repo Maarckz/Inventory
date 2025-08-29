@@ -131,12 +131,6 @@
     font-size: 0.75rem;
     color: var(--gray);
 }
-/*
-.machine-table tbody tr {
-    opacity: 0;
-    transform: translateY(40px);
-    animation: fadeInUp 0.1s cubic-bezier(0.23, 1, 0.32, 1) forwards;
-}*/
 
 .search-footer {
     display: flex;
@@ -157,4 +151,34 @@
 
 .no-results p {
     margin-bottom: 0.5rem;
+}
+
+@keyframes fadeIn {
+    to {
+        opacity: 1;
+    }
+}
+
+.fade-in {
+    opacity: 0;
+    animation: fadeIn 0.6s ease-out forwards;
+}
+
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.search-container {
+    max-width: 1500px;
+    margin: 0 auto;
+    opacity: 0; /* garante estado inicial */
+    animation: fadeInUp 0.7s cubic-bezier(0.23, 1, 0.32, 1) forwards;
 }
