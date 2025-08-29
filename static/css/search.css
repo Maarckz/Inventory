@@ -131,12 +131,12 @@
     font-size: 0.75rem;
     color: var(--gray);
 }
-
+/*
 .machine-table tbody tr {
     opacity: 0;
     transform: translateY(40px);
-    animation: fadeInUp 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
-}
+    animation: fadeInUp 0.1s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}*/
 
 .search-footer {
     display: flex;

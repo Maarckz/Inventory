@@ -132,3 +132,20 @@ th.desc::after {
     margin-top: 2rem;
     text-align: right;
 }
+
+.details-section {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.6s ease-out forwards;
+}
+
+.details-section:nth-child(1) { animation-delay: 0.1s; }
+.details-section:nth-child(2) { animation-delay: 0.2s; }
+.details-section:nth-child(3) { animation-delay: 0.3s; }
+.details-section:nth-child(4) { animation-delay: 0.4s; }
