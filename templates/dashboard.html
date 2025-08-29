@@ -3,8 +3,8 @@
 {% block title %}Dashboard - Sistema de Monitoramento{% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+<script src="{{ url_for('static', filename='js/chart.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/chartjs-plugin-datalabels.min.js') }}"></script>
 {% endblock %}
 
 {% block extra_css %}
@@ -285,21 +285,21 @@
     <div class="kpi-cards">
         <div class="kpi-card" onclick="window.location.href='/search'">
             <div class="kpi-header">
-                <div class="kpi-title">Total de Máquinas</div>
+                <div class="kpi-title">{{ translate('Total de Máquinas') }}</div>
                 <div class="kpi-icon blue"><i class="fas fa-laptop"></i></div>
             </div>
             <div class="kpi-value">{{ active_count + inactive_count }}</div>
         </div>
         <div class="kpi-card" onclick="window.location.href='/search?query=agent_info:status:active'">
             <div class="kpi-header">
-                <div class="kpi-title">Máquinas Ativas</div>
+                <div class="kpi-title">{{ translate('Ativas') }}</div>
                 <div class="kpi-icon green"><i class="fas fa-check-circle"></i></div>
             </div>
             <div class="kpi-value">{{ active_count }}</div>
         </div>
         <div class="kpi-card" onclick="window.location.href='/search?query=agent_info:status:disconnected'">
             <div class="kpi-header">
-                <div class="kpi-title">Máquinas Inativas</div>
+                <div class="kpi-title">{{ translate('Inativas') }}</div>
                 <div class="kpi-icon orange"><i class="fas fa-times-circle"></i></div>
             </div>
             <div class="kpi-value">{{ inactive_count }}</div>
@@ -309,30 +309,30 @@
     <!-- Charts Grid -->
     <div class="charts-grid">
         <div class="chart-card">
-            <div class="chart-header"><h3 class="chart-title">Distribuição de Sistemas Operacionais</h3></div>
+            <div class="chart-header"><h3 class="chart-title">{{ translate('Sistemas Operacionais') }}</h3></div>
             <div class="chart-container"><canvas id="osChart"></canvas></div>
         </div>
         <div class="chart-card">
-            <div class="chart-header"><h3 class="chart-title">Distribuição de RAM</h3></div>
-            <div class="chart-container"><canvas id="ramChart"></canvas></div>
+            <div class="chart-header"><h3 class="chart-title">{{ translate('Processadores') }}</h3></div>
+            <div class="chart-container"><canvas id="cpuChart"></canvas></div>
         </div>
         <div class="chart-card">
-            <div class="chart-header"><h3 class="chart-title">Top Processadores</h3></div>
-            <div class="chart-container"><canvas id="cpuChart"></canvas></div>
+            <div class="chart-header"><h3 class="chart-title">{{ translate('Memória RAM') }}</h3></div>
+            <div class="chart-container"><canvas id="ramChart"></canvas></div>
         </div>
     </div>
 
     <div class="charts-grid">
         <div class="chart-card">
-            <div class="chart-header"><h3 class="chart-title">Portas de Rede Mais Utilizadas</h3></div>
+            <div class="chart-header"><h3 class="chart-title">{{ translate('Portas de Rede Mais Comuns') }}</h3></div>
             <div class="chart-container"><canvas id="portChart"></canvas></div>
         </div>
         <div class="chart-card">
-            <div class="chart-header"><h3 class="chart-title">Processos Mais Comuns</h3></div>
+            <div class="chart-header"><h3 class="chart-title">{{ translate('Processos Mais Comuns') }}</h3></div>
             <div class="chart-container"><canvas id="processChart"></canvas></div>
         </div>
         <div class="chart-card">
-            <div class="chart-header"><h3 class="chart-title">Distribuição por Grupos</h3></div>
+            <div class="chart-header"><h3 class="chart-title">{{ translate('Distribuição por Grupos') }}</h3></div>
             <div class="chart-container"><canvas id="groupsChart"></canvas></div>
         </div>
     </div>
@@ -340,18 +340,18 @@
     <div class="detailed-grid">
         <div class="detailed-card">
             <div class="detailed-header">
-                <h3 class="detailed-title">Máquinas Recentemente Adicionadas</h3>
-                <a href="{{ url_for('search') }}" class="view-all">Ver todas</a>
+                <h3 class="detailed-title">{{ translate('Máquinas Recentemente Sincronizadas') }}</h3>
+                <a href="{{ url_for('search') }}" class="view-all">{{ translate('Ver todas') }}</a>
             </div>
             <table class="data-table">
                 <thead>
-                    <tr><th>Nome</th><th>Sistema</th><th>Status</th></tr>
+                    <tr><th>Nome</th><th>{{ translate('Sistema') }}</th><th>Status</th></tr>
                 </thead>
                 <tbody id="recent-machines"></tbody>
             </table>
         </div>
         <div class="detailed-card">
-            <div class="detailed-header"><h3 class="detailed-title">Evolução Temporal - Máquinas Ativas e Inativas</h3></div>
+            <div class="detailed-header"><h3 class="detailed-title">{{ translate('Evolução Temporal - Máquinas Ativas e Inativas') }}</h3></div>
             <div class="chart-container" style="height: 300px;"><canvas id="timelineChart"></canvas></div>
         </div>
     </div>
@@ -391,11 +391,79 @@ document.addEventListener('DOMContentLoaded', function() {
                     const portNum = chart.data.labels[index].replace(/\D/g,'');
                     query = portNum ? 'ports:' + portNum : 'ports:' + chart.data.labels[index].toLowerCase();
                     break;
-                case 'processChart': query = 'inventory:processes:' + chart.data.labels[index].toLowerCase(); break;
+                case 'processChart': 
+                    const datasetIndex = elements[0].datasetIndex;
+                    const processLabel = chart.data.labels[index];
+                    query = 'inventory:processes:' + processLabel.toLowerCase(); 
+                    break;
                 case 'groupsChart': query = 'groups:' + chart.data.labels[index].toLowerCase(); break;
                 default: query = chart.data.labels[index].toLowerCase();
             }
             window.location.href = `/search?query=${encodeURIComponent(query)}`;
+        }
+    };
+
+    // Paleta de cores do dashboard
+    const dashboardColors = [
+        '#6366F1', '#8B5CF6', '#0EA5E9', '#EC4899', '#F43F5E', 
+        '#F97316', '#F59E0B', '#10B981', '#3B82F6', '#EAB308', 
+        '#A21CAF', '#BE185D', '#64748B', '#6B7280', '#EF4444'
+    ];
+
+    // Configuração específica para o multi pie chart
+    const multiPieOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                align: 'center',
+                labels: { 
+                    usePointStyle: true, 
+                    pointStyle: 'circle', 
+                    padding: 15,
+                    generateLabels: function(chart) {
+                        // Get the default label list
+                        const original = Chart.overrides.pie.plugins.legend.labels.generateLabels;
+                        const labelsOriginal = original.call(this, chart);
+
+                        // Build an array of colors used in the datasets of the chart
+                        let datasetColors = chart.data.datasets.map(function(e) {
+                            return e.backgroundColor;
+                        });
+                        datasetColors = datasetColors.flat();
+
+                        // Modify the color and hide state of each label
+                        labelsOriginal.forEach(label => {
+                            // There are twice as many labels as there are datasets. This converts the label index into the corresponding dataset index
+                            label.datasetIndex = (label.index - label.index % 2) / 2;
+
+                            // The hidden state must match the dataset's hidden state
+                            label.hidden = !chart.isDatasetVisible(label.datasetIndex);
+
+                            // Change the color to match the dataset
+                            label.fillStyle = datasetColors[label.index];
+                        });
+
+                        return labelsOriginal;
+                    }
+                },
+                onClick: function(mouseEvent, legendItem, legend) {
+                    // toggle the visibility of the dataset from what it currently is
+                    legend.chart.getDatasetMeta(
+                        legendItem.datasetIndex
+                    ).hidden = legend.chart.isDatasetVisible(legendItem.datasetIndex);
+                    legend.chart.update();
+                }
+            },
+            tooltip: {
+                callbacks: {
+                    title: function(context) {
+                        const labelIndex = (context[0].datasetIndex * 2) + context[0].dataIndex;
+                        return context[0].chart.data.labels[labelIndex] + ': ' + context[0].formattedValue;
+                    }
+                }
+            }
         }
     };
 
@@ -430,11 +498,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 options:{...chartOptions, indexAxis:'y', scales:{x:{beginAtZero:true, grid:{drawBorder:false}}}, plugins:{legend:{display:false}}}
             });
 
-            // Process Chart
+            // Process Chart - Multi Pie
+            // Dados de exemplo para o multi pie
+            const processDataMultiPie = {
+                labels: data.process_labels || ['Chrome', 'Firefox', 'Explorer', 'Teams', 'Word', 'Excel'],
+                datasets: [
+                    {
+                        backgroundColor: [dashboardColors[0], dashboardColors[1]],
+                        data: data.process_data ? [data.process_data[0], 100 - data.process_data[0]] : [35, 65]
+                    },
+                    {
+                        backgroundColor: [dashboardColors[2], dashboardColors[3]],
+                        data: data.process_data ? [data.process_data[1], 100 - data.process_data[1]] : [25, 75]
+                    },
+                    {
+                        backgroundColor: [dashboardColors[4], dashboardColors[5]],
+                        data: data.process_data ? [data.process_data[2], 100 - data.process_data[2]] : [20, 80]
+                    },
+                    {
+                        backgroundColor: [dashboardColors[6], dashboardColors[7]],
+                        data: data.process_data ? [data.process_data[3], 100 - data.process_data[3]] : [15, 85]
+                    }
+                ]
+            };
+            
             new Chart(document.getElementById('processChart').getContext('2d'), {
-                type:'bar',
-                data:{ labels:data.process_labels, datasets:[{ label:'Ocorrências', data:data.process_data, backgroundColor:'#F59E0B', borderRadius:6, borderWidth:0 }]},
-                options:{...chartOptions, indexAxis:'y', scales:{x:{beginAtZero:true, grid:{drawBorder:false}}}, plugins:{legend:{display:false}}}
+                type: 'pie',
+                data: processDataMultiPie,
+                options: multiPieOptions
             });
 
             // Groups Chart (Polar)
@@ -454,7 +545,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     { label:'Máquinas Ativas', data:data.timeline_active, borderColor:'#10B981', backgroundColor:'rgba(16,185,129,0.1)', fill:true, tension:0.4, pointBackgroundColor:'#10B981', pointBorderColor:'#fff', pointRadius:5, pointHoverRadius:7 },
                     { label:'Máquinas Inativas', data:data.timeline_inactive, borderColor:'#EF4444', backgroundColor:'rgba(239,68,68,0.1)', fill:true, tension:0.4, pointBackgroundColor:'#EF4444', pointBorderColor:'#fff', pointRadius:5, pointHoverRadius:7 }
                 ]},
-                options:{ ...chartOptions, scales:{y:{beginAtZero:true, title:{display:true,text:'Número de Máquinas'}, grid:{borderDash:[5,5]}}, x:{grid:{display:false}}} }
+                options:{ ...chartOptions, scales:{y:{beginAtZero:true, title:{display:false}, grid:{borderDash:[5,5]}}, x:{grid:{display:false}}} }
             });
 
             // Recent Machines Table

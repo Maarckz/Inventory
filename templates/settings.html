@@ -52,7 +52,7 @@
                     const statusElement = document.getElementById('mfa-status');
                     statusElement.innerHTML = `
                         <i class="fas fa-${data.enabled ? 'check-circle' : 'times-circle'}"></i>
-                        MFA ${data.enabled ? 'Ativo' : 'Desativado'}
+                        MFA ${data.enabled ? '' : ''}
                     `;
                     statusElement.className = data.enabled ? 'status-enabled' : 'status-disabled';
                 });
