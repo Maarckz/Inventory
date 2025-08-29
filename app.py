@@ -169,7 +169,7 @@ def load_all_json_files(directory):
 
 MACHINES_CACHE = {'data': None, 'last_update': 0}
 STATS_CACHE = {'data': None, 'last_update': 0}
-CACHE_TIMEOUT = 15
+CACHE_TIMEOUT = 40
 
 def get_cached_machines():
     current_time = time.time()
