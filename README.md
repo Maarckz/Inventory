@@ -293,7 +293,8 @@ inventory:processes:python # Pesquisa em processos em execução
 
 - **Aplicação Web**
   - Exibição de Grupos de Agentes 
-  - API REST para integrações externas  
+  - API REST para integrações externas
+  - Sincronizaçao periodica definida no painel de config  
 
 - **Segurança**  
   - Criptografia dos arquivos JSON do inventário  
