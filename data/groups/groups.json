@@ -1,12 +1,12 @@
 [
   {
     "grupo": "default",
-    "quantidade_agentes": 0,
+    "quantidade_agentes": 1,
     "agentes": []
   },
   {
     "grupo": "Home",
-    "quantidade_agentes": 1,
+    "quantidade_agentes": 2,
     "agentes": [
       {
         "id": "006",
@@ -16,7 +16,7 @@
   },
   {
     "grupo": "Servidores",
-    "quantidade_agentes": 0,
+    "quantidade_agentes": 3,
     "agentes": []
   }
 ]
