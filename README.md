@@ -58,6 +58,7 @@ Software
     Processos em execução
 Classificação de Atividade
     Dispositivos classificados como ativos ou inativos conforme a última sincronização.
+Grupos do WAZUH
 ```
 
 ### 2. Web Application (Flask)
