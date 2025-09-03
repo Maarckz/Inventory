@@ -291,6 +291,8 @@ inventory:processes:python # Pesquisa em processos em execução
 - **BackEnd**
   - Filtros por Grupos de Agentes   
   - Proteção contra força bruta
+  - Implementar banco Redis
+  - Leitura de JSON do Wazuh via API
 
 - **Aplicação Web**
   - Exibição de Grupos de Agentes 
