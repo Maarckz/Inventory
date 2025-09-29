@@ -4,7 +4,7 @@ O **INVENTORY** é a solução definitiva para a gestão centralizada do invent�
 
 
 <div align="left">
-  <a href="https://github.com/maarckz/Inventory" target="_blank"><img height="260" width= "960" src="https://github.com/Maarckz/Maarckz/blob/main/Images/I1_Inventory.gif?raw=true"/> 
+  <a href="https://github.com/maarckz/Inventory" target="_blank"><img height="260" width= "960" src="https://github.com/Maarckz/Maarckz/blob/main/Images/Inventory.gif?raw=true"/> 
 </div>
 
 O objetivo principal do INVENTORY é eliminar a "cegueira" sobre os ativos de TI, fornecendo às equipes de segurança, operações e _compliance_ uma fonte única e confiável de informação sobre o estado, _hardware_, _software_ e segurança de cada dispositivo.
