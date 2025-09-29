@@ -12,7 +12,7 @@ O objetivo principal do INVENTORY é eliminar a "cegueira" sobre os ativos de TI
 A principal vantagem reside na **utilização dos agentes nativos do Wazuh**, eliminando a necessidade de instalar _softwares_ adicionais nos _endpoints_ e, consequentemente, **reduzindo a superfície de ataque** e o _overhead_ operacional.
 
 <div align="left">
-  <a href="https://github.com/maarckz/Inventory" target="_blank"><img height="260" width= "960" src="https://github.com/Maarckz/Maarckz/blob/main/Images/Inventory.gif?raw=true"/> 
+  <a href="https://github.com/maarckz/Inventory" target="_blank"><img height="260" width= "960" src="https://github.com/Maarckz/Maarckz/blob/main/Images/IV1_APRESENTATION.mp4?raw=true"/> 
 </div>
 
 ![[IV1_APRESENTATION.mp4]]
