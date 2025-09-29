@@ -44,6 +44,45 @@ A arquitetura  é materializada por dois componentes de software principais que 
 ### 3.1 Módulo Coletor (INVENTORY Collector)
 O Coletor de Dados é o **principal** responsável pela extração de informações, atuando como a interface de comunicação entre o sistema *INVENTORY* e o ambiente _WAZUH_. Sua função é automatizar a coleta e a estruturação dos dados de inventário.
 
+
+### 1. Collector Module
+
+Interage com a API do Wazuh seguindo os passos abaixo:
+
+- **JWT Authentication**: Obtém um token de acesso para requisições autenticadas.
+- **Listagem de Agentes**: Recupera os dispositivos monitorados via API.
+- **Inventory Collection**: Extrai especificações de hardware, detalhes do sistema operacional, informações de rede e portas abertas para cada agente.
+- **Classificação de Status**: Marca os dispositivos de acordo com status da última sincronização, entre ativos e inativos.
+- **Local Storage**: Grava arquivos JSON estruturados, nomeados de acordo com o hostname de cada dispositivo.
+
+```
+Dados Coletados:
+
+Informações Básicas
+    Hostname
+    Agent ID
+    Sistema Operacional
+    Arquitetura
+    Serial da placa
+    Última varredura
+Hardware
+    CPU
+    Núcleos
+    Memória RAM
+Rede
+    Interfaces de rede
+    Portas de rede abertas
+    Configurações de rede
+Software
+    Pacotes instalados
+    Processos em execução
+Classificação de Atividade
+    Dispositivos classificados como ativos ou inativos conforme a última sincronização.
+Grupos do WAZUH
+```
+
+
+
 | Função                           | Detalhamento                                                                                                                                                               |
 | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Interface com a API do Wazuh** | Realiza a coleta e listagem de dados dos agentes monitorados, utilizando o módulo _SysCollector_ do Wazuh.                                                                 |
@@ -55,12 +94,43 @@ O Coletor de Dados é o **principal** responsável pela extração de informaç�
 ### 3.2 Aplicação Web (Flask)
 A Aplicação Web é a camada de processamento, gerenciamento, visualização e gestão da solução, fornecendo a interface com a qual os usuários interagem para analisar o inventário.
 
+
+Acessível via navegador, com as seguintes funcionalidades:
+
+- **Autenticação Segura**  
+  - Senhas protegidas com hash bcrypt
+  - Bloqueio de IP após tentativas falhas configuráveis
+  - Expiração automática da sessão (ex: 30 minutos)
+  - MFA TOTP
+- **Statistical Dashboard**  
+  - Total de máquinas cadastradas, ativas e inativas
+  - Distribuição de Sistemas Operacionais
+  - Tipos de processadores e memória RAM
+  - Portas de Rede mais comun
+  - Serviços
+  - Processos com maior repetição
+- **Painel de Máquinas**  
+  - Lista completa de dispositivos com filtros avançados
+- **Busca Avançada**  
+  - Pesquisa por IP, sistema operacional, hardware ou outros critérios
+- **Detalhes da Máquina**  
+  - Visão detalhada dos dados coletados para cada host
+
+
+
 | Função              | Detalhamento                                                                                                                                                                                                                                            |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Framework**       | A aplicação é construída sobre o micro-framework **Flask**, utilizando a linguagem **Python**, o que garante leveza e flexibilidade.                                                                                                                    |
 | **Interface**       | A interface do usuário é desenvolvida com **Tríade da Web**, utilizando bibliotecas como **Chart.js** para gráficos interativos e **Font Awesome** para ícones, resultando em uma experiência de usuário moderna e intuitiva.                           |
 | **Funcionalidades** | Oferece um _dashboard_ estatístico completo, um _painel_ para listagem e _detalhamento de máquinas_, um sistema de _busca avançada_ com filtros dinâmicos e a capacidade de exportar relatórios em formatos PDF e CSV (este último em desenvolvimento). |
 | **Segurança**       | Implementa múltiplos mecanismos de segurança, incluindo armazenamento de senhas com **hash bcrypt**, **Autenticação Multifator (MFA) baseada em TOTP**, controle de acesso por faixas de IP e o uso de **headers de segurança HTTP**.                   |
+
+
+
+
+
+
+
 
 ## 4. Estrutura de Diretórios
 
@@ -156,11 +226,20 @@ O dashboard é a visão centralizada e estatística do inventário, projetado pa
 
 • **Gráficos Interativos:** Exibe visualizações gráficas da distribuição de sistemas operacionais, tipos de processadores, faixas de memória RAM, portas de rede mais comuns e processos com maior recorrência, além da **evolução temporal do status dos agentes**, permitindo a análise de tendências. O clique em um gráfico redireciona para a busca avançada com o filtro correspondente aplicado.
 
-![[I2_DASHBOARD.png]]
+<div align="left">
+  <a href="https://github.com/maarckz/Inventory" target="_blank"><img height="260" width= "960" src="https://github.com/Maarckz/Inventory/blob/main/Images/I2_DASHBOARD.png?raw=true"/> 
+</div>
+
 ### 5.2. Painel de Máquinas e Detalhes de Ativos
 Este painel fornece uma listagem de **todos os dispositivos inventariados**, exibindo informações resumidas e o status de atividade em _tempo real_. A partir desta lista, é possível navegar para uma página de detalhes completa para cada ativo, que consolida todas as informações extraídas do Wazuh, incluindo hardware, rede, software instalado e processos em execução.
-![[I3_PAINEL.png]]
-![[I5_DETAILS.png]]
+
+<div align="left">
+  <a href="https://github.com/maarckz/Inventory" target="_blank"><img height="260" width= "960" src="https://github.com/Maarckz/Inventory/blob/main/Images/I3_PAINEL.png?raw=true"/> 
+</div>
+
+<div align="left">
+  <a href="https://github.com/maarckz/Inventory" target="_blank"><img height="260" width= "960" src="https://github.com/Maarckz/Inventory/blob/main/Images/I5_DETAILS.png?raw=true"/> 
+</div>
 
 ### 5.3. Sistema de Busca Avançada
 A funcionalidade de busca avançada é uma ferramenta para atividades de _threat hunting_, auditoria, ou até mesmo uma simples pesquisa, permitindo consultas precisas com uma sintaxe baseada em **tags**.
@@ -173,7 +252,10 @@ A funcionalidade de busca avançada é uma ferramenta para atividades de _threat
 • `inventory:processes:python` - Busca por processos em execução em um ativo.
 • `ram_gb:9-12gb` - Filtra ativos por uma faixa específica de memória RAM.
 
-![[I4_SEARCH.png]]
+<div align="left">
+  <a href="https://github.com/maarckz/Inventory" target="_blank"><img height="260" width= "960" src="https://github.com/Maarckz/Inventory/blob/main/Images/I4_SEARCH.png?raw=true"/> 
+</div>
+
 
 ### 5.4. Geração de Relatórios e Sincronização
 O sistema permite a _exportação de relatórios_ completos do inventário em formatos **PDF** e **CSV**, facilitando a criação de documentação para auditorias de conformidade. Adicionalmente, oferece uma funcionalidade de_ sincronização manual_, que aciona o coletor para atualizar os dados do inventário diretamente do Wazuh, garantindo que as informações estejam sempre atualizadas.
@@ -181,7 +263,9 @@ O sistema permite a _exportação de relatórios_ completos do inventário em fo
 > [!NOTE]
 > Devido a uma restrição de segurança da própria API do Wazuh, a sincronização pode ser lenta de acordo com a quantidade de hosts a serem sincronizados.
 
-![[I6_CONFIG.png]]
+<div align="left">
+  <a href="https://github.com/maarckz/Inventory" target="_blank"><img height="260" width= "960" src="https://github.com/Maarckz/Inventory/blob/main/Images/I6_CONFIG.png?raw=true"/> 
+</div>
 
 ## 6. Arquitetura de Segurança
 
@@ -204,6 +288,228 @@ O acesso à interface web pode ser restrito a faixas de rede específicas. Essa 
 
 ### 6.4. Segurança da Camada de Transporte e Auditoria
 A comunicação entre o cliente e o servidor é protegida com **TLS/SSL**, garantindo a criptografia de todo o tráfego via HTTPS. A aplicação também implementa **Headers de Segurança HTTP** para mitigar ataques comuns a aplicações web. Além disso, o sistema mantém logs detalhados de segurança (`security.log`) e auditoria (`audit.log`), registrando eventos relevantes para garantir a rastreabilidade completa das ações.
+
+
+# 02 - Preparação
+
+
+## Overview
+
+O sistema realiza o inventário dos dispositivos com agentes Wazuh em duas camadas principais:
+
+- **Coletor de Dados**: Responsável por se conectar à API do Wazuh e coletar informações detalhadas de cada agente monitorado, incluindo dados de hardware, sistema operacional, rede e portas abertas. As informações são processadas e armazenadas em arquivos JSON, organizados por hostname, de forma estruturada e padronizada para consumo posterior pela interface web.
+- **Aplicação Web (Flask)**: Consome os arquivos JSON gerados pelo coletor e apresenta os dados por meio de uma interface web segura e interativa. A aplicação disponibiliza dashboards estatísticos, visualizações individuais por máquina, filtros dinâmicos, busca avançada e consultas personalizadas. Essa interface facilita a análise, inspeção e auditoria do inventário de forma eficiente e centralizada.
+
+**Operation Flow**:
+```
+Wazuh Collector → JSON Data → Flask App → Dashboard / Panel
+       │               │              │             └─ Visualização por máquina
+       │               │              └─ Leitura e parsing dos arquivos
+       │               └─ Armazenamento estruturado por hostname
+       └─ Coleta via API: hardware, SO, rede, portas abertas, programas e processos.
+```
+
+**Criar usuários:**
+```bash
+# Aplicação
+sudo useradd -r -s /usr/sbin/nologin inventory
+```
+
+
+# 8 - Instalação do Inventory
+
+O inventory serve como uma solução para centralizar os dados de OSCollector do WAZUH.
+Ao invés de acessar maquina por maquina, é possivel ter uma visão geral e abrangente dos ativos.
+
+**Criar e configurar a pasta:**
+```
+cd /opt
+sudo mkdir Inventory
+chown -R inventory:inventory ./Inventory
+```
+
+**Clonar o repositório:**
+```shell
+
+git clone https://github.com/Maarckz/Inventory.git
+```
+
+**Criar o `.env` dentro de Inventory e colar o conteúdo abaixo**
+```shell
+cd Inventory && nano .env
+```
+
+## Environment (`.env`)
+```bash
+
+# Configurações de segurança
+SECRET_KEY=suachavesupersecreta_altere_esta_chave!
+SESSION_SALT=suachavesupersecreta_altere_esta_chave_salt!
+INVENTORY_DIR=data/inventory
+GROUPS_DIR=data/groups
+AUTH_FILE=data/auth/logins.json
+LOG_DIR=logs
+
+# Configurações de rede
+HOST=0.0.0.0
+PORT=7000
+DEBUG=False
+
+# Configurações de HTTPS
+USE_HTTPS=True
+SSL_CERT_PATH=ssl/cert.pem
+SSL_KEY_PATH=ssl/key.pem
+
+# Permitir apenas IPs de uma faixa específica
+ALLOWED_IP_RANGES=192.168.0.0/16
+
+WAZUH_PROTOCOL=https
+WAZUH_HOST=192.168.56.101
+WAZUH_PORT=55000
+WAZUH_USER=wazuh-wui
+WAZUH_PASSWORD=ma?Pt3XvLxQzpU8.J3rIQ8.dYhxzV?pT
+```
+
+**As credenciais de API, devem ser consultadas dentro da  pasta de instalaçao do WAZUH**
+```shell
+sudo tar -O -xvf wazuh-install-files.tar wazuh-install-files/wazuh-passwords.txt
+```
+
+**Instalar o PIP3:**
+```
+sudo apt install python3-pip python3-venv
+```
+
+
+**Criar o ambiente virtual e de permissões novamente**
+```
+sudo -u inventory python3 -m venv /opt/Inventory/venv
+sudo chown -R inventory:inventory ./Inventory
+```
+
+**Abra um shell como usuário inventory**
+```
+sudo -u inventory -s
+```
+
+**Dentro do shell**
+```
+source /opt/Inventory/venv/bin/activate
+```
+
+**Instalar dependências com o usuário `Inventory`:**
+```shell
+pip3 install flask flask_session bcrypt requests python-dotenv qrcode pyotp reportlab --break-system-packages
+```
+
+**Rodar o coletor (via Painel do Sistema ou Manualmente):**
+```shell
+python3 utils/get_data.py
+```
+
+**Criar TLS/SSL Cert:**
+```shell
+openssl req -x509 -newkey rsa:4096 -nodes -out ssl/cert.pem -keyout ssl/key.pem -days 365 
+```
+
+**Teste da aplicação WEB:**
+```shell
+python3 app.py
+```
+
+**Login e Password padrão:**
+```shell
+Login: admin
+Password: Meuadmin123
+```
+
+> [!NOTE]
+> 1. É possivel criar e remover usuãrios pelo "./utils/man_users.py"
+> 2. Os dados contidos inicialmente sem o SYNC,no dahsboard, são apenas DEMOS, realize o SYNC para obter os dados reais.
+
+# 9 - Criação do serviço utilitário
+Para manter os serviço disponivel mesmo após o reboot, sugiro a criação abaixo no diretório:
+
+**/etc/systemd/system/inventory.service**
+```bash
+[Unit]
+Description=Inventory Application
+After=network.target
+Wants=network-online.target
+
+[Service]
+# Exec
+Type=simple
+WorkingDirectory=/opt/Inventory
+ExecStart=/opt/Inventory/venv/bin/python3 /opt/Inventory/app.py
+
+# Run as unprivileged account (or use DynamicUser=yes, ver abaixo)
+User=inventory
+Group=inventory
+
+# Restart policy
+Restart=always
+RestartSec=5
+
+# Basic sandboxing
+NoNewPrivileges=yes          # impede elevação de privilégios
+PrivateTmp=yes               # /tmp isolado
+PrivateDevices=yes           # sem acesso direto a /dev
+ProtectSystem=full           # /usr e /boot readonly; 'full' protege /etc também
+ProtectHome=yes              # /home e /root inacessíveis
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+
+# Filesystem allowlist: deixa somente o que precisa escrever
+ReadOnlyPaths=/
+ReadWritePaths=/opt/Inventory
+
+# Network restrictions: permita só famílias necessárias (web usa AF_INET/AF_INET6)
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+# Capabilities: remove tudo por padrão (adicione só o que for imprescindível)
+CapabilityBoundingSet=
+AmbientCapabilities=
+
+# Limits
+LimitNOFILE=65536
+LimitNPROC=1024
+
+# Memory exec protections
+MemoryDenyWriteExecute=yes
+LockPersonality=yes
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+
+# Extra: make sure service cannot create new users/suid escalation
+RestrictSUIDSGID=yes
+
+[Install]
+WantedBy=multi-user.target
+
+```
+
+**Para verificar o usuário do serviço / processo:**
+```
+systemctl show -p MainPID --value inventory.service 
+ps -o user,pid,cmd -p <PID>
+```
+
+**Recarregue o daemon do sistema:**
+```shell
+sudo systemctl daemon-reload
+```
+
+**Habilite e inicie o Inventory.service:**
+```shell
+sudo systemctl enable inventory.service && sudo systemctl start inventory.service
+```
+
+
 
 ## 7. Operação e Manutenção
 
@@ -252,320 +558,4 @@ O sistema **INVENTORY** preenche uma lacuna estratégica ao eliminar a cegueira 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-<div align="left">
-  <a href="https://github.com/maarckz/Inventory" target="_blank"><img height="260" width= "960" src="https://github.com/Maarckz/Maarckz/blob/main/Images/Inventory.gif?raw=true"/> 
-</div>
-
-# Sistema de Inventário de Máquinas com WAZUH
-
-Este documento descreve a arquitetura, os componentes e o funcionamento do INVENTORY, um sistema de inventário de máquinas para ambientes corporativos utilizando o Wazuh. A solução integra coleta de dados via API/script, processamento e visualização baseada na web, com ênfase em segurança e facilidade de operação. A arquitetura é modular, escalável e segue as melhores práticas de proteção de dados.
-
-## Overview
-
-O sistema realiza o inventário dos dispositivos com agentes Wazuh em duas camadas principais:
-
-- **Coletor de Dados**: Responsável por se conectar à API do Wazuh e coletar informações detalhadas de cada agente monitorado, incluindo dados de hardware, sistema operacional, rede e portas abertas. As informações são processadas e armazenadas em arquivos JSON, organizados por hostname, de forma estruturada e padronizada para consumo posterior pela interface web.
-- **Aplicação Web (Flask)**: Consome os arquivos JSON gerados pelo coletor e apresenta os dados por meio de uma interface web segura e interativa. A aplicação disponibiliza dashboards estatísticos, visualizações individuais por máquina, filtros dinâmicos, busca avançada e consultas personalizadas. Essa interface facilita a análise, inspeção e auditoria do inventário de forma eficiente e centralizada.
-
-**Operation Flow**:
-```
-Wazuh Collector → JSON Data → Flask App → Dashboard / Panel
-       │               │              │             └─ Visualização por máquina
-       │               │              └─ Leitura e parsing dos arquivos
-       │               └─ Armazenamento estruturado por hostname
-       └─ Coleta via API: hardware, SO, rede, portas abertas, programas e processos.
-```
-
-## Componentes Principais
-
-### 1. Collector Module
-
-Interage com a API do Wazuh seguindo os passos abaixo:
-
-- **JWT Authentication**: Obtém um token de acesso para requisições autenticadas.
-- **Listagem de Agentes**: Recupera os dispositivos monitorados via API.
-- **Inventory Collection**: Extrai especificações de hardware, detalhes do sistema operacional, informações de rede e portas abertas para cada agente.
-- **Classificação de Status**: Marca os dispositivos de acordo com status da última sincronização, entre ativos e inativos.
-- **Local Storage**: Grava arquivos JSON estruturados, nomeados de acordo com o hostname de cada dispositivo.
-
-```
-Dados Coletados:
-
-Informações Básicas
-    Hostname
-    Agent ID
-    Sistema Operacional
-    Arquitetura
-    Serial da placa
-    Última varredura
-Hardware
-    CPU
-    Núcleos
-    Memória RAM
-Rede
-    Interfaces de rede
-    Portas de rede abertas
-    Configurações de rede
-Software
-    Pacotes instalados
-    Processos em execução
-Classificação de Atividade
-    Dispositivos classificados como ativos ou inativos conforme a última sincronização.
-Grupos do WAZUH
-```
-
-### 2. Web Application (Flask)
-
-Acessível via navegador, com as seguintes funcionalidades:
-
-- **Autenticação Segura**  
-  - Senhas protegidas com hash bcrypt
-  - Bloqueio de IP após tentativas falhas configuráveis
-  - Expiração automática da sessão (ex: 30 minutos)
-  - MFA TOTP
-- **Statistical Dashboard**  
-  - Total de máquinas cadastradas, ativas e inativas
-  - Distribuição de Sistemas Operacionais
-  - Tipos de processadores e memória RAM
-  - Portas de Rede mais comun
-  - Serviços
-  - Processos com maior repetição
-- **Painel de Máquinas**  
-  - Lista completa de dispositivos com filtros avançados
-- **Busca Avançada**  
-  - Pesquisa por IP, sistema operacional, hardware ou outros critérios
-- **Detalhes da Máquina**  
-  - Visão detalhada dos dados coletados para cada host
-
-<div align="left">
-  <a href="https://github.com/maarckz/Inventory" target="_blank"><img height="500" width= "960" src="https://github.com/Maarckz/Maarckz/blob/main/Images/InventoryDemo.gif?raw=true"/> 
-</div>
-
-
-## Estrutura de Pastas
-
-```
-INVENTORY
-├── app.py
-├── data
-│   ├── auth
-│   │   └── logins.json
-│   └── inventory
-│       ├── agent_1.json
-│       ├── agent_2.json
-│       ├── agent_3.json
-├── ssl
-│   ├── cert.pem
-│   └── key.pem
-├── static
-│   ├── css
-│   │   ├── all.min.css
-│   │   ├── base.css
-│   │   ├── components.css
-│   │   ├── dashboard.css
-│   │   ├── error.css
-│   │   ├── login.css
-│   │   ├── machine_details.css
-│   │   ├── painel.css
-│   │   ├── search.css
-│   │   ├── settings.css
-│   │   └── styles.css
-│   ├── favicon.png
-│   ├── js
-│   │   ├── base.js
-│   │   ├── chart.js
-│   │   ├── common.js
-│   │   ├── dashboard.js
-│   │   ├── machine_details.js
-│   │   ├── painel.js
-│   │   └── search.js
-│   ├── logo.svg
-│   └── mlogo.svg
-├── templates
-│   ├── base.html
-│   ├── dashboard.html
-│   ├── error.html
-│   ├── login.html
-│   ├── machine_details.html
-│   ├── painel.html
-│   ├── search.html
-│   ├── settings.html
-│   └── verify_mfa.html
-└── utils
-    ├── create_machines.py
-    ├── get_data.py
-    ├── get_groups.py
-    ├── language.py
-    ├── man_users.py
-    ├── mfa_utils.py
-    └── pdf_export.py
-```
-
-## Pré-requisitos
-- Linux
-- Python 3.8+
-- SIEM WAZUH + Agents Deploy
-- Dependencias: `Flask`, `bcrypt`, `python-dotenv`, `qrcode`, `pyotp`, `flask_session`, `reportlab`
-
-
-
-## Instalação & Execução
-
-1. Clonar o repositório
-```bash
-git clone https://github.com/Maarckz/Inventory.git
-```
-
-2.Criar o `.env` dentro de Inventory e colar o conteúdo abaixo
-```bash
-cd Inventory && nano .env
-```
-
-## Environment (`.env`)
-```ini
-# Configurações de segurança
-SECRET_KEY=suachavesupersecreta_altere_esta_chave!
-SESSION_SALT=suachavesupersecreta_altere_esta_chave_salt!
-INVENTORY_DIR=data/inventory
-GROUPS_DIR=data/groups
-AUTH_FILE=data/auth/logins.json
-LOG_DIR=logs
-
-# Configurações de rede
-HOST=0.0.0.0
-PORT=8000
-DEBUG=False
-
-# Configurações de HTTPS
-USE_HTTPS=True
-SSL_CERT_PATH=ssl/cert.pem
-SSL_KEY_PATH=ssl/key.pem
-
-# Permitir apenas IPs de uma faixa específica
-ALLOWED_IP_RANGES=192.168.0.0/16
-
-WAZUH_PROTOCOL=https
-WAZUH_HOST=192.168.56.101
-WAZUH_PORT=55000
-WAZUH_USER=wazuh-wui
-WAZUH_PASSWORD=ma?Pt3XvLxQzpU8.J3rIQ8.dYhxzV?pT
-```
-
-Você pode recuperar as credenciais a partir do arquivo .tar do WAZUH com o seguinte comando:
-```bash
-sudo tar -axf wazuh-install-files.tar wazuh-install-files/wazuh-passwords.txt -O
-```
-
-3. Instalar dependências:
-```bash
-pip3 install flask flask_session bcrypt requests python-dotenv qrcode pyotp reportlab
-```
-4. Rodar o coletor (via Painel do Sistema ou Manualmente):
-```bash
-python3 utils/get_data.py
-```
-
-5. Criar TLS/SSL Cert:
-```bash
-openssl req -x509 -newkey rsa:4096 -nodes -out ssl/cert.pem -keyout ssl/key.pem -days 365 
-```
-6. Iniciar a aplicação WEB:
-```bash
-python app.py
-```
-7. Login e Password padrão:
-```bash
-Login: admin
-Password: Meuadmin123
-```
-OBSERVAÇÕES: 
-1. É possivel criar e remover usuãrios pelo "./utils/man_users.py"
-2. Os dados contidos inicialmente sem o SYNC,no dahsboard, são apenas DEMOS, realize o SYNC para obter os dados reais.
-
-
-## Configuração de Serviço
-
-1. Crie um arquivo para o serviço  
-```bash
-sudo nano /etc/systemd/system/inventory.service
-```
-2. Cole o conteúdo:
-
-```ini
-[Unit]
-Description=Flask Inventory Application
-After=network.target
-
-[Service]
-Type=simple
-#User=YOUR USER NAME
-WorkingDirectory=/opt/Inventory
-ExecStart=/usr/bin/python3 /opt/Inventory/app.py
-Restart=always
-RestartSec=5
-StandardOutput=journal
-StandardError=journal
-
-[Install]
-WantedBy=multi-user.target
-```
-3. Recarregue o daemon do sistema 
-```bash
-sudo systemctl daemon-reload
-```
-4. Habilite e inicie o Inventory.service  
-
-```bash
- sudo systemctl enable inventory.service && sudo systemctl start inventory.service
- ```
-## Funcionalidade de Pesquisa
-Agora é possível usar tags para filtrar as requisições de busca:
-
-```ìni
-ports:445                 # Pesquisa por número de porta
-agent_info:10.7.6.20      # Pesquisa em hostname, IP, status ou ID
-inventory:os:Windows      # Pesquisa em campos do sistema operacional
-inventory:hardware:i7     # Pesquisa em CPU, RAM ou serial da placa
-inventory:packages:chrome # Pesquisa em pacotes instalados
-inventory:processes:python # Pesquisa em processos em execução
-```
-## Monitoramento & Manutenção
-- **Rotinas Recomendadas**  
-  - Execução diária do coletor  
-  - Auditoria periódica do arquivo de usuários (ex: `users.json` ou similar)  
-  - Renovação regular dos certificados SSL  
-
-
-## Melhorias Futuras
-- **Docker**  
-  - Implantação com imagem Docker  
-  - Automação com Docker Compose (Dockerfile)  
-
-- **BackEnd**
-  - Filtros por Grupos de Agentes   
-  - Proteção contra força bruta
-  - Implementar banco Redis
-  - Leitura de JSON do Wazuh via API
-
-- **Aplicação Web**
-  - Exibição de Grupos de Agentes 
-  - API REST para integrações externas
-  - Sincronizaçao periodica definida no painel de config  
-
-- **Segurança**  
-  - Criptografia dos arquivos JSON do inventário  
-
-- **Exportação de Relatórios**  
-  - Exportar para arquivos PDF ou CSV  
 
