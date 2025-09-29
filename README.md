@@ -227,18 +227,18 @@ O dashboard é a visão centralizada e estatística do inventário, projetado pa
 • **Gráficos Interativos:** Exibe visualizações gráficas da distribuição de sistemas operacionais, tipos de processadores, faixas de memória RAM, portas de rede mais comuns e processos com maior recorrência, além da **evolução temporal do status dos agentes**, permitindo a análise de tendências. O clique em um gráfico redireciona para a busca avançada com o filtro correspondente aplicado.
 
 <div align="left">
-  <a href="https://github.com/maarckz/Inventory" target="_blank"><img height="260" width= "960" src="https://github.com/Maarckz/Inventory/blob/main/Images/I2_DASHBOARD.png?raw=true"/> 
+  <a href="https://github.com/maarckz/Inventory" target="_blank"><img src="https://github.com/Maarckz/Inventory/blob/main/Images/I2_DASHBOARD.png?raw=true"/> 
 </div>
 
 ### 5.2. Painel de Máquinas e Detalhes de Ativos
 Este painel fornece uma listagem de **todos os dispositivos inventariados**, exibindo informações resumidas e o status de atividade em _tempo real_. A partir desta lista, é possível navegar para uma página de detalhes completa para cada ativo, que consolida todas as informações extraídas do Wazuh, incluindo hardware, rede, software instalado e processos em execução.
 
 <div align="left">
-  <a href="https://github.com/maarckz/Inventory" target="_blank"><img height="260" width= "960" src="https://github.com/Maarckz/Inventory/blob/main/Images/I3_PAINEL.png?raw=true"/> 
+  <a href="https://github.com/maarckz/Inventory" target="_blank"><img src="https://github.com/Maarckz/Inventory/blob/main/Images/I3_PAINEL.png?raw=true"/> 
 </div>
 
 <div align="left">
-  <a href="https://github.com/maarckz/Inventory" target="_blank"><img height="260" width= "960" src="https://github.com/Maarckz/Inventory/blob/main/Images/I5_DETAILS.png?raw=true"/> 
+  <a href="https://github.com/maarckz/Inventory" target="_blank"><img src="https://github.com/Maarckz/Inventory/blob/main/Images/I5_DETAILS.png?raw=true"/> 
 </div>
 
 ### 5.3. Sistema de Busca Avançada
@@ -253,7 +253,7 @@ A funcionalidade de busca avançada é uma ferramenta para atividades de _threat
 • `ram_gb:9-12gb` - Filtra ativos por uma faixa específica de memória RAM.
 
 <div align="left">
-  <a href="https://github.com/maarckz/Inventory" target="_blank"><img height="260" width= "960" src="https://github.com/Maarckz/Inventory/blob/main/Images/I4_SEARCH.png?raw=true"/> 
+  <a href="https://github.com/maarckz/Inventory" target="_blank"><img src="https://github.com/Maarckz/Inventory/blob/main/Images/I4_SEARCH.png?raw=true"/> 
 </div>
 
 
@@ -264,7 +264,7 @@ O sistema permite a _exportação de relatórios_ completos do inventário em fo
 > Devido a uma restrição de segurança da própria API do Wazuh, a sincronização pode ser lenta de acordo com a quantidade de hosts a serem sincronizados.
 
 <div align="left">
-  <a href="https://github.com/maarckz/Inventory" target="_blank"><img height="260" width= "960" src="https://github.com/Maarckz/Inventory/blob/main/Images/I6_CONFIG.png?raw=true"/> 
+  <a href="https://github.com/maarckz/Inventory" target="_blank"><img  src="https://github.com/Maarckz/Inventory/blob/main/Images/I6_CONFIG.png?raw=true"/> 
 </div>
 
 ## 6. Arquitetura de Segurança
@@ -282,7 +282,10 @@ A proteção de credenciais e o controle de acesso são realizados por meio de u
 ### 6.2. Autenticação Multifator (MFA)
 Para reforçar a segurança do login, o sistema suporta **Autenticação Multifator (MFA)** baseada no padrão _TOTP (Time-based One-Time Password)_. Esta funcionalidade é compatível com aplicativos autenticadores populares, como o _Google Authenticator_, pode ser configurada de forma simples através da leitura de um QR code e oferece suporte a **backup de códigos de recuperação**.
 
-![[I7_MFA.png]]
+<div align="left">
+  <a href="https://github.com/maarckz/Inventory" target="_blank"><img src="https://github.com/Maarckz/Inventory/blob/main/Images/I7_MFA.png?raw=true"/> 
+</div>
+    
 ### 6.3. Controle de Acesso à Rede
 O acesso à interface web pode ser restrito a faixas de rede específicas. Essa configuração é controlada pela variável de ambiente `ALLOWED_IP_RANGES`, permitindo que apenas usuários de redes confiáveis (como a rede corporativa interna) possam acessar a aplicação.
 
