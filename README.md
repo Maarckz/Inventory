@@ -4,12 +4,16 @@ O **INVENTORY** é a solução definitiva para a gestão centralizada do invent�
 
 
 <div align="left">
-  <a href="https://github.com/maarckz/Inventory" target="_blank"><img height="260" width= "960" src="https://github.com/Maarckz/Maarckz/blob/main/Images/Inventory.gif?raw=true"/> 
+  <a href="https://github.com/maarckz/Inventory" target="_blank"><img height="260" width= "960" src="https://github.com/Maarckz/Inventory/blob/main/Images/I1_Inventory.gif?raw=true"/> 
 </div>
 
 O objetivo principal do INVENTORY é eliminar a "cegueira" sobre os ativos de TI, fornecendo às equipes de segurança, operações e _compliance_ uma fonte única e confiável de informação sobre o estado, _hardware_, _software_ e segurança de cada dispositivo.
 
 A principal vantagem reside na **utilização dos agentes nativos do Wazuh**, eliminando a necessidade de instalar _softwares_ adicionais nos _endpoints_ e, consequentemente, **reduzindo a superfície de ataque** e o _overhead_ operacional.
+
+<div align="left">
+  <a href="https://github.com/maarckz/Inventory" target="_blank"><img height="260" width= "960" src="https://github.com/Maarckz/Maarckz/blob/main/Images/Inventory.gif?raw=true"/> 
+</div>
 
 ![[IV1_APRESENTATION.mp4]]
 ### 1.1. Objetivos da Solução:
