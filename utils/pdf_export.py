@@ -117,7 +117,8 @@ def normalize_details(machine):
     # Debug no Terminal para você ver o que está chegando
     hostname = get_value(machine, 'hostname')
     if not raw_ports:
-        print(f"[DEBUG PDF] Máquina {hostname} sem portas detectadas (Lista vazia ou None).")
+        pass
+        #print(f"[DEBUG PDF] Máquina {hostname} sem portas detectadas (Lista vazia ou None).")
     
     return raw_ifaces, raw_ports
 

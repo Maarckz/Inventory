@@ -12,12 +12,20 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-
+# --- CONFIGURAÇÕES E DIRETÓRIOS ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, '..', 'data')
+
+# Diretórios de Inventário
 INVENTORY_FOLDER = os.path.join(DATA_DIR, 'inventory')
 OLD_HOSTS_DIR = os.path.join(INVENTORY_FOLDER, 'hosts_antigos')
+
+# Diretórios de Grupos
+GROUPS_DIR = os.path.join(DATA_DIR, 'groups')
+GROUPS_FILE = os.path.join(GROUPS_DIR, 'groups.json')
+
 LOGS_DIR = os.path.join(BASE_DIR, '..', 'logs')
+
 DEFAULT_STATUS = 'Desligado'
 ENDPOINTS = [
     'hardware', 'os', 'packages', 'ports',
@@ -32,6 +40,7 @@ def setup_directories():
     """Cria diretórios necessários se não existirem"""
     os.makedirs(INVENTORY_FOLDER, exist_ok=True)
     os.makedirs(OLD_HOSTS_DIR, exist_ok=True)
+    os.makedirs(GROUPS_DIR, exist_ok=True) # Cria pasta de grupos
     os.makedirs(LOGS_DIR, exist_ok=True)
 
 
@@ -111,8 +120,9 @@ class WazuhAPI:
             logging.error(f'Falha ao obter JSON de {url}: {e}')
             return {}
 
+
 class InventoryManager:
-    """Gerencia extração e armazenamento de inventário"""
+    """Gerencia extração e armazenamento de inventário dos agentes"""
     def __init__(self, api: WazuhAPI):
         self.api = api
 
@@ -163,21 +173,45 @@ class InventoryManager:
         """Processa um agente e retorna hostname seguro"""
         agent_id = agent.get('id')
         agent['calculated_status'] = self._determine_status(agent.get('lastKeepAlive', 'unknown'))
+        
+        # --- ALTERAÇÃO 1: Captura e Tratamento dos Grupos ---
+        # O Wazuh retorna lista ['default', 'web'] ou string se for apenas um em versões antigas
+        raw_groups = agent.get('group', ['default'])
+        # Garante que seja sempre uma lista para facilitar no frontend
+        if isinstance(raw_groups, str):
+            agent_groups = [raw_groups]
+        else:
+            agent_groups = raw_groups
+            
         inv = self._fetch_inventory(agent_id)
+        
         hostname = (
             inv.get('os', [{}])[0].get('hostname')
             or agent.get('name', 'unknown')
         ).upper().strip() or 'UNKNOWN'
+        
         safe = ''.join(c for c in hostname if c.isalnum() or c in '.-_ ').strip()
-        self._save_json(safe, {'agent_info': agent, 'inventory': inv})
+        
+        # --- ALTERAÇÃO 2: Salvando a chave 'groups' no JSON ---
+        payload = {
+            'agent_info': agent,
+            'inventory': inv,
+            'groups': agent_groups,  # <--- NOVA CHAVE IMPORTANTE
+            'last_update': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        }
+        
+        self._save_json(safe, payload)
         return safe
 
     def process_agents(self, max_workers: int = 5) -> set:
         """Processa todos os agentes usando ThreadPoolExecutor"""
         existing = set(os.listdir(INVENTORY_FOLDER))
+        
+        # --- ALTERAÇÃO 3: Solicitando o campo 'group' na API ---
         resp = self.api.get_json(
-            'agents?select=id,name,ip,lastKeepAlive,status,os.platform,os.name,os.version'
+            'agents?select=id,name,ip,lastKeepAlive,status,os.platform,os.name,os.version,group'
         )
+        
         agents = resp.get('data', {}).get('affected_items', [])
         if not agents:
             logging.warning('Nenhum agente encontrado')
@@ -211,6 +245,63 @@ class InventoryManager:
                 moved += 1
         logging.info(f"{moved} arquivos antigos movidos")
 
+
+class GroupsManager:
+    """Gerencia extração de Grupos e Agentes"""
+    def __init__(self, api: WazuhAPI):
+        self.api = api
+
+    def fetch_and_save_groups(self):
+        """Busca todos os grupos, seus agentes e salva em JSON"""
+        logging.info("Iniciando extração de grupos...")
+        
+        # 1. Obter lista de grupos
+        resp = self.api.get_json('groups?pretty=true')
+        grupos = resp.get('data', {}).get('affected_items', [])
+        
+        if not grupos:
+            logging.warning("Nenhum grupo encontrado.")
+            return
+
+        resultado = []
+        
+        # 2. Iterar sobre cada grupo para buscar seus agentes
+        for grupo in grupos:
+            grupo_name = grupo.get('name')
+            
+            # Busca agentes do grupo
+            # endpoint: /groups/{group_name}/agents
+            resp_agentes = self.api.get_json(f'groups/{grupo_name}/agents?select=id,name&limit=1000')
+            agentes = resp_agentes.get('data', {}).get('affected_items', [])
+            
+            grupo_info = {
+                "grupo": grupo_name,
+                "quantidade_agentes": len(agentes),
+                "agentes": [
+                    {
+                        "id": agente.get('id'),
+                        "name": agente.get('name')
+                    }
+                    for agente in agentes
+                ]
+            }
+            resultado.append(grupo_info)
+            logging.info(f"Grupo '{grupo_name}' processado: {len(agentes)} agentes.")
+
+        # 3. Salvar arquivo
+        self._save_groups_json(resultado)
+
+    @staticmethod
+    def _save_groups_json(data):
+        """Salva os dados de grupos em arquivo JSON"""
+        try:
+            with open(GROUPS_FILE, 'w', encoding='utf-8') as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+            logging.info(f"Dados de grupos salvos em: {GROUPS_FILE}")
+        except Exception as e:
+            logging.error(f"Erro ao salvar arquivo de grupos: {e}")
+
+
 def main():
     setup_directories()
     setup_logging()
@@ -233,12 +324,20 @@ def main():
         logging.error('Autenticação crítica falhou. Saindo.')
         return
 
-    start = time.time()
+    start_time = time.time()
+
+    # 1. Processar Inventário dos Agentes
+    logging.info(">>> Iniciando processamento de INVENTÁRIO")
     inv_mgr = InventoryManager(api)
     hosts = inv_mgr.process_agents(max_workers=5)
-    elapsed = time.time() - start
+    
+    # 2. Processar Grupos
+    logging.info(">>> Iniciando processamento de GRUPOS")
+    groups_mgr = GroupsManager(api)
+    groups_mgr.fetch_and_save_groups()
 
-    logging.info(f"Processados {len(hosts)} hosts em {elapsed:.2f}s")
+    elapsed = time.time() - start_time
+    logging.info(f"Ciclo completo finalizado. Processados {len(hosts)} hosts em {elapsed:.2f}s")
 
 
 if __name__ == '__main__':

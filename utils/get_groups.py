@@ -15,11 +15,11 @@ class WazuhGroupsAPI:
         # Carregar variáveis de ambiente
         load_dotenv()
         
-        self.protocol = os.getenv('WAZUH_PROTOCOL', 'https')
-        self.host = os.getenv('WAZUH_HOST', '192.168.56.101')
-        self.port = os.getenv('WAZUH_PORT', '55000')
-        self.user = os.getenv('WAZUH_USER', 'wazuh-wui')
-        self.password = os.getenv('WAZUH_PASSWORD', 'ma?Pt3XvLxQzpU8.J3rIQ8.dYhxzV?pT')
+        self.protocol = os.getenv('WAZUH_PROTOCOL')
+        self.host = os.getenv('WAZUH_HOST')
+        self.port = os.getenv('WAZUH_PORT')
+        self.user = os.getenv('WAZUH_USER')
+        self.password = os.getenv('WAZUH_PASSWORD')
         
         self.base_url = f"{self.protocol}://{self.host}:{self.port}"
         self.session = requests.Session()
