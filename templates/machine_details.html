@@ -173,14 +173,13 @@
                 </table>
             </div>
         </div>
-
-        <div class="details-section">
+        <div class="details-section collapsed">
             <div class="section-header" onclick="toggleSection(this)">
                 <i class="fas fa-box"></i>
                 <h3>Installed Packages ({{ machine.packages|length }})</h3>
-                <i class="toggle-icon fas fa-chevron-down"></i>
+                <i class="toggle-icon fas fa-chevron-right"></i>
             </div>
-            <div class="section-body">
+            <div class="section-body" style="display: none;">
                 <div class="table-container">
                     <table class="packages-table sortable">
                         <thead>
@@ -207,14 +206,13 @@
                 </div>
             </div>
         </div>
-
-        <div class="details-section">
+        <div class="details-section collapsed">
             <div class="section-header" onclick="toggleSection(this)">
                 <i class="fas fa-cogs"></i>
                 <h3>Running Processes ({{ machine.processes|length }})</h3>
-                <i class="toggle-icon fas fa-chevron-down"></i>
+                <i class="toggle-icon fas fa-chevron-right"></i> <!-- Ícone apontando para a direita -->
             </div>
-            <div class="section-body">
+            <div class="section-body" style="display: none;">   
                 <div class="table-container">
                     <table class="processes-table sortable">
                         <thead>
