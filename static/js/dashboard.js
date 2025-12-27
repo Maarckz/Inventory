@@ -32,12 +32,20 @@ document.addEventListener('DOMContentLoaded', function() {
                     case 'cpuChart':
                         query = 'inventory:hardware:' + chart.data.labels[index].toLowerCase();
                         break;
+                    //case 'ramChart':
+                    //    const ramLabel = chart.data.labels[index].toLowerCase();
+                    //    query = ramLabel.includes('+') 
+                    //        ? 'ram_gb:>' + ramLabel.replace('+', '').replace('gb', '').trim()
+                    //        : 'ram_gb:' + ramLabel;
+                    //    break;
+
+
                     case 'ramChart':
                         const ramLabel = chart.data.labels[index].toLowerCase();
-                        query = ramLabel.includes('+') 
-                            ? 'ram_gb:>' + ramLabel.replace('+', '').replace('gb', '').trim()
-                            : 'ram_gb:' + ramLabel;
+                        
+                        query = 'ram_gb:' + ramLabel; 
                         break;
+                            
                     case 'portChart':
                         const portLabel = chart.data.labels[index];
                         const portNumber = portLabel.replace(/\D/g, '');
