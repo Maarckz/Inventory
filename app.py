@@ -196,6 +196,16 @@ def formatar_data(data_iso):
 
 app.jinja_env.filters['formatar_data'] = formatar_data
 
+def get_ram_range(ram_gb):
+    ranges = [
+        (2, "0-2GB"), (4, "3-4GB"), (8, "5-8GB"),
+        (16, "9-16GB"), (32, "17-32GB"), (64, "33-64GB")
+    ]
+    for limit, label in ranges:
+        if ram_gb <= limit:
+            return label
+    return "64+GB" if ram_gb > 0 else "Unknown"
+
 def get_machine_stats(machines):
     stats = {
         'os': defaultdict(int),
@@ -218,30 +228,7 @@ def get_machine_stats(machines):
         
         # Process RAM stats com mais granularidade
         ram_gb = machine.get('ram_gb', 0)
-        if ram_gb > 0:
-            if ram_gb <= 2:
-                ram_range = "0-2GB"
-            elif ram_gb <= 4:
-                ram_range = "3-4GB"
-            elif ram_gb <= 6:
-                ram_range = "5-6GB"
-            elif ram_gb <= 8:
-                ram_range = "7-8GB"
-            elif ram_gb <= 12:
-                ram_range = "9-12GB"
-            elif ram_gb <= 16:
-                ram_range = "13-16GB"
-            elif ram_gb <= 24:
-                ram_range = "17-24GB"
-            elif ram_gb <= 32:
-                ram_range = "25-32GB"
-            elif ram_gb <= 64:
-                ram_range = "33-64GB"
-            else:
-                ram_range = "64+GB"
-        else:
-            ram_range = 'Unknown'
-        stats['ram'][ram_range] += 1
+        stats['ram'][get_ram_range(ram_gb)] += 1
         
         status = machine.get('device_status', 'Inativo')
         stats['status'][status] += 1
@@ -665,209 +652,161 @@ def search():
     if 'username' not in session:
         return redirect(url_for('login'))
     
+    # Limpeza inicial da query
     query = request.args.get('query', '')[:100].strip().lower()
     machines = get_cached_machines()
-    
-    if query:
-        if query.startswith('ram_gb:'):
-            ram_query = query[7:] 
-            results = []
-            added_hostnames = set()
-            
-            ram_ranges = {
-                "0-2gb": (0, 2),
-                "3-4gb": (3, 4),
-                "5-6gb": (5, 6),
-                "7-8gb": (7, 8),
-                "9-12gb": (9, 12),
-                "13-16gb": (13, 16),
-                "17-24gb": (17, 24),
-                "25-32gb": (25, 32),
-                "33-64gb": (33, 64),
-                "64+gb": (65, float('inf'))
-            }
-            
-            if ram_query in ram_ranges:
-                min_ram, max_ram = ram_ranges[ram_query]
-                
-                for m in machines:
-                    hostname = m.get('hostname', '')
-                    
-                    if hostname in added_hostnames:
-                        continue
-                        
-                    ram_gb = m.get('ram_gb', 0)
-                    
-                    if ram_gb >= min_ram and ram_gb <= max_ram:
-                        results.append(m)
-                        added_hostnames.add(hostname)
-            else:
-                try:
-                    ram_value = float(ram_query.replace('gb', ''))
-                    for m in machines:
-                        hostname = m.get('hostname', '')
-                        
-                        if hostname in added_hostnames:
-                            continue
-                            
-                        ram_gb = m.get('ram_gb', 0)
-                        
-                        if ram_gb == ram_value:
-                            results.append(m)
-                            added_hostnames.add(hostname)
-                except ValueError:
-                    pass
-            
-            return render_template('search.html', results=results)
-        
-        if ':' in query:
-            tag_parts = query.split(':', 2)
-            tag = tag_parts[0].strip()
-            search_term = tag_parts[-1].strip()
-            
-            sub_tag = tag_parts[1].strip() if len(tag_parts) > 2 else None
-            
-            results = []
-            added_hostnames = set()
-            
-            for m in machines:
-                hostname = m.get('hostname', '')
-                
-                if hostname in added_hostnames:
-                    continue
-                    
-                found = False
-                
-                if tag == 'ports':
-                    for port in m.get('ports', []):
-                        if search_term == str(port.get('local', {}).get('port', '')):
-                            found = True
-                            break
-                            
-                elif tag == 'agent_info':
-                    if (search_term in m.get('hostname', '').lower() or
-                        search_term in m.get('ip_address', '').lower() or
-                        search_term in m.get('id', '').lower()):
-                        found = True
-                    
-                    elif sub_tag == 'status':
-                        status_map = {
-                            'active': 'ativo',
-                            'disconnected': 'inativo'
-                        }
-                        machine_status = m.get('device_status', '').lower()
-                        if status_map.get(search_term) == machine_status:
-                            found = True
-                
-                elif tag == 'inventory' and sub_tag:
-                    if sub_tag == 'os':
-                        if (search_term in m.get('os_name', '').lower() or
-                            search_term in m.get('os_version', '').lower() or
-                            search_term in m.get('os_architecture', '').lower() or
-                            search_term in m.get('os_kernel', '').lower() or
-                            search_term in m.get('os_platform', '').lower()):
-                            found = True
-                    
-                    elif sub_tag == 'hardware':
-                        if (search_term in m.get('cpu_name', '').lower() or
-                            search_term in str(m.get('cpu_cores', '')).lower() or
-                            search_term in str(m.get('ram_gb', '')).lower() or
-                            search_term in m.get('board_serial', '').lower()):
-                            found = True
-                    
-                    elif sub_tag == 'packages':
-                        for pkg in m.get('packages', []):
-                            if (search_term in pkg.get('name', '').lower() or
-                                search_term in pkg.get('version', '').lower()):
-                                found = True
-                                break
-                    
-                    elif sub_tag == 'processes':
-                        for proc in m.get('processes', []):
-                            if (search_term in proc.get('name', '').lower() or
-                                search_term in str(proc.get('pid', '')).lower() or
-                                search_term in proc.get('cmd', '').lower()):
-                                found = True
-                                break
-                
-                if found:
-                    results.append(m)
-                    added_hostnames.add(hostname)
-        else:
-            results = []
-            added_hostnames = set()
-            
-            for m in machines:
-                hostname = m.get('hostname', '')
-                
-                if hostname in added_hostnames:
-                    continue
-                    
-                found = False
-                
-                if (query in m.get('hostname', '').lower() or
-                    query in m.get('ip_address', '').lower() or
-                    query in m.get('os_name', '').lower() or
-                    query in m.get('cpu_name', '').lower() or
-                    query in m.get('device_status', '').lower() or
-                    query in str(m.get('ram_gb', 0))):
-                    found = True
-                    
-                if not found:
-                    for iface in m.get('netiface', []):
-                        if (query in iface.get('name', '').lower() or
-                            query in iface.get('mac', '').lower()):
-                            found = True
-                            break
-                            
-                if not found:
-                    for addr in m.get('netaddr', []):
-                        if (query in addr.get('iface', '').lower() or
-                            query in addr.get('address', '').lower()):
-                            found = True
-                            break
-                            
-                if not found:
-                    for port in m.get('ports', []):
-                        if (query in str(port.get('local', {}).get('port', '')) or
-                            query in port.get('process', '').lower()):
-                            found = True
-                            break
-                            
-                if not found:
-                    for proc in m.get('processes', []):
-                        if (query in str(proc.get('pid', '')).lower() or
-                            query in proc.get('name', '').lower() or
-                            query in proc.get('euser', '').lower() or
-                            query in proc.get('cmd', '').lower()):
-                            found = True
-                            break
+    results = []
+    added_hostnames = set()
 
-                if not found:
-                    for pkg in m.get('packages', []):
-                        if (query in pkg.get('name', '').lower() or
-                            query in pkg.get('version', '').lower() or
-                            query in pkg.get('description', '').lower() or
-                            query in pkg.get('architecture', '').lower() or
-                            query in pkg.get('format', '').lower()):
-                            found = True
-                            break
+    if not query:
+        return render_template('search.html', results=machines, query="")
+
+    # --- LÓGICA ESPECIAL PARA RAM (RANGE E VALORES) ---
+    if query.startswith('ram_gb:'):
+        # Remove prefixo e a unidade 'gb' para pegar apenas os números/range
+        ram_query = query.replace('ram_gb:', '').replace('gb', '').strip()
+        
+        # Mapeamento de ranges (deve ser idêntico aos labels do Chart.js)
+        ram_ranges = {
+            "0-2": (0, 2),
+            "3-4": (3, 4),
+            "5-6": (5, 6),
+            "7-8": (7, 8),
+            "9-12": (9, 12),
+            "13-16": (13, 16),
+            "17-24": (17, 24),
+            "25-32": (25, 32),
+            "33-64": (33, 64)
+        }
+
+        for m in machines:
+            try:
+                # Converte ram_gb da máquina para float para comparação precisa
+                ram_val = float(m.get('ram_gb', 0))
                 
-                if not found:
-                    if (query in m.get('os_version', '').lower() or
-                        query in m.get('os_platform', '').lower() or
-                        query in m.get('os_architecture', '').lower() or
-                        query in m.get('board_serial', '').lower() or
-                        query in m.get('os_kernel', '').lower()):
+                # Caso 1: Range (ex: 17-32)
+                if "-" in ram_query:
+                    if ram_query in ram_ranges:
+                        min_r, max_r = ram_ranges[ram_query]
+                    else:
+                        # Tenta extrair range manual se não estiver no dicionário
+                        parts = ram_query.split('-')
+                        min_r, max_r = float(parts[0]), float(parts[1])
+                    
+                    if min_r <= ram_val <= max_r:
+                        results.append(m)
+                
+                # Caso 2: Maior que (ex: >64)
+                elif ram_query.startswith('>'):
+                    limit = float(ram_query.replace('>', ''))
+                    if ram_val > limit:
+                        results.append(m)
+                
+                # Caso 3: Menor que (ex: <8)
+                elif ram_query.startswith('<'):
+                    limit = float(ram_query.replace('<', ''))
+                    if ram_val < limit:
+                        results.append(m)
+
+                # Caso 4: Valor exato ou aproximado
+                else:
+                    if float(ram_query) == ram_val:
+                        results.append(m)
+            except (ValueError, IndexError):
+                continue
+        
+        return render_template('search.html', results=results, query=query)
+
+    # --- LÓGICA PARA TAGS (ports:, agent_info:, inventory:xxx:) ---
+    if ':' in query:
+        tag_parts = query.split(':')
+        tag = tag_parts[0].strip()
+        
+        # Pega o último termo como termo de busca
+        search_term = tag_parts[-1].strip()
+        # Sub-tag se existir (ex: inventory:os:windows -> sub_tag é 'os')
+        sub_tag = tag_parts[1].strip() if len(tag_parts) > 2 else None
+        
+        for m in machines:
+            hostname = m.get('hostname', '')
+            if hostname in added_hostnames: continue
+            found = False
+            
+            if tag == 'ports':
+                for port in m.get('ports', []):
+                    if search_term == str(port.get('local', {}).get('port', '')):
+                        found = True; break
+            
+            elif tag == 'agent_info':
+                if (search_term in m.get('hostname', '').lower() or
+                    search_term in m.get('ip_address', '').lower() or
+                    search_term in m.get('id', '').lower()):
+                    found = True
+                elif sub_tag == 'status':
+                    status_map = {'active': 'ativo', 'disconnected': 'inativo'}
+                    if status_map.get(search_term) == m.get('device_status', '').lower():
                         found = True
+            
+            elif tag == 'inventory' and sub_tag:
+                if sub_tag == 'os':
+                    if any(search_term in str(m.get(k, '')).lower() for k in ['os_name', 'os_version', 'os_architecture', 'os_kernel', 'os_platform']):
+                        found = True
+                elif sub_tag == 'hardware':
+                    if (search_term in m.get('cpu_name', '').lower() or
+                        search_term in str(m.get('cpu_cores', '')) or
+                        search_term in m.get('board_serial', '').lower()):
+                        found = True
+                elif sub_tag == 'packages':
+                    for pkg in m.get('packages', []):
+                        if search_term in pkg.get('name', '').lower() or search_term in pkg.get('version', '').lower():
+                            found = True; break
+                elif sub_tag == 'processes':
+                    for proc in m.get('processes', []):
+                        if search_term in proc.get('name', '').lower() or search_term in str(proc.get('pid', '')):
+                            found = True; break
+            
+            if found:
+                results.append(m)
+                added_hostnames.add(hostname)
                 
-                if found:
-                    results.append(m)
-                    added_hostnames.add(hostname)
+    # --- PESQUISA GLOBAL (SEM TAGS) ---
     else:
-        results = machines
-    
-    return render_template('search.html', results=results)
+        for m in machines:
+            hostname = m.get('hostname', '')
+            if hostname in added_hostnames: continue
+            
+            # Busca em campos principais
+            if any(query in str(m.get(k, '')).lower() for k in ['hostname', 'ip_address', 'os_name', 'cpu_name', 'device_status', 'ram_gb']):
+                results.append(m)
+                added_hostnames.add(hostname)
+                continue
+            
+            # Busca em sub-listas (Interfaces, Portas, Processos, Pacotes)
+            found_in_sub = False
+            # Redes
+            for iface in m.get('netiface', []):
+                if query in iface.get('name', '').lower() or query in iface.get('mac', '').lower():
+                    found_in_sub = True; break
+            if not found_in_sub:
+                for addr in m.get('netaddr', []):
+                    if query in addr.get('address', '').lower():
+                        found_in_sub = True; break
+            # Portas e Processos
+            if not found_in_sub:
+                for port in m.get('ports', []):
+                    if query in str(port.get('local', {}).get('port', '')) or query in port.get('process', '').lower():
+                        found_in_sub = True; break
+            # Pacotes
+            if not found_in_sub:
+                for pkg in m.get('packages', []):
+                    if query in pkg.get('name', '').lower() or query in pkg.get('description', '').lower():
+                        found_in_sub = True; break
+
+            if found_in_sub:
+                results.append(m)
+                added_hostnames.add(hostname)
+
+    return render_template('search.html', results=results, query=query)
 
 @app.route('/machine/<hostname>')
 def machine_details(hostname):
