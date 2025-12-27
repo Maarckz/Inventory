@@ -245,12 +245,20 @@ Este painel fornece uma listagem de **todos os dispositivos inventariados**, exi
 A funcionalidade de busca avançada é uma ferramenta para atividades de _threat hunting_, auditoria, ou até mesmo uma simples pesquisa, permitindo consultas precisas com uma sintaxe baseada em **tags**.
 
 **Exemplos de Sintaxe de Busca:**
+
 • `ports:445` - Localiza máquinas com uma porta específica aberta.
+
 • `inventory:os:Windows` - Filtra dispositivos por sistema operacional.
+
 • `inventory:packages:chrome` - Busca por máquinas com um pacote de software específico instalado.
+
 • `agent_info:10.7.6.20` - Pesquisa por hostname, IP, status ou ID do agente.
+
 • `inventory:processes:python` - Busca por processos em execução em um ativo.
+
 • `ram_gb:9-12gb` - Filtra ativos por uma faixa específica de memória RAM.
+
+• `groups:Home` - Busca pelo grupo pesquisado.
 
 <div align="left">
   <a href="https://github.com/maarckz/Inventory" target="_blank"><img src="https://github.com/Maarckz/Inventory/blob/main/Images/I4_SEARCH.png?raw=true"/> 
