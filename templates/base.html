@@ -3,12 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
     <title>{% block title %}Inventário TI{% endblock %}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.png') }}">
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
     {% block extra_css %}{% endblock %}
     
+    <script>
+    (function() {
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        if (savedTheme === 'dark') {
+            document.documentElement.classList.add('dark-mode');
+        }
+    })();
+</script>
 </head>
 <body>
     <div class="app-container">
@@ -46,7 +56,12 @@
                     </select>
                 </div>
 
-
+                <div class="theme-toggle">
+                    <button id="theme-toggle-btn" class="theme-toggle-btn" aria-label="Alternar tema">
+                        <i class="fas fa-sun"></i>
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </div>
                     {% if 'username' in session %}
                         <a href="{{ url_for('logout') }}" class="nav-link">
                             <i class="fas fa-sign-out-alt"></i> {{ translate('Sair') }}

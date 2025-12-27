@@ -9,12 +9,30 @@
 
     <style>
         :root {
+            /* Definindo variáveis padrão (Claro) */
             --primary: #6366F1;
             --primary-dark: #4f46e5;
             --danger: #EF4444;
             --light: #F8FAFC;
             --dark: #1E293B;
             --gray: #94A3B8;
+            
+            --bg-body: #F1F5F9;
+            --bg-card: #FFFFFF;
+            --text-main: #1E293B;
+            --text-label: #1E293B;
+            --border-input: #e2e8f0;
+            --bg-input: #fff;
+        }
+
+        /* Tema Escuro */
+        [data-theme="dark"] {
+            --bg-body: #0f172a;
+            --bg-card: #1e293b;
+            --text-main: #f1f5f9;
+            --text-label: #cbd5e1;
+            --border-input: #334155;
+            --bg-input: #334155;
         }
         
         * {
@@ -25,12 +43,15 @@
         }
         
         body {
-            background-color: #F1F5F9;
+            background-color: var(--bg-body);
+            color: var(--text-main);
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             padding: 20px;
+            transition: background-color 0.3s, color 0.3s;
+            position: relative;
         }
         
         .login-container {
@@ -39,14 +60,15 @@
         }
         
         .login-card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            padding: 0 2rem 2rem 2rem;
-            text-align: center;
+            background: var(--bg-card);
+            padding: 2.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            animation: fadeInUp 0.5s ease-out;
+            transition: background-color 0.3s;
         }
         
-        .login-logo {
+          .login-logo {
             margin-bottom: 2rem;
             color: var(--primary);
         }
@@ -61,81 +83,114 @@
             font-weight: 600;
         }
         
+        
         .form-group {
             margin-bottom: 1.5rem;
-            text-align: left;
+            animation: fadeIn 0.5s ease-out 0.4s backwards;
         }
         
         .form-group label {
             display: block;
             margin-bottom: 0.5rem;
+            color: var(--text-label);
             font-weight: 500;
-            color: #64748B;
-            margin-right: 10px;
+            font-size: 0.9rem;
         }
         
         .form-group input {
             width: 100%;
             padding: 0.75rem 1rem;
-            border: 1px solid #E2E8F0;
-            border-radius: 8px;
+            border: 1px solid var(--border-input);
+            background-color: var(--bg-input);
+            color: var(--text-main);
+            border-radius: 0.5rem;
             font-size: 1rem;
-            transition: all 0.3s;
+            transition: all 0.2s;
         }
         
         .form-group input:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
         }
         
         .btn {
             width: 100%;
             padding: 0.75rem;
-            background: var(--primary);
+            background-color: var(--primary);
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 0.5rem;
             font-size: 1rem;
-            font-weight: 500;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: background-color 0.2s;
+            animation: fadeIn 0.5s ease-out 0.6s backwards;
         }
         
         .btn:hover {
-            background: var(--primary-dark);
+            background-color: var(--primary-dark);
         }
         
         .alert {
             padding: 0.75rem;
-            border-radius: 8px;
+            border-radius: 0.5rem;
             margin-bottom: 1.5rem;
             font-size: 0.9rem;
+            animation: fadeIn 0.5s ease-out;
         }
         
-        .alert-error {
-            background: #FEE2E2;
+        .alert-danger {
+            background-color: #FEE2E2;
             color: #B91C1C;
+            border: 1px solid #FECACA;
         }
-        .login-container, .login-card, .login-logo, form, .alert {
-            opacity: 0;
-            animation: fadeIn 1s ease forwards;
-        }
+        
+        .login-card > *:nth-child(1) { animation-delay: 0s; }
+        .login-card > *:nth-child(2) { animation-delay: 0.1s; }
+        .login-card > *:nth-child(3) { animation-delay: 0.2s; }
+        .login-card > *:nth-child(4) { animation-delay: 0.3s; }
 
-        .login-container { animation-delay: 0.1s; }
-        .login-card { animation-delay: 0s; }
-        .login-logo { animation-delay: 0s; }
-        form { animation-delay: 0.0s; }
-        .alert { animation-delay: 0.1s; }
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
         @keyframes fadeIn {
-            to {
-            opacity: 1;
-            }
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Botão de Toggle Tema no Login */
+        .theme-toggle-login {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-input);
+            color: var(--text-main);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
     </style>
 </head>
 <body>
+    <button id="theme-toggle" class="theme-toggle-login" aria-label="Alternar Tema">
+        <i class="fas fa-moon"></i>
+    </button>
+
     <div class="login-container">
         <div class="login-card">
             <div class="login-logo" style="margin:0; padding:0;">
@@ -169,5 +224,34 @@
             </form>
         </div>
     </div>
+
+    <script>
+        // Lógica simples de tema para a página de Login
+        const toggleBtn = document.getElementById('theme-toggle');
+        const icon = toggleBtn.querySelector('i');
+        const html = document.documentElement;
+        
+        function updateIcon(theme) {
+            if (theme === 'dark') {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            }
+        }
+
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        html.setAttribute('data-theme', savedTheme);
+        updateIcon(savedTheme);
+
+        toggleBtn.addEventListener('click', () => {
+            const current = html.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            updateIcon(next);
+        });
+    </script>
 </body>
 </html>
