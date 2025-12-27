@@ -260,6 +260,8 @@ def process_machine_data(raw_data):
         'device_status': 'Ativo' if raw_data['agent_info'].get('status') == 'active' else 'Inativo',
         'last_seen': raw_data['agent_info'].get('lastKeepAlive', 'N/A'),
         'id': raw_data['agent_info'].get('id', 'N/A'),
+        'groups': raw_data.get('groups', []),
+        
     }
     
     # Hardware info
@@ -732,6 +734,29 @@ def search():
             if hostname in added_hostnames: continue
             found = False
             
+            if tag in ['groups', 'group' ]:
+                # Coleta todos os grupos possíveis dessa máquina
+                candidate_groups = []
+                
+                # 1. Tenta pegar da raiz (padrão novo do get_data.py)
+                if m.get('groups'):
+                    candidate_groups.extend(m['groups'] if isinstance(m['groups'], list) else [m['groups']])
+                
+                # 2. Tenta pegar de agent_info (padrão nativo do JSON Wazuh)
+                agent_info = m.get('agent_info', {})
+                if isinstance(agent_info, dict):
+                    raw_g = agent_info.get('group')
+                    if raw_g:
+                        candidate_groups.extend(raw_g if isinstance(raw_g, list) else [raw_g])
+
+                # 3. Verifica se o termo buscado está em ALGUM dos grupos
+                for g in candidate_groups:
+                    # Converte para string e minúsculo para comparar
+                    if search_term in str(g).lower():
+                        found = True
+                        break
+            
+            
             if tag == 'ports':
                 for port in m.get('ports', []):
                     if search_term == str(port.get('local', {}).get('port', '')):
@@ -740,7 +765,8 @@ def search():
             elif tag == 'agent_info':
                 if (search_term in m.get('hostname', '').lower() or
                     search_term in m.get('ip_address', '').lower() or
-                    search_term in m.get('id', '').lower()):
+                    search_term in m.get('id', '').lower() or
+                    search_term in m.get('group', '').lower()):
                     found = True
                 elif sub_tag == 'status':
                     status_map = {'active': 'ativo', 'disconnected': 'inativo'}
