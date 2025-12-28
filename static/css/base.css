@@ -446,7 +446,6 @@ body.dark-mode .search-input i {
 /* Form Controls */
 .form-group input,
 .form-control {
-    width: 100%;
     padding: 0.75rem 1rem;
     border: 1px solid var(--light-gray);
     border-radius: var(--border-radius);
