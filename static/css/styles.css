@@ -127,7 +127,6 @@ body {
     margin-left: 1rem;
 }
 
-/* Dashboard */
 .dashboard-header {
     margin-bottom: 2rem;
 }
@@ -232,7 +231,6 @@ body {
     height: 300px;
 }
 
-/* Machines Panel */
 .panel-header {
     display: flex;
     justify-content: space-between;
@@ -331,7 +329,6 @@ body {
     padding: 0 1.5rem 1.5rem;
 }
 
-/* Buttons */
 .btn {
     display: inline-flex;
     align-items: center;
@@ -371,7 +368,6 @@ body {
     background-color: var(--light-gray);
 }
 
-/* Login */
 .login-container {
     max-width: 400px;
     margin: 0 auto;
@@ -426,7 +422,6 @@ body {
     margin-top: 1rem;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
     .header-content {
         flex-direction: column;
@@ -459,20 +454,6 @@ body {
 }
 
 
-
-/* Dark Mode */
-/* Dark Mode */
-/* Dark Mode */
-/* Dark Mode */
-/* Dark Mode */
-/* Dark Mode */
-/* Dark Mode */
-/* Dark Mode */
-/* Dark Mode */
-/* Dark Mode */
-/* Dark Mode */
-
-/* Machine Details Specific Styles */
 .machine-details-container {
     max-width: 1500px;
     margin: 0 auto;
@@ -611,18 +592,6 @@ th {
 
 
 
-
-/* Dark Mode */
-/* Dark Mode */
-/* Dark Mode */
-/* Dark Mode */
-/* Dark Mode */
-/* Dark Mode */
-/* Dark Mode */
-/* Dark Mode */
-/* Dark Mode */
-
-/* Search Page Styles */
 .search-container {
     max-width: 1500px;
     margin: 0 auto;

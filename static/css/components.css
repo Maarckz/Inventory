@@ -1,4 +1,3 @@
-/* Card Component */
 .card {
     background-color: var(--white);
     border-radius: var(--border-radius);
@@ -29,7 +28,6 @@
     padding: 1.5rem;
 }
 
-/* Stat Card */
 .stat-card {
     display: flex;
     align-items: center;
@@ -78,7 +76,6 @@
     color: var(--dark);
 }
 
-/* Grid Layout */
 .grid {
     display: grid;
     gap: 1.5rem;
@@ -100,7 +97,6 @@
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
 }
 
-/* Table Styles */
 .table {
     width: 100%;
     border-collapse: collapse;
@@ -134,7 +130,6 @@
     box-shadow: var(--box-shadow);
 }
 
-/* Form Elements */
 .form-group {
     margin-bottom: 1.25rem;
 }
@@ -162,7 +157,6 @@
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
 }
 
-/* Search Input */
 .search-input {
     position: relative;
     display: flex;

@@ -1,5 +1,4 @@
 :root {
-    /* Light theme variables */
     --primary: #6366F1;
     --primary-light: #8183f4;
     --primary-dark: #4f46e5;
@@ -15,14 +14,13 @@
     --dark-gray: #64748B;
     --white: #FFFFFF;
     --black: #000000;
-    --background: #dfe9f9; /* Nova variável para o background */
+    --background: #dfe9f9; 
     --border-radius: 8px;
     --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     --transition: all 0.3s ease;
     color-scheme: light dark;
 }
 
-/* Dark theme variables */
 body.dark-mode {
     --primary: #818cf8;
     --primary-light: #a5b4fc;
@@ -39,7 +37,7 @@ body.dark-mode {
     --dark-gray: #cbd5e1;
     --white: #0f172a;
     --black: #dfe9f9;
-    --background: #0f172a; /* Background escuro */
+    --background: #0f172a; 
     --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
 }
 
@@ -52,12 +50,11 @@ body.dark-mode {
 
 body {
     font-family: 'Inter', sans-serif;
-    background-color: var(--background); /* Usando a variável de background */
+    background-color: var(--background); 
     color: var(--dark);
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* No transition class for preventing flash */
 .no-transition,
 .no-transition *,
 .no-transition *::before,
@@ -66,14 +63,12 @@ body {
     animation: none !important;
 }
 
-/* App Container */
 .app-container {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
 }
 
-/* Header */
 .app-header {
     background-color: var(--white);
     box-shadow: var(--box-shadow);
@@ -107,7 +102,6 @@ body.dark-mode .app-header {
     transform: scale(1.1);
 }
 
-/* Navigation */
 .app-nav {
     display: flex;
     gap: 1.5rem;
@@ -133,11 +127,10 @@ body.dark-mode .app-header {
     font-size: 1rem;
 }
 
-/* Main Content */
 .app-main {
     flex: 1;
     padding: 2rem 0;
-    background-color: var(--background); /* Usando a variável de background */
+    background-color: var(--background);
     transition: background-color 0.3s ease;
 }
 
@@ -147,7 +140,6 @@ body.dark-mode .app-header {
     padding: 0 2rem;
 }
 
-/* Alerts */
 .alert {
     padding: 1rem;
     border-radius: var(--border-radius);
@@ -189,7 +181,6 @@ body.dark-mode .alert-success {
     margin-left: 1rem;
 }
 
-/* Buttons */
 .btn {
     display: inline-flex;
     align-items: center;
@@ -230,7 +221,6 @@ body.dark-mode .alert-success {
     background-color: var(--light-gray);
 }
 
-/* Status */
 .status {
     padding: 0.25rem 0.75rem;
     border-radius: 1rem;
@@ -264,7 +254,6 @@ body.dark-mode .status-down {
     color: #f87171;
 }
 
-/* Language Selector */
 .language-selector select {
     padding: 8px 35px 8px 12px;
     border-radius: 12px;
@@ -299,7 +288,6 @@ body.dark-mode .language-selector select:focus {
     box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.3);
 }
 
-/* Theme Toggle */
 .theme-toggle {
     margin-left: 1rem;
     display: flex;
@@ -363,7 +351,6 @@ body.dark-mode .theme-toggle-btn .fa-moon {
     transform: rotate(0deg);
 }
 
-/* Efeito de brilho nos ícones */
 .fa-sun {
     text-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
 }
@@ -372,7 +359,6 @@ body.dark-mode .fa-moon {
     text-shadow: 0 0 8px rgba(99, 102, 241, 0.5);
 }
 
-/* Efeito de pulsação */
 @keyframes pulse {
     0% {
         transform: scale(1);
@@ -389,7 +375,6 @@ body.dark-mode .fa-moon {
     animation: pulse 0.5s ease;
 }
 
-/* Search Input - ESTILO CORRETO */
 .search-input input {
     padding: 0.5rem 1rem 0.5rem 2.5rem;
     border: 1px solid var(--light-gray);
@@ -407,7 +392,6 @@ body.dark-mode .fa-moon {
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
 }
 
-/* CORREÇÃO ESPECÍFICA PARA O CAMPO DE PESQUISA */
 body .search-input input {
     background-color: var(--white) !important;
     color: var(--dark) !important;
@@ -444,7 +428,6 @@ body.dark-mode .search-input i {
     color: #94a3b8;
 }
 
-/* Form Controls */
 .form-group input,
 .form-control {
     padding: 0.75rem 1rem;
@@ -476,7 +459,6 @@ body.dark-mode .form-control:focus {
     box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.3);
 }
 
-/* Cards */
 .kpi-card,
 .chart-card,
 .detailed-card,
@@ -500,7 +482,6 @@ body.dark-mode .card {
     color: var(--dark);
 }
 
-/* Tables */
 table {
     width: 100%;
     border-collapse: collapse;
@@ -599,7 +580,6 @@ body.dark-mode .badge.red {
     color: #fca5a5;
 }
 
-/* Modal */
 .modal-content {
     background-color: var(--white);
     color: var(--dark);
@@ -610,7 +590,6 @@ body.dark-mode .modal-content {
     color: var(--dark);
 }
 
-/* Login/MFA Cards */
 .login-card,
 .mfa-card {
     background-color: var(--white);
@@ -623,7 +602,6 @@ body.dark-mode .mfa-card {
     color: var(--dark);
 }
 
-/* Animations */
 @keyframes fadeInUp {
     to {
         opacity: 1;
