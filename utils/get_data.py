@@ -12,15 +12,12 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-# --- CONFIGURAÇÕES E DIRETÓRIOS ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, '..', 'data')
 
-# Diretórios de Inventário
 INVENTORY_FOLDER = os.path.join(DATA_DIR, 'inventory')
 OLD_HOSTS_DIR = os.path.join(INVENTORY_FOLDER, 'hosts_antigos')
 
-# Diretórios de Grupos
 GROUPS_DIR = os.path.join(DATA_DIR, 'groups')
 GROUPS_FILE = os.path.join(GROUPS_DIR, 'groups.json')
 
@@ -66,7 +63,6 @@ class WazuhAPI:
         self.base_url = f"{protocol}://{host}:{port}"
         self.session = requests.Session()
         self.session.verify = False
-        # Apenas para autenticação inicial
         self.session.auth = (user, password)
         self.token = None
         self._last_req = 0.0
@@ -77,7 +73,6 @@ class WazuhAPI:
         try:
             resp = self._request('GET', url, timeout=10)
             self.token = resp.text.strip()
-            # Atualiza header e remove credenciais básicas
             self.session.headers.update({'Authorization': f'Bearer {self.token}'})
             self.session.auth = None
             logging.info('Autenticação bem-sucedida')
@@ -174,10 +169,7 @@ class InventoryManager:
         agent_id = agent.get('id')
         agent['calculated_status'] = self._determine_status(agent.get('lastKeepAlive', 'unknown'))
         
-        # --- ALTERAÇÃO 1: Captura e Tratamento dos Grupos ---
-        # O Wazuh retorna lista ['default', 'web'] ou string se for apenas um em versões antigas
         raw_groups = agent.get('group', ['default'])
-        # Garante que seja sempre uma lista para facilitar no frontend
         if isinstance(raw_groups, str):
             agent_groups = [raw_groups]
         else:
@@ -192,11 +184,10 @@ class InventoryManager:
         
         safe = ''.join(c for c in hostname if c.isalnum() or c in '.-_ ').strip()
         
-        # --- ALTERAÇÃO 2: Salvando a chave 'groups' no JSON ---
         payload = {
             'agent_info': agent,
             'inventory': inv,
-            'groups': agent_groups,  # <--- NOVA CHAVE IMPORTANTE
+            'groups': agent_groups, 
             'last_update': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         }
         
@@ -207,7 +198,6 @@ class InventoryManager:
         """Processa todos os agentes usando ThreadPoolExecutor"""
         existing = set(os.listdir(INVENTORY_FOLDER))
         
-        # --- ALTERAÇÃO 3: Solicitando o campo 'group' na API ---
         resp = self.api.get_json(
             'agents?select=id,name,ip,lastKeepAlive,status,os.platform,os.name,os.version,group'
         )
@@ -255,7 +245,6 @@ class GroupsManager:
         """Busca todos os grupos, seus agentes e salva em JSON"""
         logging.info("Iniciando extração de grupos...")
         
-        # 1. Obter lista de grupos
         resp = self.api.get_json('groups?pretty=true')
         grupos = resp.get('data', {}).get('affected_items', [])
         
@@ -265,12 +254,9 @@ class GroupsManager:
 
         resultado = []
         
-        # 2. Iterar sobre cada grupo para buscar seus agentes
         for grupo in grupos:
             grupo_name = grupo.get('name')
             
-            # Busca agentes do grupo
-            # endpoint: /groups/{group_name}/agents
             resp_agentes = self.api.get_json(f'groups/{grupo_name}/agents?select=id,name&limit=1000')
             agentes = resp_agentes.get('data', {}).get('affected_items', [])
             
@@ -326,12 +312,10 @@ def main():
 
     start_time = time.time()
 
-    # 1. Processar Inventário dos Agentes
     logging.info(">>> Iniciando processamento de INVENTÁRIO")
     inv_mgr = InventoryManager(api)
     hosts = inv_mgr.process_agents(max_workers=5)
     
-    # 2. Processar Grupos
     logging.info(">>> Iniciando processamento de GRUPOS")
     groups_mgr = GroupsManager(api)
     groups_mgr.fetch_and_save_groups()

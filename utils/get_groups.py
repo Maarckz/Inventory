@@ -5,14 +5,12 @@ import requests
 import urllib3
 from dotenv import load_dotenv
 
-# Desabilitar warnings de SSL
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class WazuhGroupsAPI:
     """API específica para obter grupos do Wazuh"""
     
     def __init__(self):
-        # Carregar variáveis de ambiente
         load_dotenv()
         
         self.protocol = os.getenv('WAZUH_PROTOCOL')
@@ -27,7 +25,6 @@ class WazuhGroupsAPI:
         self.session.auth = (self.user, self.password)
         self.token = None
         
-        # Configurar logging
         logging.basicConfig(
             level=logging.INFO,
             format='%(asctime)s - %(levelname)s - %(message)s'
@@ -96,7 +93,6 @@ class WazuhGroupsAPI:
             grupo_name = grupo.get('name')
             agentes = self.get_agents_in_group(grupo_name)
             
-            # Formatar dados simplificados
             grupo_info = {
                 "grupo": grupo_name,
                 "quantidade_agentes": len(agentes),
@@ -115,7 +111,6 @@ class WazuhGroupsAPI:
 def save_groups_json(data, filename="../data/groups/groups.json"):
     """Salva os dados em arquivo JSON na pasta ../data/groups/"""
     try:
-        # Criar diretório se não existir
         os.makedirs(os.path.dirname(filename), exist_ok=True)
         
         with open(filename, 'w', encoding='utf-8') as f:
@@ -129,14 +124,11 @@ def save_groups_json(data, filename="../data/groups/groups.json"):
 
 def main():
     """Função principal"""
-    # Criar instância da API
     wazuh_api = WazuhGroupsAPI()
     
-    # Obter grupos com agentes no formato simplificado
     grupos_simplificados = wazuh_api.get_groups_with_agents_simple()
     
     if grupos_simplificados:
-        # Salvar em arquivo JSON na pasta ../data/groups/
         success = save_groups_json(grupos_simplificados)
         if success:
             logging.info("Arquivo JSON salvo com sucesso na pasta ../data/groups/")

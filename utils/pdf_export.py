@@ -1,16 +1,15 @@
-from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib import colors
-from reportlab.graphics.shapes import Drawing
 from reportlab.graphics.charts.piecharts import Pie
+from reportlab.graphics.shapes import Drawing
+from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
 from collections import Counter
 from datetime import datetime
 from io import BytesIO
 import json
 import ast
 
-# --- Configurações Visuais ---
 COLOR_PRIMARY = colors.HexColor("#1A252F")
 COLOR_SECONDARY = colors.HexColor("#3498DB")
 COLOR_ACCENT = colors.HexColor("#BDC3C7")
@@ -20,7 +19,6 @@ COLOR_DANGER = colors.HexColor("#C0392B")
 
 def header_footer(canvas, doc):
     canvas.saveState()
-    # Logo e Cabeçalho
     try:
         canvas.drawImage("static/mlogo.png", 40, letter[1] - 55, width=90, height=25, preserveAspectRatio=True, mask='auto')
     except:
@@ -34,7 +32,6 @@ def header_footer(canvas, doc):
     canvas.setFillColor(COLOR_SECONDARY)
     canvas.rect(40, letter[1] - 65, letter[0] - 80, 2, fill=1, stroke=0)
 
-    # Rodapé
     timestamp = datetime.now().strftime('%d/%m/%Y • %H:%M')
     canvas.setStrokeColor(COLOR_ACCENT)
     canvas.line(40, 50, letter[0] - 40, 50)
@@ -58,7 +55,6 @@ def create_pie_chart(machines):
     os_raw = [str(get_value(m, 'os_name', 'Unknown')).split()[0] for m in machines]
     data_counter = Counter(os_raw)
     
-    # Cores fixas
     colors_list = [colors.HexColor(c) for c in ["#3498DB", "#E74C3C", "#F1C40F", "#9B59B6", "#2ECC71", "#34495E"]]
     
     most = data_counter.most_common(5)
@@ -78,7 +74,6 @@ def create_pie_chart(machines):
         pc.slices[i].fillColor = colors_list[i % len(colors_list)]
         pc.slices[i].strokeColor = colors.white
         
-    # Dados para legenda manual
     legend_data = []
     total = sum(data)
     for i, label in enumerate(labels):
@@ -91,7 +86,6 @@ def normalize_details(machine):
     """
     Tenta extrair interfaces e portas de strings JSON ou objetos.
     """
-    # 1. Interfaces
     raw_ifaces = get_value(machine, 'network_interfaces', [])
     if isinstance(raw_ifaces, str):
         try:
@@ -100,12 +94,10 @@ def normalize_details(machine):
             try: raw_ifaces = ast.literal_eval(raw_ifaces)
             except: raw_ifaces = []
             
-    # Fallback: Se vazio, cria fake com IP principal
     ip = get_value(machine, 'ip_address')
     if not raw_ifaces and ip and ip != 'N/A':
         raw_ifaces = [{'name': 'eth0 (default)', 'ip': ip, 'mac': '-'}]
         
-    # 2. Portas
     raw_ports = get_value(machine, 'open_ports', [])
     if isinstance(raw_ports, str):
         try:
@@ -114,12 +106,6 @@ def normalize_details(machine):
             try: raw_ports = ast.literal_eval(raw_ports)
             except: raw_ports = []
 
-    # Debug no Terminal para você ver o que está chegando
-    hostname = get_value(machine, 'hostname')
-    if not raw_ports:
-        pass
-        #print(f"[DEBUG PDF] Máquina {hostname} sem portas detectadas (Lista vazia ou None).")
-    
     return raw_ifaces, raw_ports
 
 def generate_pdf_report(stats, machines, include_details=False):
@@ -128,19 +114,16 @@ def generate_pdf_report(stats, machines, include_details=False):
     elements = []
     styles = getSampleStyleSheet()
 
-    # Estilos
     style_h2 = ParagraphStyle('H2', parent=styles['Heading2'], fontName='Helvetica-Bold', fontSize=12, textColor=COLOR_PRIMARY, spaceAfter=10)
     style_h3 = ParagraphStyle('H3', parent=styles['Heading3'], fontName='Helvetica-Bold', fontSize=10, textColor=COLOR_SECONDARY, spaceBefore=10)
     style_cell = ParagraphStyle('Cell', parent=styles['Normal'], fontSize=9)
     style_mono = ParagraphStyle('Mono', parent=styles['Normal'], fontName='Courier', fontSize=8, textColor=COLOR_PRIMARY)
     style_mono_small = ParagraphStyle('MonoSmall', parent=styles['Normal'], fontName='Courier', fontSize=7, textColor=colors.grey)
 
-    # --- DASHBOARD ---
     elements.append(Paragraph("Visão Geral do Ambiente", style_h2))
     
     chart, legend = create_pie_chart(machines)
     
-    # Legenda
     t_leg_data = [[ "", label, pct] for c, label, pct in legend]
     t_leg = Table(t_leg_data, colWidths=[15, 80, 40])
     leg_style = [('FONTSIZE', (0,0), (-1,-1), 8), ('VALIGN', (0,0), (-1,-1), 'MIDDLE')]
@@ -148,7 +131,6 @@ def generate_pdf_report(stats, machines, include_details=False):
         leg_style.append(('BACKGROUND', (0,i), (0,i), item[0]))
     t_leg.setStyle(TableStyle(leg_style))
     
-    # Métricas
     active = stats['status'].get('Ativo', 0)
     inactive = stats['status'].get('Inativo', 0)
     total = active + inactive
@@ -161,13 +143,11 @@ def generate_pdf_report(stats, machines, include_details=False):
     t_metrics = Table(metrics_data, colWidths=[100], rowHeights=[45,45,45])
     t_metrics.setStyle(TableStyle([('ALIGN', (0,0), (-1,-1), 'RIGHT'), ('LINEBELOW', (0,0), (0,-2), 1, COLOR_BG_HEADER)]))
     
-    # Monta Dashboard
     t_dash = Table([[chart, t_leg, t_metrics]], colWidths=[160, 140, 120])
     t_dash.setStyle(TableStyle([('VALIGN', (0,0), (-1,-1), 'MIDDLE')]))
     elements.append(t_dash)
     elements.append(Spacer(1, 20))
 
-    # --- LISTA RESUMIDA ---
     elements.append(Paragraph("Inventário Resumido", style_h2))
     headers = ["Hostname", "IP", "Sistema", "Status"]
     t_data = [headers]
@@ -195,7 +175,6 @@ def generate_pdf_report(stats, machines, include_details=False):
     ]))
     elements.append(t_main)
 
-    # --- DETALHES COMPLETOS ---
     if include_details:
         elements.append(PageBreak())
         elements.append(Paragraph("Detalhamento Técnico de Rede e Serviços", style_h2))
@@ -203,12 +182,10 @@ def generate_pdf_report(stats, machines, include_details=False):
         for i, m in enumerate(machines):
             ifaces, ports = normalize_details(m)
             
-            # Header da Máquina
             hn = get_value(m, 'hostname')
             ip = get_value(m, 'ip_address')
             elements.append(Paragraph(f"{hn} <font color='#7f8c8d' size=9>({ip})</font>", style_h3))
             
-            # 1. Hardware Info (Tabela Compacta)
             hw_info = [
                 [Paragraph("<b>Hardware</b>", style_cell), Paragraph(f"CPU: {get_value(m,'cpu_name')} | RAM: {get_value(m,'ram_total')}GB", style_cell)],
                 [Paragraph("<b>OS/Kernel</b>", style_cell), Paragraph(f"{get_value(m,'os_name')} | Kernel: {get_value(m,'os_kernel')}", style_cell)]
@@ -221,7 +198,6 @@ def generate_pdf_report(stats, machines, include_details=False):
             elements.append(t_hw)
             elements.append(Spacer(1, 8))
             
-            # 2. Interfaces (Tabela Específica)
             elements.append(Paragraph("Interfaces de Rede", style_cell))
             if_header = [Paragraph("Interface", style_mono), Paragraph("Configuração (IP / MAC)", style_mono)]
             if_rows = [if_header]
@@ -230,7 +206,6 @@ def generate_pdf_report(stats, machines, include_details=False):
                 if_rows.append(["-", "Nenhuma interface detectada"])
             else:
                 for iface in ifaces:
-                    # Suporta dict ou objeto
                     iname = iface.get('name', 'eth?') if isinstance(iface, dict) else getattr(iface, 'name', 'eth?')
                     iip = iface.get('ip', iface.get('address', 'N/A')) if isinstance(iface, dict) else getattr(iface, 'ip', 'N/A')
                     imac = iface.get('mac', '') if isinstance(iface, dict) else getattr(iface, 'mac', '')
@@ -249,7 +224,6 @@ def generate_pdf_report(stats, machines, include_details=False):
             elements.append(t_if)
             elements.append(Spacer(1, 8))
 
-            # 3. Portas Abertas (Tabela Específica)
             elements.append(Paragraph("Portas Abertas", style_cell))
             p_header = [Paragraph("Porta/Proto", style_mono), Paragraph("Serviço / Banner", style_mono)]
             p_rows = [p_header]
@@ -258,7 +232,6 @@ def generate_pdf_report(stats, machines, include_details=False):
                 p_rows.append(["-", "Nenhuma porta aberta ou scan não realizado"])
             else:
                 for p in ports:
-                    # Suporta format string "80/tcp" ou dict {'port':80, 'service':'http'}
                     if isinstance(p, dict):
                         pval = p.get('port', p.get('local_port', '?'))
                         proto = p.get('protocol', 'tcp')
@@ -283,7 +256,6 @@ def generate_pdf_report(stats, machines, include_details=False):
             ]))
             elements.append(t_ports)
             
-            # Divisor
             elements.append(Spacer(1, 15))
             if i < len(machines) - 1:
                 elements.append(Paragraph("<hr width='100%' color='#bdc3c7' size='1'/>", styles['Normal']))
