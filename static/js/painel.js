@@ -1,27 +1,32 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Mostrar/ocultar campo de pesquisa
-    document.getElementById('show-search').addEventListener('click', function(e) {
-        e.preventDefault();
-        const panelHeader = this.parentElement;
-        const searchContainer = document.getElementById('search-container');
-        
-        panelHeader.style.transition = 'opacity 0.2s';
-        panelHeader.style.opacity = 0;
-        panelHeader.style.pointerEvents = 'none';
-        
-        setTimeout(function() {
-            panelHeader.style.display = 'none';
-            searchContainer.style.display = 'block';
-            setTimeout(function() {
-                searchContainer.style.opacity = 1;
-            }, 10);
-        }, 400);
-    });
+    
+    const searchBtn = document.getElementById('show-search');
+    const panelHeader = document.querySelector('.panel-header');
+    const searchContainer = document.getElementById('search-container');
+    const searchInput = document.querySelector('input[name="query"]');
 
-    // Animar cards de máquinas
+    if (searchBtn && panelHeader && searchContainer) {
+        searchBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            panelHeader.classList.add('hidden');
+            
+            searchContainer.classList.add('open');
+            
+            setTimeout(() => {
+                if (searchInput) searchInput.focus();
+            }, 300); 
+        });
+    }
+
     const machineCards = document.querySelectorAll('.machine-card');
+    
     machineCards.forEach((card, i) => {
-        card.style.animationDelay = (0.1 * (i + 1)) + 's';
+        if (i < 20) {
+            card.style.animationDelay = (0.05 * i) + 's';
+        } else {
+            card.style.animationDelay = '0s';
+            card.style.opacity = '1'; 
+        }
     });
 });
-

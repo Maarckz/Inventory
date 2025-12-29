@@ -1,8 +1,3 @@
-/**
- * Common utility functions used across the application
- */
-
-// Toggle section visibility
 function toggleSection(sectionHeader) {
     const section = sectionHeader.parentElement;
     const body = section.querySelector('.section-body');
@@ -19,19 +14,16 @@ function toggleSection(sectionHeader) {
     }
 }
 
-// Sort table by column
 function sortTable(table, columnIndex, sortType) {
     const tbody = table.querySelector('tbody');
     const rows = Array.from(tbody.querySelectorAll('tr'));
     const header = table.querySelectorAll('th')[columnIndex];
     const isAscending = !header.classList.contains('asc');
 
-    // Remove sorting classes from all headers
     table.querySelectorAll('th').forEach(th => {
         th.classList.remove('asc', 'desc');
     });
 
-    // Add class to current header
     header.classList.add(isAscending ? 'asc' : 'desc');
 
     rows.sort((a, b) => {
@@ -49,14 +41,11 @@ function sortTable(table, columnIndex, sortType) {
         }
     });
 
-    // Remove all rows
     rows.forEach(row => tbody.removeChild(row));
     
-    // Add sorted rows
     rows.forEach(row => tbody.appendChild(row));
 }
 
-// Initialize table sorting
 function initTableSorting() {
     document.querySelectorAll('.sortable th[data-sort]').forEach(th => {
         th.addEventListener('click', () => {
@@ -68,7 +57,6 @@ function initTableSorting() {
     });
 }
 
-// Initialize section toggles
 function initSectionToggles() {
     document.querySelectorAll('.section-header').forEach(header => {
         header.addEventListener('click', (e) => {
@@ -79,7 +67,6 @@ function initSectionToggles() {
     });
 }
 
-// Initialize row click events
 function initRowClickEvents() {
     document.querySelectorAll('[data-href]').forEach(row => {
         row.style.cursor = 'pointer';
@@ -89,19 +76,16 @@ function initRowClickEvents() {
     });
 }
 
-// Document ready handler
 document.addEventListener('DOMContentLoaded', function() {
     initTableSorting();
     initSectionToggles();
     initRowClickEvents();
     
-    // Initialize any tables that should be sorted by default
     const portTable = document.querySelector('.port-table');
     if (portTable) {
         sortTable(portTable, 0, 'number');
     }
     
-    // Animate table rows
     const rows = document.querySelectorAll('.machine-table tbody tr');
     rows.forEach((row, i) => {
         row.style.animationDelay = (i * 0.07) + 's';

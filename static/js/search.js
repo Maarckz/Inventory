@@ -1,14 +1,13 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Função para obter o valor da célula para ordenação
     const getCellValue = (tr, idx) => {
         const cell = tr.children[idx];
-        if (idx === 8) { // Coluna Status
+        if (idx === 8) { 
             return cell.querySelector('.status').textContent.trim();
         }
-        if (idx === 2) { // Coluna SO
+        if (idx === 2) { 
             return cell.querySelector('strong').textContent.trim().toLowerCase();
         }
-        if (idx === 9) { // Coluna Última Atividade
+        if (idx === 9) { 
             const dateText = cell.textContent.trim();
             if (!dateText) return 0;
 
@@ -31,7 +30,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return cell.textContent.trim().toLowerCase();
     };
 
-    // Função comparadora para ordenação
     const comparer = (idx, asc) => (a, b) => {
         const valA = getCellValue(asc ? a : b, idx);
         const valB = getCellValue(asc ? b : a, idx);
@@ -48,7 +46,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return valA.localeCompare(valB, 'pt', { sensitivity: 'base' });
     };
 
-    // Adicionar eventos de clique nos cabeçalhos
     document.querySelectorAll('th[data-sort]').forEach(th => {
         th.addEventListener('click', () => {
             const table = th.closest('table');
@@ -56,17 +53,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const columnIndex = Array.from(th.parentNode.children).indexOf(th);
             const isAsc = th.classList.contains('asc');
 
-            // Remover classes de ordenação de todos os cabeçalhos
             table.querySelectorAll('th').forEach(header => {
                 header.classList.remove('asc', 'desc');
             });
 
-            // Definir nova direção
             const newDir = !isAsc;
             th.classList.toggle('asc', newDir);
             th.classList.toggle('desc', !newDir);
 
-            // Ordenar as linhas
             Array.from(tbody.querySelectorAll('tr'))
                 .sort(comparer(columnIndex, newDir))
                 .forEach(tr => tbody.appendChild(tr));

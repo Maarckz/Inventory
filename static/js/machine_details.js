@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Função para alternar seções (expandir/retrair)
     function toggleSection(header) {
         const section = header.parentElement;
         const body = section.querySelector('.section-body');
@@ -16,19 +15,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Função para ordenar tabelas
     function sortTable(table, columnIndex, sortType) {
         const tbody = table.querySelector('tbody');
         const rows = Array.from(tbody.querySelectorAll('tr'));
         const header = table.querySelectorAll('th')[columnIndex];
         const isAscending = !header.classList.contains('asc');
 
-        // Remover classes de ordenação de todos os cabeçalhos
         table.querySelectorAll('th').forEach(th => {
             th.classList.remove('asc', 'desc');
         });
 
-        // Adicionar classe ao cabeçalho atual
         header.classList.add(isAscending ? 'asc' : 'desc');
 
         rows.sort((a, b) => {
@@ -46,14 +42,10 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Remover todas as linhas
         rows.forEach(row => tbody.removeChild(row));
-        
-        // Adicionar linhas ordenadas
         rows.forEach(row => tbody.appendChild(row));
     }
 
-    // Adicionar eventos de clique aos cabeçalhos das tabelas
     document.querySelectorAll('.sortable th[data-sort]').forEach(th => {
         th.addEventListener('click', () => {
             const table = th.closest('table');
@@ -63,7 +55,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Adicionar eventos de clique aos cabeçalhos das seções
     document.querySelectorAll('.section-header').forEach(header => {
         header.addEventListener('click', (e) => {
             const target = e.target;
@@ -73,7 +64,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Ordenar automaticamente a tabela de portas por número de porta (ordem crescente)
     const portTable = document.querySelector('.port-table');
     if (portTable) {
         sortTable(portTable, 0, 'number');
