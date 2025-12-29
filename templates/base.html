@@ -41,7 +41,6 @@
                         <i class="fas fa-cog"></i> {{ translate('Configurações') }}
                     </a>
 
-                    <!-- Seletor de idiomas -->
                 <div class="language-selector">
                     <select onchange="window.location.href='/set_language/' + this.value">
                         <option value="pt" {% if session.get('language', 'pt') == 'pt' %}selected{% endif %}>
@@ -52,6 +51,9 @@
                         </option>
                         <option value="es" {% if session.get('language', 'pt') == 'es' %}selected{% endif %}>
                             🇪🇸 Español
+                        </option>
+                        <option value="hi" {% if session.get('language', 'pt') == 'hi' %}selected{% endif %}>
+                            🇮🇳 Hindi
                         </option>
                     </select>
                 </div>

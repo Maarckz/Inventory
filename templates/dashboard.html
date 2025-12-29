@@ -391,8 +391,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     break;
                 case 'processChart': 
                     const datasetIndex = elements[0].datasetIndex;
-                    // No Multi Pie, o label pode precisar de ajuste dependendo de como é gerado
-                    // Assumindo que o label é consistente com o dataset
                     const processLabel = chart.data.labels[index] || chart.data.labels[datasetIndex];
                     if (processLabel) {
                         query = 'inventory:processes:' + processLabel.toLowerCase(); 
@@ -405,7 +403,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    // Paleta de cores do dashboard
     const dashboardColors = [
         '#6366F1', '#8B5CF6', '#0EA5E9', '#EC4899', '#F43F5E', 
         '#F97316', '#F59E0B', '#10B981', '#3B82F6', '#EAB308', 
@@ -413,7 +410,6 @@ document.addEventListener('DOMContentLoaded', function() {
         '#34D399', '#F472B6', '#22D3EE', '#D1FAE5', '#8BC34A'
     ];
 
-    // Configuração específica para o multi pie chart
     const multiPieOptions = {
         responsive: true,
         maintainAspectRatio: false,
@@ -467,7 +463,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // OS Chart
             new Chart(document.getElementById('osChart').getContext('2d'), {
                 type: 'doughnut',
-                data: { labels: data.os_labels, datasets:[{ data: data.os_data, backgroundColor:['#6366F1','#8B5CF6','#0EA5E9','#EC4899'], borderWidth:0, hoverOffset:10 }] },
+                data: { labels: data.os_labels, datasets:[{ data: data.os_data, backgroundColor:['#6366F1','#8B5CF6','#0EA5E9','#EC4899','#F43F5E','#F97316','#F59E0B','#10B981'], borderWidth:0, hoverOffset:10 }] },
                 options: chartOptions
             });
 
@@ -516,29 +512,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
 
-            // Process Chart - Multi Pie (CORRIGIDO: borderWidth: 0 adicionado)
             const processDataMultiPie = {
                 labels: data.process_labels || ['Chrome', 'Firefox', 'Explorer', 'Teams', 'Word', 'Excel'],
                 datasets: [
                     {
                         backgroundColor: [dashboardColors[0], dashboardColors[1]],
                         data: data.process_data ? [data.process_data[0], 100 - data.process_data[0]] : [35, 65],
-                        borderWidth: 0 // Remove a borda branca
+                        borderWidth: 0 
                     },
                     {
                         backgroundColor: [dashboardColors[2], dashboardColors[3]],
                         data: data.process_data ? [data.process_data[1], 100 - data.process_data[1]] : [25, 75],
-                        borderWidth: 0 // Remove a borda branca
+                        borderWidth: 0 
                     },
                     {
                         backgroundColor: [dashboardColors[4], dashboardColors[5]],
                         data: data.process_data ? [data.process_data[2], 100 - data.process_data[2]] : [20, 80],
-                        borderWidth: 0 // Remove a borda branca
+                        borderWidth: 0 
                     },
                     {
                         backgroundColor: [dashboardColors[6], dashboardColors[7]],
                         data: data.process_data ? [data.process_data[3], 100 - data.process_data[3]] : [15, 85],
-                        borderWidth: 0 // Remove a borda branca
+                        borderWidth: 0 
                     }
                 ]
             };
@@ -549,7 +544,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 options: multiPieOptions
             });
 
-            // Groups Chart (Polar/Bar)
             if (data.groups && data.groups.length > 0) {
                 const activeGroups = data.groups
                     .filter(g => g.quantidade_agentes > 0)
@@ -610,7 +604,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('groupsChart').closest('.chart-card').style.display = 'none';
             }
 
-            // Timeline Chart
             new Chart(document.getElementById('timelineChart').getContext('2d'), {
                 type:'line',
                 data:{ labels:data.timeline_dates, datasets:[
@@ -620,7 +613,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 options:{ ...chartOptions, scales:{y:{beginAtZero:true, title:{display:false}, grid:{borderDash:[5,5]}}, x:{grid:{display:false}}} }
             });
 
-            // Recent Machines Table
             if(data.recent_machines) {
                 document.getElementById('recent-machines').innerHTML = data.recent_machines.map(m=>`<tr><td>${m.name}</td><td>${m.os}</td><td><span class="badge ${m.status==='Ativo'?'green':'orange'}">${m.status}</span></td></tr>`).join('');
             }

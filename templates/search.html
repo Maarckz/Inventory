@@ -16,17 +16,26 @@
         <form method="GET" action="{{ url_for('search') }}" class="search-form">
             <div class="search-input">
                 <i class="fas fa-search"></i>
-                <input type="text" name="query" placeholder="{{ translate('Pesquisar por hostname, SO ou processador...') }}"
-                    value="{{ request.args.get('query', '') }}">
+                <input
+                    type="text"
+                    name="query"
+                    placeholder="{{ translate('Pesquisar por hostname, SO ou processador...') }}"
+                    value="{{ request.args.get('query', '') }}"
+                >
             </div>
             <button type="submit" class="btn btn-primary">
                 {{ translate('Pesquisar') }}
             </button>
         </form>
-        <div class="results-count">
-            {{ results|length }} {{ translate('resultado(s) encontrado(s)') }}
-        </div>
     </div>
+    <div class="results-count">
+        {{ results|length }} {{ translate('resultado(s) encontrado(s)') }}
+    </div>
+</div>
+
+  
+
+    
 
     {% if results %}
     <div class="table-responsive">
