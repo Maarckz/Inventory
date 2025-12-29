@@ -203,6 +203,7 @@ body.dark-mode .alert-success {
     transition: var(--transition);
     border: none;
     gap: 0.5rem;
+    color: var(--primary-dark);
 }
 
 .btn-sm {
