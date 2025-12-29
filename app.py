@@ -56,7 +56,7 @@ ALLOWED_IP_RANGES = os.getenv('ALLOWED_IP_RANGES').split(',')
 os.makedirs(INVENTORY_DIR, exist_ok=True)
 os.makedirs(LOG_DIR, exist_ok=True)
 os.makedirs(os.path.dirname(AUTH_FILE), exist_ok=True)
-os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)  # Diretório para sessões
+os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)
 
 ssl_context = None
 if USE_HTTPS:
@@ -401,7 +401,6 @@ def check_access():
     
     audit_logger.info(f"ACESSO - IP: {client_ip}, Usuário: {username}, Endpoint: {request.endpoint}, Método: {request.method}")
     
-    # Verificar se o IP está permitido (exceto para arquivos estáticos)
     if not request.path.startswith('/static'):
         if not is_ip_allowed(client_ip):
             security_logger.warning(f"ACESSO BLOQUEADO - IP não permitido: {client_ip}, Usuário: {username}, Endpoint: {request.endpoint}")
@@ -484,12 +483,10 @@ def get_chart_data():
     with open(os.path.join(GROUPS_DIR, 'groups.json')) as f:
         groups = json.load(f)
     
-    # Obter máquinas recentemente adicionadas (últimas 5 por data)
     recent_machines = sorted(machines, 
                            key=lambda x: x.get('last_seen', ''),
                            reverse=True)[:5]
     
-    # Preparar dados para timeline (últimos 7 dias)
     timeline_data = {'dates': [], 'active': [], 'inactive': []}
     today = datetime.now().date()
     
@@ -498,7 +495,6 @@ def get_chart_data():
         date_str = date.strftime('%d/%m')
         timeline_data['dates'].append(date_str)
         
-        # Contar máquinas ativas/inativas para cada dia
         active_count = 0
         inactive_count = 0
         
@@ -620,7 +616,6 @@ def logout():
     username = session.get('username', 'Desconhecido')
     client_ip = request.remote_addr
     
-    # Registrar logout
     security_logger.info(f"LOGOUT - Usuário: {username}, IP: {client_ip}")
     
     session.clear()
@@ -637,7 +632,6 @@ def painel():
     machines = get_cached_machines()
     total_machines = len(machines)
     
-    # Paginação simples
     start_idx = (page - 1) * per_page
     end_idx = start_idx + per_page
     paginated_machines = machines[start_idx:end_idx]
@@ -653,7 +647,6 @@ def search():
     if 'username' not in session:
         return redirect(url_for('login'))
     
-    # Limpeza inicial da query
     query = request.args.get('query', '')[:100].strip().lower()
     machines = get_cached_machines()
     results = []
@@ -664,10 +657,8 @@ def search():
 
     # --- LÓGICA ESPECIAL PARA RAM (RANGE E VALORES) ---
     if query.startswith('ram_gb:'):
-        # Remove prefixo e a unidade 'gb' para pegar apenas os números/range
         ram_query = query.replace('ram_gb:', '').replace('gb', '').strip()
         
-        # Mapeamento de ranges (deve ser idêntico aos labels do Chart.js)
         ram_ranges = {
             "0-2": (0, 2),
             "3-4": (3, 4),
@@ -682,34 +673,28 @@ def search():
 
         for m in machines:
             try:
-                # Converte ram_gb da máquina para float para comparação precisa
                 ram_val = float(m.get('ram_gb', 0))
                 
-                # Caso 1: Range (ex: 17-32)
                 if "-" in ram_query:
                     if ram_query in ram_ranges:
                         min_r, max_r = ram_ranges[ram_query]
                     else:
-                        # Tenta extrair range manual se não estiver no dicionário
                         parts = ram_query.split('-')
                         min_r, max_r = float(parts[0]), float(parts[1])
                     
                     if min_r <= ram_val <= max_r:
                         results.append(m)
                 
-                # Caso 2: Maior que (ex: >64)
                 elif ram_query.startswith('>'):
                     limit = float(ram_query.replace('>', ''))
                     if ram_val > limit:
                         results.append(m)
                 
-                # Caso 3: Menor que (ex: <8)
                 elif ram_query.startswith('<'):
                     limit = float(ram_query.replace('<', ''))
                     if ram_val < limit:
                         results.append(m)
 
-                # Caso 4: Valor exato ou aproximado
                 else:
                     if float(ram_query) == ram_val:
                         results.append(m)
@@ -723,9 +708,7 @@ def search():
         tag_parts = query.split(':')
         tag = tag_parts[0].strip()
         
-        # Pega o último termo como termo de busca
         search_term = tag_parts[-1].strip()
-        # Sub-tag se existir (ex: inventory:os:windows -> sub_tag é 'os')
         sub_tag = tag_parts[1].strip() if len(tag_parts) > 2 else None
         
         for m in machines:
@@ -734,23 +717,18 @@ def search():
             found = False
             
             if tag in ['groups', 'group' ]:
-                # Coleta todos os grupos possíveis dessa máquina
                 candidate_groups = []
                 
-                # 1. Tenta pegar da raiz (padrão novo do get_data.py)
                 if m.get('groups'):
                     candidate_groups.extend(m['groups'] if isinstance(m['groups'], list) else [m['groups']])
                 
-                # 2. Tenta pegar de agent_info (padrão nativo do JSON Wazuh)
                 agent_info = m.get('agent_info', {})
                 if isinstance(agent_info, dict):
                     raw_g = agent_info.get('group')
                     if raw_g:
                         candidate_groups.extend(raw_g if isinstance(raw_g, list) else [raw_g])
 
-                # 3. Verifica se o termo buscado está em ALGUM dos grupos
                 for g in candidate_groups:
-                    # Converte para string e minúsculo para comparar
                     if search_term in str(g).lower():
                         found = True
                         break
@@ -800,13 +778,11 @@ def search():
             hostname = m.get('hostname', '')
             if hostname in added_hostnames: continue
             
-            # Busca em campos principais
             if any(query in str(m.get(k, '')).lower() for k in ['hostname', 'ip_address', 'os_name', 'cpu_name', 'device_status', 'ram_gb']):
                 results.append(m)
                 added_hostnames.add(hostname)
                 continue
             
-            # Busca em sub-listas (Interfaces, Portas, Processos, Pacotes)
             found_in_sub = False
             # Redes
             for iface in m.get('netiface', []):
@@ -919,7 +895,6 @@ def toggle_mfa():
         try:
             with open(AUTH_FILE, 'w') as f:
                 json.dump(users, f)
-            # Gerar QR code
             totp_uri = pyotp.totp.TOTP(secret).provisioning_uri(
                 name=username,
                 issuer_name="Inventory System"
@@ -1002,7 +977,6 @@ def translate(key, lang=None):
     
     return LANGUAGES.get(lang, {}).get(key, LANGUAGES['pt'].get(key, key))
 
-# Context processor para templates
 @app.context_processor
 def inject_translations():
     return dict(
@@ -1010,7 +984,6 @@ def inject_translations():
         language=session.get('language', 'pt')
     )
 
-# Rota para mudar idioma
 @app.route('/set_language/<language>')
 def set_language(language):
     if language in LANGUAGES:
