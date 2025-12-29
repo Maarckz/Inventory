@@ -24,7 +24,6 @@ import time
 import json
 import os
 
-
 load_dotenv()
 
 app = Flask(__name__)
@@ -286,7 +285,7 @@ def process_machine_data(raw_data):
         processed['os_platform'] = os_info.get('os', {}).get('platform', 'N/A')
         processed['os_architecture'] = os_info.get('architecture', 'N/A')
         processed['os_full'] = f"{processed['os_name']} {processed['os_version']} ({processed['os_codename']})"
-        processed['os_kernel'] = os_info.get('release', 'N/A')
+        processed['os_kernel'] = os_info.get('release', os_info.get('os_release', 'N/A'))
     
     # Network interfaces
     processed['netiface'] = []
