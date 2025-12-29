@@ -281,7 +281,6 @@
 
 {% block content %}
 <div class="dashboard-container">
-    <!-- KPI Cards -->
     <div class="kpi-cards">
         <div class="kpi-card" onclick="window.location.href='/search'">
             <div class="kpi-header">
@@ -306,7 +305,6 @@
         </div>
     </div>
 
-    <!-- Charts Grid -->
     <div class="charts-grid">
         <div class="chart-card">
             <div class="chart-header"><h3 class="chart-title">{{ translate('Sistemas Operacionais') }}</h3></div>
@@ -393,13 +391,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     break;
                 case 'processChart': 
                     const datasetIndex = elements[0].datasetIndex;
-                    const processLabel = chart.data.labels[index];
-                    query = 'inventory:processes:' + processLabel.toLowerCase(); 
+                    // No Multi Pie, o label pode precisar de ajuste dependendo de como é gerado
+                    // Assumindo que o label é consistente com o dataset
+                    const processLabel = chart.data.labels[index] || chart.data.labels[datasetIndex];
+                    if (processLabel) {
+                        query = 'inventory:processes:' + processLabel.toLowerCase(); 
+                    }
                     break;
                 case 'groupsChart': query = 'groups:' + chart.data.labels[index].toLowerCase(); break;
                 default: query = chart.data.labels[index].toLowerCase();
             }
-            window.location.href = `/search?query=${encodeURIComponent(query)}`;
+            if (query) window.location.href = `/search?query=${encodeURIComponent(query)}`;
         }
     };
 
@@ -424,25 +426,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     pointStyle: 'circle', 
                     padding: 15,
                     generateLabels: function(chart) {
-                        // Get the default label list
                         const original = Chart.overrides.pie.plugins.legend.labels.generateLabels;
                         const labelsOriginal = original.call(this, chart);
 
-                        // Build an array of colors used in the datasets of the chart
                         let datasetColors = chart.data.datasets.map(function(e) {
                             return e.backgroundColor;
                         });
                         datasetColors = datasetColors.flat();
 
-                        // Modify the color and hide state of each label
                         labelsOriginal.forEach(label => {
-                            // There are twice as many labels as there are datasets. This converts the label index into the corresponding dataset index
                             label.datasetIndex = (label.index - label.index % 2) / 2;
-
-                            // The hidden state must match the dataset's hidden state
                             label.hidden = !chart.isDatasetVisible(label.datasetIndex);
-
-                            // Change the color to match the dataset
                             label.fillStyle = datasetColors[label.index];
                         });
 
@@ -450,7 +444,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 },
                 onClick: function(mouseEvent, legendItem, legend) {
-                    // toggle the visibility of the dataset from what it currently is
                     legend.chart.getDatasetMeta(
                         legendItem.datasetIndex
                     ).hidden = legend.chart.isDatasetVisible(legendItem.datasetIndex);
@@ -512,46 +505,40 @@ document.addEventListener('DOMContentLoaded', function() {
                         x: {
                             beginAtZero: true, 
                             grid: { display: false },
-                            ticks: {
-                                font: {
-                                    weight: '700', // Engrossa os números (eixo X)
-                                    size: 11
-                                }
-                            }
+                            ticks: { font: { weight: '700', size: 11 } }
                         }, 
                         y: {
                             grid: { display: false },
-                            ticks: {
-                                font: {
-                                    weight: '700', // Engrossa os nomes das portas (eixo Y)
-                                    size: 12
-                                }
-                            }
+                            ticks: { font: { weight: '700', size: 12 } }
                         }
                     }, 
                     plugins: { legend: { display: false } }
                 }
             });
 
-            // Process Chart - Multi Pie
+            // Process Chart - Multi Pie (CORRIGIDO: borderWidth: 0 adicionado)
             const processDataMultiPie = {
                 labels: data.process_labels || ['Chrome', 'Firefox', 'Explorer', 'Teams', 'Word', 'Excel'],
                 datasets: [
                     {
                         backgroundColor: [dashboardColors[0], dashboardColors[1]],
-                        data: data.process_data ? [data.process_data[0], 100 - data.process_data[0]] : [35, 65]
+                        data: data.process_data ? [data.process_data[0], 100 - data.process_data[0]] : [35, 65],
+                        borderWidth: 0 // Remove a borda branca
                     },
                     {
                         backgroundColor: [dashboardColors[2], dashboardColors[3]],
-                        data: data.process_data ? [data.process_data[1], 100 - data.process_data[1]] : [25, 75]
+                        data: data.process_data ? [data.process_data[1], 100 - data.process_data[1]] : [25, 75],
+                        borderWidth: 0 // Remove a borda branca
                     },
                     {
                         backgroundColor: [dashboardColors[4], dashboardColors[5]],
-                        data: data.process_data ? [data.process_data[2], 100 - data.process_data[2]] : [20, 80]
+                        data: data.process_data ? [data.process_data[2], 100 - data.process_data[2]] : [20, 80],
+                        borderWidth: 0 // Remove a borda branca
                     },
                     {
                         backgroundColor: [dashboardColors[6], dashboardColors[7]],
-                        data: data.process_data ? [data.process_data[3], 100 - data.process_data[3]] : [15, 85]
+                        data: data.process_data ? [data.process_data[3], 100 - data.process_data[3]] : [15, 85],
+                        borderWidth: 0 // Remove a borda branca
                     }
                 ]
             };
@@ -562,9 +549,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 options: multiPieOptions
             });
 
-            // Groups Chart (Polar)
+            // Groups Chart (Polar/Bar)
             if (data.groups && data.groups.length > 0) {
-                // 1. Filtrar grupos vazios e ordenar
                 const activeGroups = data.groups
                     .filter(g => g.quantidade_agentes > 0)
                     .sort((a, b) => b.quantidade_agentes - a.quantidade_agentes);
@@ -586,36 +572,27 @@ document.addEventListener('DOMContentLoaded', function() {
                             }]
                         },
                         options: {
-                            indexAxis: 'y', // Mantém horizontal para o texto ser legível
+                            indexAxis: 'y',
                             responsive: true,
                             maintainAspectRatio: false,
                             scales: {
                                 x: {
-                                    reverse: true, // INVERTE as barras para a direita
+                                    reverse: true,
                                     beginAtZero: true,
                                     grid: { display: false },
-                                    ticks: {
-                                        maxRotation: 0, // Deixa os números em pé
-                                        minRotation: 0, // Deixa os números em pé
-                                        font: { size: 11 }
-                                    }
+                                    ticks: { maxRotation: 0, minRotation: 0, font: { size: 11 } }
                                 },
                                 y: {
-                                    position: 'right', // Joga os nomes dos grupos para a direita
+                                    position: 'right',
                                     grid: { display: false },
-                                    ticks: {
-                                        font: { weight: '600', size: 12 },
-                                        color: '#475569'
-                                    }
+                                    ticks: { font: { weight: '600', size: 12 }, color: '#475569' }
                                 }
                             },
                             plugins: {
                                 legend: { display: false },
                                 tooltip: {
-                                    rtl: true, // Ajusta o tooltip para o modo invertido
-                                    callbacks: {
-                                        label: (ctx) => ` ${ctx.raw} máquinas`
-                                    }
+                                    rtl: true,
+                                    callbacks: { label: (ctx) => ` ${ctx.raw} máquinas` }
                                 }
                             },
                             onClick: (event, elements, chart) => {
@@ -644,7 +621,9 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             // Recent Machines Table
-            document.getElementById('recent-machines').innerHTML = data.recent_machines.map(m=>`<tr><td>${m.name}</td><td>${m.os}</td><td><span class="badge ${m.status==='Ativo'?'green':'orange'}">${m.status}</span></td></tr>`).join('');
+            if(data.recent_machines) {
+                document.getElementById('recent-machines').innerHTML = data.recent_machines.map(m=>`<tr><td>${m.name}</td><td>${m.os}</td><td><span class="badge ${m.status==='Ativo'?'green':'orange'}">${m.status}</span></td></tr>`).join('');
+            }
         })
         .catch(err => console.error('Erro ao carregar dados:', err));
 });
