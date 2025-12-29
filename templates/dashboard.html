@@ -407,7 +407,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const dashboardColors = [
         '#6366F1', '#8B5CF6', '#0EA5E9', '#EC4899', '#F43F5E', 
         '#F97316', '#F59E0B', '#10B981', '#3B82F6', '#EAB308', 
-        '#A21CAF', '#BE185D', '#64748B', '#6B7280', '#EF4444'
+        '#A21CAF', '#BE185D', '#64748B', '#6B7280', '#EF4444',
+        '#34D399', '#F472B6', '#22D3EE', '#D1FAE5', '#8BC34A'
     ];
 
     // Configuração específica para o multi pie chart
@@ -488,18 +489,51 @@ document.addEventListener('DOMContentLoaded', function() {
             new Chart(document.getElementById('cpuChart').getContext('2d'), {
                 type: 'bar',
                 data: { labels: data.cpu_labels, datasets:[{ label:'Quantidade', data:data.cpu_data, backgroundColor:['#6366F1','#8B5CF6','#0EA5E9','#EC4899','#F43F5E','#F97316','#F59E0B','#10B981','#3B82F6','#EAB308','#A21CAF','#BE185D'], borderRadius:6, borderWidth:0 }] },
-                options: {...chartOptions, scales:{ x:{ticks:{display:false}, grid:{drawTicks:false}}, y:{beginAtZero:true, grid:{drawBorder:false}} }, plugins:{legend:{display:false}}}
+                options: {...chartOptions, scales:{ x:{ticks:{display:false}, grid:{display:false}}, y:{beginAtZero:true, grid:{display:false}} }, plugins:{legend:{display:false}}}
             });
 
             // Port Chart
             new Chart(document.getElementById('portChart').getContext('2d'), {
-                type:'bar',
-                data:{ labels:data.port_labels, datasets:[{ label:'Ocorrências', data:data.port_data, backgroundColor:data.port_labels.map((l,i)=>data.port_protocols[i]==='tcp'?'#3B82F6':'#10B981'), borderRadius:6, borderWidth:0 }]},
-                options:{...chartOptions, indexAxis:'y', scales:{x:{beginAtZero:true, grid:{drawBorder:false}}}, plugins:{legend:{display:false}}}
+                type: 'bar',
+                data: { 
+                    labels: data.port_labels, 
+                    datasets: [{ 
+                        label: 'Ocorrências', 
+                        data: data.port_data, 
+                        backgroundColor: data.port_labels.map((l, i) => data.port_protocols[i] === 'tcp' ? '#3B82F6' : '#10B981'), 
+                        borderRadius: 6, 
+                        borderWidth: 0 
+                    }]
+                },
+                options: {
+                    ...chartOptions, 
+                    indexAxis: 'y', 
+                    scales: {
+                        x: {
+                            beginAtZero: true, 
+                            grid: { display: false },
+                            ticks: {
+                                font: {
+                                    weight: '700', // Engrossa os números (eixo X)
+                                    size: 11
+                                }
+                            }
+                        }, 
+                        y: {
+                            grid: { display: false },
+                            ticks: {
+                                font: {
+                                    weight: '700', // Engrossa os nomes das portas (eixo Y)
+                                    size: 12
+                                }
+                            }
+                        }
+                    }, 
+                    plugins: { legend: { display: false } }
+                }
             });
 
             // Process Chart - Multi Pie
-            // Dados de exemplo para o multi pie
             const processDataMultiPie = {
                 labels: data.process_labels || ['Chrome', 'Firefox', 'Explorer', 'Teams', 'Word', 'Excel'],
                 datasets: [
@@ -529,14 +563,75 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             // Groups Chart (Polar)
-            if (data.groups?.length){
-                const groupsCtx = document.getElementById('groupsChart').getContext('2d');
-                new Chart(groupsCtx, {
-                    type:'polarArea',
-                    data:{ labels:data.groups.map(g=>g.grupo), datasets:[{ data:data.groups.map(g=>g.quantidade_agentes), backgroundColor:['#6366F1','#8B5CF6','#0EA5E9','#EC4899','#F43F5E','#F97316','#F59E0B','#10B981','#3B82F6','#EAB308','#A21CAF','#BE185D'], borderWidth:0 }]},
-                    options:{ ...chartOptions }
-                });
-            } else document.getElementById('groupsChart').closest('.chart-card').style.display='none';
+            if (data.groups && data.groups.length > 0) {
+                // 1. Filtrar grupos vazios e ordenar
+                const activeGroups = data.groups
+                    .filter(g => g.quantidade_agentes > 0)
+                    .sort((a, b) => b.quantidade_agentes - a.quantidade_agentes);
+
+                if (activeGroups.length > 0) {
+                    const groupsCtx = document.getElementById('groupsChart').getContext('2d');
+                    
+                    new Chart(groupsCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: activeGroups.map(g => g.grupo),
+                            datasets: [{
+                                label: 'Máquinas',
+                                data: activeGroups.map(g => g.quantidade_agentes),
+                                backgroundColor: dashboardColors,
+                                borderRadius: 8,
+                                borderSkipped: false,
+                                barThickness: 25
+                            }]
+                        },
+                        options: {
+                            indexAxis: 'y', // Mantém horizontal para o texto ser legível
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                x: {
+                                    reverse: true, // INVERTE as barras para a direita
+                                    beginAtZero: true,
+                                    grid: { display: false },
+                                    ticks: {
+                                        maxRotation: 0, // Deixa os números em pé
+                                        minRotation: 0, // Deixa os números em pé
+                                        font: { size: 11 }
+                                    }
+                                },
+                                y: {
+                                    position: 'right', // Joga os nomes dos grupos para a direita
+                                    grid: { display: false },
+                                    ticks: {
+                                        font: { weight: '600', size: 12 },
+                                        color: '#475569'
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: { display: false },
+                                tooltip: {
+                                    rtl: true, // Ajusta o tooltip para o modo invertido
+                                    callbacks: {
+                                        label: (ctx) => ` ${ctx.raw} máquinas`
+                                    }
+                                }
+                            },
+                            onClick: (event, elements, chart) => {
+                                if (!elements.length) return;
+                                const index = elements[0].index;
+                                const groupName = chart.data.labels[index];
+                                window.location.href = `/search?query=groups:${encodeURIComponent(groupName)}`;
+                            }
+                        }
+                    });
+                } else {
+                    document.getElementById('groupsChart').closest('.chart-card').style.display = 'none';
+                }
+            } else {
+                document.getElementById('groupsChart').closest('.chart-card').style.display = 'none';
+            }
 
             // Timeline Chart
             new Chart(document.getElementById('timelineChart').getContext('2d'), {

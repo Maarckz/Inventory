@@ -50,6 +50,21 @@
                     <span class="detail-value">{{ machine.board_serial }}</span>
                 </div>
                 <div class="detail-row">
+                    <span class="detail-label">Groups</span>
+                    <span class="detail-value">
+                        {% if machine.groups %}
+                            {% for group in machine.groups %}
+                                {{ group }}
+                                {% if not loop.last %}
+                                    ,
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="detail-row">
                     <span class="detail-label">Last scan</span>
                     <span class="detail-value">{{ machine.last_seen | formatar_data }}</span>
                 </div>
