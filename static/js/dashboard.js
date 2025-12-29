@@ -1,3 +1,4 @@
+/*
 document.addEventListener('DOMContentLoaded', function() {
     // Configuração comum para os gráficos
     const chartOptions = {
@@ -282,3 +283,4 @@ createChartIfExists('portChart', (element) => {
             // Você pode adicionar aqui uma mensagem de erro para o usuário
         });
 });
+*/
