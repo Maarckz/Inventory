@@ -152,6 +152,10 @@ body.dark-mode .app-header {
     color: var(--dark);
 }
 
+.alert {
+    animation: fadeIn 0.4s ease forwards;
+    animation-delay: 0.1s;
+}
 .alert-error {
     background-color: #FEE2E2;
     color: #B91C1C;

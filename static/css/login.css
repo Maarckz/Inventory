@@ -57,6 +57,36 @@
     animation: fadeIn 0.4s ease forwards;
     animation-delay: 0.1s;
 }
+.alert-error {
+    background-color: #FEE2E2;
+    color: #B91C1C;
+}
+
+body.dark-mode .alert-error {
+    background-color: #7f1d1d;
+    color: #fecaca;
+}
+
+.alert-success {
+    background-color: #DCFCE7;
+    color: #15803D;
+}
+
+body.dark-mode .alert-success {
+    background-color: #14532d;
+    color: #bbf7d0;
+}
+
+.alert-close {
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    padding: 0;
+    margin-left: 1rem;
+}
+
+
 
 @keyframes fadeIn {
     to {
