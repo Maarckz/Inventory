@@ -1,31 +1,41 @@
 ###########################
-## IMPORTING BIBLIOTECAS ##
+## IMPORTAR  BIBLIOTECAS ##
 ###########################
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, make_response
-from logging.handlers import RotatingFileHandler
-from utils.pdf_export import generate_pdf_report
-from datetime import datetime, timedelta
-from utils.language import LANGUAGES
-from collections import defaultdict
-from flask_session import Session
-from dotenv import load_dotenv
-from datetime import datetime
-from io import BytesIO
-import ipaddress
+import os
+import json
+import time
+import pyotp
+import fcntl
+import qrcode
+import base64
+import struct
+import socket
 import logging
 import bcrypt
-import socket
-import struct
-import base64
-import qrcode
-import fcntl
-import pyotp
-import time
-import json
-import os
+import ipaddress
+from io import BytesIO
+from datetime import datetime
+from dotenv import load_dotenv
+from flask_session import Session
+from collections import defaultdict
+from utils.language import LANGUAGES
+from datetime import datetime, timedelta
+from utils.pdf_export import generate_pdf_report
+from logging.handlers import RotatingFileHandler
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, make_response
 
+
+#############################################
+## IMPORTAR  VARIAVEIS DE AMBIENTE DO .ENV ##
+#############################################
 load_dotenv()
 
+
+############################
+## CONFIGURACOES INICIAIS ##
+############################
+
+#CONFIGURACOES DO FLASK
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY')
 app.config['STATIC_FOLDER'] = 'static'
@@ -848,8 +858,7 @@ def get_data():
         os.popen(f'python3 {script_path} &')
         os.popen(f'python3 {groups_script_path} &')
         app.logger.info("Coleta de dados iniciada")
-        #flash(translate('Coleta de dados iniciada, aguarde alguns minutos.'), 'categoria')
-        flash('Coleta de dados iniciada, aguarde alguns minutos.', 'success')
+        flash(translate('Coleta de dados iniciada, aguarde alguns minutos.'), 'success')
         return redirect(url_for('dashboard'))
     except Exception as e:
         app.logger.error(f"Erro ao iniciar coleta: {str(e)}")
