@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Inventory</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.png') }}">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
 
     <style>
         :root {
@@ -196,17 +196,15 @@
             <div class="login-logo" style="margin:0; padding:0;">
                 <img src="{{ url_for('static', filename='logo.svg') }}" alt="Logo" style="margin:0; padding:0;">
             </div>
-            
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category, message in messages %}
-                        <div class="alert alert-{{ category }}">
-                            {{ message }}
+                        <div class="alert alert-{{ category }}" style="background-color: #FEE2E2; border: 1px solid #FECACA; color: #B91C1C;">
+                            {{message }}
                         </div>
                     {% endfor %}
                 {% endif %}
             {% endwith %}
-            
             <form method="POST" action="{{ url_for('login') }}">
                 <div class="form-group">
                     <label>{{ translate('Usuário') }}</label>

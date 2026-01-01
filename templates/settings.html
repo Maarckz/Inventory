@@ -204,17 +204,17 @@ function fetchMfaStatus() {
             const body = document.getElementById('mfa-modal-body');
             if (data.enabled) {
                 body.innerHTML = `
-                    <p>MFA está <strong>habilitada</strong>.</p>
-                    <button class="btn btn-danger" onclick="disableMfa()">Desabilitar MFA</button>`;
+                    <p>{{ translate('MFA está <strong>habilitada</strong>.') }}</p>
+                    <button class="btn btn-danger" onclick="disableMfa()">{{ translate('Desabilitar MFA') }}</button>`;
             } else {
                 body.innerHTML = `
-                    <p>MFA está <strong>desabilitada</strong>.</p>
-                    <button class="btn btn-primary" onclick="enableMfa()">Habilitar MFA</button>
+                    <p>{{ translate('MFA está ') }}<strong>{{ translate('desabilitada') }}</strong></p>
+                    <button class="btn btn-primary" onclick="enableMfa()">{{ translate('Habilitar MFA') }}</button>
                     <div id="mfa-setup-container" style="display:none;margin-top:1rem;">
                         <div id="qr-code-container"></div>
-                        <p>Secret: <span id="mfa-secret"></span></p>
-                        <input type="text" id="mfa-code" placeholder="Código de 6 dígitos" class="form-control"/>
-                        <button class="btn btn-success" onclick="verifyMfaSetup()">Verificar</button>
+                        <p>{{ translate('Secret') }}: <span id="mfa-secret"></span></p>
+                        <input type="text" id="mfa-code" placeholder="{{ translate('Código de 6 dígitos') }}" class="form-control"/>
+                        <button class="btn btn-primary" onclick="verifyMfaSetup()">{{ translate('Verificar') }}</button>
                     </div>`;
             }
         });

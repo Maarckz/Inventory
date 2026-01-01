@@ -40,9 +40,10 @@
             <a href="{{ url_for('machine_details', hostname=machine.hostname) }}" class="hostname-btn">
                 {{ machine.hostname.upper() }} ({{ machine.id }})
             </a>
-            <span class="status status-{{ 'ativo' if machine.device_status == 'Ativo' else 'inativo' }}">
-                {{ machine.device_status }}
+            <span class="status status-{{ 'ativo' if machine.device_status == translate('Ativo') else 'inativo' }}">
+                {{ translate(machine.device_status) }}
             </span>
+
         </div>
 
         <div class="machine-info">
