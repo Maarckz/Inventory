@@ -114,40 +114,43 @@ Grupos do WAZUH
 | **Utilitários**                  | Inclui os scripts `get_data.py` (coletor principal) e `get_groups.py` (coletor de grupos de agentes Wazuh).                                                                |
 
 ### 3.2 Aplicação Web (Flask)
-A Aplicação Web é a camada de processamento, gerenciamento, visualização e gestão da solução, fornecendo a interface com a qual os usuários interagem para analisar o inventário.
 
+A Aplicação Web é a camada de processamento, gerenciamento, visualização e gestão da solução, fornecendo a interface com a qual os usuários interagem para analisar o inventário. Atualmente integrada ao banco de dados **PostgreSQL**, a aplicação oferece maior performance, estabilidade e resposta rápida nas requisições, eliminando a dependência de leitura de arquivos estáticos.
 
-Acessível via navegador, com as seguintes funcionalidades:
+Acessível via navegador, a plataforma conta com as seguintes funcionalidades:
 
-- **Autenticação Segura**  
-  - Senhas protegidas com hash bcrypt
-  - Bloqueio de IP após tentativas falhas configuráveis
-  - Expiração automática da sessão (ex: 30 minutos)
-  - MFA TOTP
-- **Statistical Dashboard**  
-  - Total de máquinas cadastradas, ativas e inativas
-  - Distribuição de Sistemas Operacionais
-  - Tipos de processadores e memória RAM
-  - Portas de Rede mais comun
-  - Serviços
-  - Processos com maior repetição
-- **Painel de Máquinas**  
-  - Lista completa de dispositivos com filtros avançados
-- **Busca Avançada**  
-  - Pesquisa por IP, sistema operacional, hardware ou outros critérios
-- **Detalhes da Máquina**  
-  - Visão detalhada dos dados coletados para cada host
+- **Autenticação e Gestão de Identidade**
+    
+    - Senhas protegidas com hash bcrypt.
+    - **Gerenciador de Contas** e funcionalidade de **Troca de Senha**.
+    - Bloqueio de IP após tentativas falhas configuráveis.
+    - Expiração automática da sessão (ex: 30 minutos).
+    - Autenticação Multifator (MFA TOTP).
+- **Dashboard Estatístico (Tempo Real)**
+    
+    - **Atualização automática a cada 2 minutos** sem necessidade de recarregar a página.
+    - Total de máquinas cadastradas, ativas e inativas.
+    - Distribuição de Sistemas Operacionais, Arquiteturas e Hardware.
+    - Análise de Portas de Rede, Serviços e Processos.
+- **Painel e Busca de Ativos**
+    
+    - Lista completa de dispositivos com filtros avançados.
+    - Sistema de **Busca Avançada** com sintaxe de tags (ex: `ports:445`, `os:Windows`).
+    - **Controle de Máquinas Legadas** para gestão de ativos antigos ou específicos.
+- **Internacionalização**
+    
+    - **Suporte Multi-idioma** completo para Inglês, Espanhol e Hindi.
+- **Detalhes e Relatórios**
+    
+    - Visão detalhada dos dados coletados para cada host (Hardware, Rede, Software).
+    - Exportação de relatórios em formato PDF.
 
-
-
-| Função              | Detalhamento                                                                                                                                                                                                                                            |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Framework**       | A aplicação é construída sobre o micro-framework **Flask**, utilizando a linguagem **Python**, o que garante leveza e flexibilidade.                                                                                                                    |
-| **Interface**       | A interface do usuário é desenvolvida com **Tríade da Web**, utilizando bibliotecas como **Chart.js** para gráficos interativos e **Font Awesome** para ícones, resultando em uma experiência de usuário moderna e intuitiva.                           |
-| **Funcionalidades** | Oferece um _dashboard_ estatístico completo, um _painel_ para listagem e _detalhamento de máquinas_, um sistema de _busca avançada_ com filtros dinâmicos e a capacidade de exportar relatórios em formatos PDF e CSV (este último em desenvolvimento). |
-| **Segurança**       | Implementa múltiplos mecanismos de segurança, incluindo armazenamento de senhas com **hash bcrypt**, **Autenticação Multifator (MFA) baseada em TOTP**, controle de acesso por faixas de IP e o uso de **headers de segurança HTTP**.                   |
-
-
+| Função              | Detalhamento                                                                                                                                                                                                                               |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Framework**       | A aplicação é construída sobre o micro-framework **Flask**, utilizando a linguagem **Python**. A integração com **PostgreSQL** substitui o uso de arquivos JSON locais, garantindo consultas mais rápidas e integridade de dados.          |
+| **Interface**       | A interface do usuário é desenvolvida com **Tríade da Web**, utilizando bibliotecas como **Chart.js** para gráficos interativos e **Font Awesome** para ícones, resultando em uma experiência moderna e responsiva.                        |
+| **Funcionalidades** | Oferece um _dashboard_ estatístico com **atualização em tempo real (2 min)**, suporte a **múltiplos idiomas** (Inglês, Espanhol, Hindi), gestão de contas, controle de máquinas legadas, busca avançada e exportação de relatórios em PDF. |
+| **Segurança**       | Implementa múltiplos mecanismos de segurança, incluindo armazenamento de senhas com **hash bcrypt**, **Autenticação Multifator (MFA) baseada em TOTP**, controle de acesso por faixas de IP e o uso de **headers de segurança HTTP**.      |
 
 
 
