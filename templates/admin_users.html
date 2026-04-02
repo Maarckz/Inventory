@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Gestão de Usuários - Sistema de Monitoramento{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="detailed-card" style="margin-bottom: 2rem;">
+        <div class="detailed-header">
+            <h3 class="detailed-title">Novo Usuário</h3>
+        </div>
+        <form action="{{ url_for('add_user') }}" method="POST" style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 1rem; align-items: end;">
+            <div>
+                <label>Nome de Usuário</label>
+                <input type="text" name="username" class="form-control" style="margin-bottom: 0;" required>
+            </div>
+            <div>
+                <label>Senha</label>
+                <input type="password" name="password" class="form-control" style="margin-bottom: 0;" required>
+            </div>
+            <div>
+                <label>Perfil</label>
+                <select name="role" class="form-control" style="margin-bottom: 0;">
+                    <option value="user">Usuário Comum</option>
+                    <option value="admin">Administrador</option>
+                </select>
+            </div>
+            <button type="submit" class="view-all" style="background: var(--primary); color: white; padding: 0.75rem 1.5rem; border-radius: 8px; border: none; cursor: pointer;">Criar</button>
+        </form>
+    </div>
+
+    <div class="detailed-card">
+        <div class="detailed-header">
+            <h3 class="detailed-title">Usuários Cadastrados</h3>
+        </div>
+        
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Usuário</th>
+                    <th>Role</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.username }}</td>
+                    <td><span class="badge {{ 'blue' if user.role == 'admin' else 'green' }}">{{ user.role }}</span></td>
+                    <td>
+                        {% if user.username != 'admin' %}
+                        <form action="{{ url_for('delete_user', user_id=user.id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Tem certeza que deseja remover este usuário?')">
+                            <button type="submit" class="view-all" style="color: var(--danger); border: none; background: none; cursor: pointer;">Remover</button>
+                        </form>
+                        {% else %}
+                        <span style="color: var(--secondary); font-size: 0.8rem;">Sistema</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

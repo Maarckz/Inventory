@@ -11,6 +11,8 @@
     <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
     {% block extra_css %}{% endblock %}
     
+
+    <!--  BLOCO DE ATUALIZAÇÃO AUTOMATICA  -->
     <script>
     (function() {
         const savedTheme = localStorage.getItem('theme') || 'light';
@@ -18,7 +20,12 @@
             document.documentElement.classList.add('dark-mode');
         }
     })();
+    setInterval(function() {
+        window.location.reload();
+    }, 140000);
 </script>
+
+
 </head>
 <body>
     <div class="app-container">
@@ -77,18 +84,20 @@
         
         <main class="app-main">
             <div class="container">
+                <div class="toast-container">
                 {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
                         {% for category, message in messages %}
                             <div class="alert alert-{{ category }}">
                                 <span>{{ message }}</span>
-                                <button class="alert-close" onclick="this.parentElement.remove()">
+                                <button class="alert-close">
                                     <i class="fas fa-times"></i>
                                 </button>
                             </div>
                         {% endfor %}
                     {% endif %}
                 {% endwith %}
+                </div>
                 
                 {% block content %}{% endblock %}
             </div>
@@ -97,5 +106,6 @@
     
     <script src="{{ url_for('static', filename='js/base.js') }}"></script>
     {% block extra_js %}{% endblock %}
+    {% block modals %}{% endblock %}
 </body>
 </html>

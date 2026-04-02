@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+
+{% block title %}Máquinas Legadas - Inventory{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}">
+<style>
+    .legacy-container {
+        padding: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    .legacy-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 2rem;
+        gap: 1rem;
+    }
+    .search-input {
+        flex: 1;
+        position: relative;
+    }
+    .search-input input {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 2.5rem;
+        border: 1px solid var(--light-gray);
+        border-radius: var(--border-radius);
+        background: var(--white);
+        color: var(--dark);
+        font-size: 0.95rem;
+        transition: var(--transition);
+    }
+    .search-input input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        outline: none;
+    }
+    body.dark-mode .search-input input {
+        background: #334155;
+        border-color: #475569;
+        color: var(--dark);
+    }
+    body.dark-mode .search-input input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.3);
+    }
+    .search-input i.fa-search {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--gray);
+    }
+    .legacy-table th {
+        padding: 1rem;
+        text-align: left;
+        font-weight: 500;
+        font-size: 0.95rem;
+        cursor: pointer;
+        user-select: none;
+    }
+    .legacy-table th:hover {
+        background: rgba(99, 102, 241, 0.05);
+    }
+    .legacy-row {
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    .legacy-row:hover {
+        background-color: #f8fafc;
+    }
+    body.dark-mode .legacy-row:hover {
+        background-color: #2d3748 !important;
+    }
+    .legacy-card {
+        background: var(--white);
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: var(--box-shadow);
+        border: 1px solid var(--light-gray);
+    }
+    .table-container {
+        border-radius: 1rem;
+        overflow: hidden;
+        border: 1px solid var(--light-gray);
+        margin-top: 1rem;
+    }
+    .legacy-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--white);
+    }
+
+    .legacy-table td {
+        padding: 1rem;
+        vertical-align: middle;
+        font-size: 0.95rem;
+    }
+    .btn-delete {
+        background: var(--danger);
+        color: #ffffff;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .btn-delete:hover {
+        background: #dc2626;
+        transform: translateY(-2px);
+    }
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="legacy-container">
+    <div class="legacy-header">
+        <div class="search-input">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="{{ translate('Pesquisar por hostname, data...') }}">
+        </div>
+    </div>
+
+    <div class="legacy-card">
+        <div class="table-container">
+            <table class="legacy-table">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable(0)">{{ translate('Hostname') }} <i class="fas fa-sort" style="margin-left: 5px; color: var(--gray);"></i></th>
+                        <th onclick="sortTable(1)">{{ translate('Status') }} <i class="fas fa-sort" style="margin-left: 5px; color: var(--gray);"></i></th>
+                        <th onclick="sortTable(2)">{{ translate('Última Sincronização') }} <i class="fas fa-sort" style="margin-left: 5px; color: var(--gray);"></i></th>
+                        <th>{{ translate('Ações') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for host in hosts %}
+                    <tr id="host-row-{{ host.id }}" class="legacy-row" onclick="if(!event.target.closest('.btn-delete')) window.location.href='{{ url_for('machine_details', hostname=host.hostname) }}'">
+                        <td><strong style="color: var(--primary);">{{ host.hostname }}</strong></td>
+                        <td><span class="status-badge">{{ translate('Legado') }}</span></td>
+                        <td>{{ host.last_updated.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td>
+                            <button onclick="event.stopPropagation(); deleteHost({{ host.id }}, '{{ host.hostname }}')" class="btn-delete">
+                                <i class="fas fa-trash"></i> {{ translate('Excluir') }}
+                            </button>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 3rem;">
+                            <i class="fas fa-check-circle" style="font-size: 3rem; color: #10b981; margin-bottom: 1rem; display: block;"></i>
+                            {{ translate('Nenhuma máquina legada encontrada. Seu inventário está 100% sincronizado!') }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+async function deleteHost(id, hostname) {
+    if (!confirm(`Tem certeza que deseja excluir permanentemente o registro de ${hostname}?`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/settings/delete_legacy_host/${id}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            document.getElementById(`host-row-${id}`).remove();
+            showToast(data.message, 'success');
+            
+            if (document.querySelectorAll('tbody tr').length === 0) {
+                location.reload();
+            }
+        } else {
+            showToast(data.error, 'error');
+        }
+    } catch (error) {
+        showToast('Erro ao realizar a exclusão.', 'error');
+    }
+}
+
+const searchInput = document.getElementById('searchInput');
+if (searchInput) {
+    searchInput.addEventListener('input', function() {
+        const query = this.value.toLowerCase();
+        const rows = document.querySelectorAll('.legacy-table tbody tr:not(.no-results-row)');
+        
+        rows.forEach(row => {
+            const textContent = row.textContent.toLowerCase();
+            if (textContent.includes(query)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+}
+
+let sortOrders = {};
+function sortTable(colIndex) {
+    const table = document.querySelector('.legacy-table');
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr:not(.no-results-row)'));
+    
+    if (rows.length === 0) return;
+    
+    sortOrders[colIndex] = !sortOrders[colIndex];
+    const asc = sortOrders[colIndex];
+    
+    const ths = table.querySelectorAll('th');
+    ths.forEach((th, idx) => {
+        const icon = th.querySelector('i');
+        if (icon) {
+            if (idx === colIndex) {
+                icon.className = asc ? 'fas fa-sort-up' : 'fas fa-sort-down';
+                icon.style.color = 'var(--primary)';
+            } else {
+                icon.className = 'fas fa-sort';
+                icon.style.color = 'var(--gray)';
+            }
+        }
+    });
+
+    rows.sort((a, b) => {
+        const cellA = a.cells[colIndex].textContent.trim();
+        const cellB = b.cells[colIndex].textContent.trim();
+        
+        if (colIndex === 2) {
+            const [dateA, timeA] = cellA.split(' ');
+            const [dateB, timeB] = cellB.split(' ');
+            
+            const fA = dateA && timeA ? dateA.split('/').reverse().join('-') + ' ' + timeA : '';
+            const fB = dateB && timeB ? dateB.split('/').reverse().join('-') + ' ' + timeB : '';
+            return asc ? fA.localeCompare(fB) : fB.localeCompare(fA);
+        }
+        
+        return asc ? cellA.localeCompare(cellB, undefined, {numeric: true}) 
+                   : cellB.localeCompare(cellA, undefined, {numeric: true});
+    });
+    
+    rows.forEach(row => tbody.appendChild(row));
+}
+</script>
+{% endblock %}

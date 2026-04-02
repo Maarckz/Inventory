@@ -6,485 +6,686 @@
 {% block extra_js %}
 {% endblock %}
 {% block content %}
-    <div class="user-info" style="margin: 0 20px;">
-        <div class="user-avatar" >
-            {{ session.username[0] | upper }}
-        </div>
-        <div class="user-details">
-            <div><strong>{{ session.username | upper }}</strong></div>
-            <div class="status-indicator" id="mfa-status">
-                <i class="fas fa-spinner fa-spin"></i>
-                Verificando...
-            </div>
+<div class="user-info" style="margin: 0 20px;">
+    <div class="user-avatar">
+        {{ session.username[0] | upper }}
+    </div>
+    <div class="user-details">
+        <div><strong>{{ session.username | upper }}</strong></div>
+        <div class="status-indicator" id="mfa-status">
+            <i class="fas fa-spinner fa-spin"></i>
+            Verificando...
         </div>
     </div>
-    <style>
-        .user-info {
-            transition: box-shadow 0.3s;
-        }
-        .user-info:hover {
-            box-shadow: 0 10px 15px -3px rgba(99, 101, 241, 0.7), 0 4px 6px -2px rgba(99, 102, 241, 0.7);
-        }
-    </style>
+</div>
+<style>
+</style>
 
-    <style>
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-        .user-info {
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-        }
-        .user-details {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-    </style>
-
-    <script>
-        fetchMfaStatus();
-        function fetchMfaStatus() {
-            fetch('/mfa_status')
-                .then(r => r.json())
-                .then(data => {
-                    const statusElement = document.getElementById('mfa-status');
-                    statusElement.innerHTML = `
+<script>
+    fetchMfaStatus();
+    function fetchMfaStatus() {
+        fetch('/mfa_status')
+            .then(r => r.json())
+            .then(data => {
+                const statusElement = document.getElementById('mfa-status');
+                statusElement.innerHTML = `
                         <i class="fas fa-${data.enabled ? 'check-circle' : 'times-circle'}"></i>
                         MFA ${data.enabled ? '' : ''}
                     `;
-                    statusElement.className = data.enabled ? 'status-enabled' : 'status-disabled';
-                });
+                statusElement.className = data.enabled ? 'status-enabled' : 'status-disabled';
+            });
+    }
+</script>
+
+<div class="settings-grid">
+    {% if session.role == 'admin' %}
+    <div class="settings-card">
+        <div class="settings-card-header">
+            <i class="fas fa-sync-alt"></i>
+            <h3>{{ translate('SYNC com Wazuh') }}</h3>
+        </div>
+        <div class="settings-card-body">
+            <p>{{ translate('Configure a frequência com que o sistema coleta dados do Wazuh API.') }}</p>
+            <button class="btn btn-primary" id="sync-settings-btn">
+                <i class="fas fa-cog"></i> {{ translate('Configurar Sync') }}
+            </button>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="settings-card">
+        <div class="settings-card-header">
+            <i class="fas fa-bell"></i>
+            <h3>{{ translate('Notificações') }}</h3>
+        </div>
+        <div class="settings-card-body">
+            <p>{{ translate('Configure suas preferências de notificação para receber alertas importantes.') }}</p>
+            <button class="btn btn-outline" disabled>
+                <i class="fas fa-clock"></i>{{ translate('Em breve') }}
+            </button>
+        </div>
+    </div>
+
+    <div class="settings-card">
+        <div class="settings-card-header">
+            <i class="fas fa-file-pdf"></i>
+            <h3>{{ translate('Exportar Relatório') }}</h3>
+        </div>
+        <div class="settings-card-body">
+            <p>{{ translate('Exportar um relatório completo em PDF com todas as informações do sistema') }}</p>
+            <button class="btn btn-outline" id="export-pdf-btn">
+                <i class="fas fa-download"></i> {{ translate('Exportar PDF') }}
+            </button>
+        </div>
+    </div>
+
+    <div class="settings-card">
+        <div class="settings-card-header">
+            <i class="fas fa-shield-alt"></i>
+            <h3>{{ translate('Segurança') }}</h3>
+        </div>
+        <div class="settings-card-body">
+            <p>{{ translate('Configure a autenticação de dois fatores (MFA) para aumentar a segurança.') }}</p>
+            <button class="btn btn-outline" id="mfa-settings-btn">
+                <i class="fas fa-lock"></i> {{ translate('Configurar MFA') }}
+            </button>
+        </div>
+    </div>
+
+    <div class="settings-card">
+        <div class="settings-card-header">
+            <i class="fas fa-key"></i>
+            <h3>{{ translate('Alterar Senha') }}</h3>
+        </div>
+        <div class="settings-card-body">
+            <p>{{ translate('Mantenha sua conta segura alterando sua senha periodicamente.') }}</p>
+            <button class="btn btn-primary" id="change-password-btn">
+                <i class="fas fa-edit"></i> {{ translate('Alterar Minha Senha') }}
+            </button>
+        </div>
+    </div>
+
+    {% if session.role == 'admin' %}
+    <div class="settings-card">
+        <div class="settings-card-header">
+            <i class="fas fa-users-cog"></i>
+            <h3>{{ translate('Gestão de Usuários') }}</h3>
+        </div>
+        <div class="settings-card-body">
+            <p>{{ translate('Adicione, remova ou edite as permissões dos usuários do sistema.') }}</p>
+            <button class="btn btn-primary" id="user-management-btn">
+                <i class="fas fa-users"></i> {{ translate('Gerenciar Usuários') }}
+            </button>
+        </div>
+    </div>
+
+    <div class="settings-card">
+        <div class="settings-card-header">
+            <i class="fas fa-history"></i>
+            <h3>{{ translate('Máquinas Legadas') }}</h3>
+        </div>
+        <div class="settings-card-body">
+            <p>{{ translate('Gerencie e exclua registros antigos de máquinas que não estão mais sincronizadas.') }}</p>
+            <a href="{{ url_for('legacy_machines') }}" class="btn btn-primary">
+                <i class="fas fa-trash-alt"></i> {{ translate('Ver Legado') }}
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block modals %}
+<div id="mfaModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <div class="modal-header">
+            <i class="fas fa-shield-alt"></i>
+            <h2>{{ translate('Autenticação em Duas Etapas') }}</h2>
+        </div>
+        <hr style="margin-top: 1rem; border: none; border-top: 1px solid #ccc;">
+        <div id="mfa-modal-body" style="margin-top: 1rem;"></div>
+    </div>
+</div>
+
+<div id="changePasswordModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <div class="modal-header">
+            <i class="fas fa-key"></i>
+            <h2>{{ translate('Alterar Minha Senha') }}</h2>
+        </div>
+        <hr style="margin-top: 1rem; border: none; border-top: 1px solid #ccc;">
+        <form action="{{ url_for('change_password') }}" method="POST">
+            <div class="form-group">
+                <label>
+                    <i class="fas fa-unlock-alt icon-spacing"></i>
+                    {{ translate('Senha Atual') }}
+                </label>
+                <input type="password" name="current_password" class="form-control"
+                    placeholder="{{ translate('Digite sua senha atual') }}" required>
+            </div>
+
+            <div class="form-group">
+                <label>
+                    <i class="fas fa-lock icon-spacing"></i>
+                    {{ translate('Nova Senha') }}
+                </label>
+                <input type="password" id="new_password" name="new_password" class="form-control"
+                    placeholder="{{ translate('Digite a nova senha') }}" required>
+            </div>
+
+            <div class="form-group">
+                <label>
+                    <i class="fas fa-check-double icon-spacing"></i>
+                    {{ translate('Confirmar Nova Senha') }}
+                </label>
+                <input type="password" id="confirm_new_password" name="confirm_new_password" class="form-control"
+                    placeholder="{{ translate('Repita a nova senha') }}" required>
+
+                <small id="password-match-error" class="error-text">
+                    <i class="fas fa-exclamation-circle"></i>
+                    {{ translate('As senhas não coincidem') }}
+                </small>
+            </div>
+
+            <button type="submit" id="change-pwd-submit" class="btn btn-primary btn-block">
+                <i class="fas fa-save"></i>
+                {{ translate('Salvar alterações') }}
+            </button>
+        </form>
+    </div>
+</div>
+
+
+
+{% if session.role == 'admin' %}
+<div id="userManagementModal" class="modal">
+    <div class="modal-content user-mgmt-modal" style="max-width: 900px;">
+        <span class="close">&times;</span>
+        <div class="modal-header">
+            <i class="fas fa-users-cog"></i>
+            <h2>{{ translate('Gestão de Usuários') }}</h2>
+        </div>
+<hr style="margin: 1rem 0; border: none; border-top: 1px solid #ccc;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <p style="color: var(--dark-gray); margin: 0;">{{ translate('Lista de usuários ativos no sistema.') }}</p>
+            <button id="add-user-btn" class="btn btn-primary">
+                <i class="fas fa-plus"></i> {{ translate('Novo Usuário') }}
+            </button>
+        </div>
+
+        <div class="user-list-section">
+            <div class="table-responsive"
+                style="border-radius: 1rem; overflow: hidden; border: 1px solid var(--light-gray);">
+                <table class="table user-table">
+                    <thead>
+                        <tr>
+                            <th style="padding: 1rem; text-align: left;">ID</th>
+                            <th style="padding: 1rem; text-align: left;">{{ translate('Usuário') }}</th>
+                            <th style="padding: 1rem; text-align: left;">{{ translate('Função') }}</th>
+                            <th style="padding: 1rem; text-align: center;">{{ translate('Ações') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in users %}
+                        <tr>
+                            <td style="padding: 1rem;"><span class="badge-id"
+                                    style="color: var(--dark-gray); font-family: monospace; font-weight: 600;">#{{ u.id
+                                    }}</span></td>
+                            <td
+                                style="padding: 1rem; display: flex; align-items: center; gap: 0.75rem; font-weight: 500;">
+                                <div class="avatar-sm"
+                                    style="width: 32px; height: 32px; background: var(--primary); color: var(--white); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700;">
+                                    {{ u.username[0] | upper }}
+                                </div>
+                                {{ u.username }}
+                            </td>
+                            <td style="padding: 1rem;">
+                                <span class="role-badge {{ u.role }}"
+                                    style="padding: 0.3rem 0.75rem; border-radius: 2rem; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">
+                                    {{ u.role | upper }}
+                                </span>
+                            </td>
+                            <td style="padding: 1rem; text-align: center;">
+                                {% if u.username != 'admin' %}
+                                <form id="delete-user-{{ u.id }}" action="{{ url_for('delete_user', user_id=u.id) }}"
+                                    method="POST">
+                                    <button type="button" class="btn-icon btn-danger-soft"
+                                        onclick='confirmDeleteUser("{{ u.username }}", "delete-user-{{ u.id }}")'
+                                        title="{{ translate('Remover') }}">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </form>
+                                {% else %}
+                                <span style="color: var(--dark-gray); opacity: 0.6;"><i class="fas fa-lock"></i></span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div id="addUserModal" class="modal">
+    <div class="modal-content" style="max-width: 500px;">
+        <span class="close">&times;</span>
+        <div class="modal-header">
+            <i class="fas fa-user-plus"></i>
+            <h2>{{ translate('Novo Usuário') }}</h2>
+        </div>
+        <hr style="margin-top: 1rem; border: none; border-top: 1px solid #ccc;">
+    
+        <form action="{{ url_for('add_user') }}" method="POST" id="add-user-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-user icon-spacing"></i>
+                        {{ translate('Nome de Usuário') }}
+                    </label>
+                    <input type="text" name="username" class="form-control" placeholder="ex: joao.silva" required>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-user-tag icon-spacing"></i>
+                        {{ translate('Função') }}
+                    </label>
+                    <select name="role" class="form-control">
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group" style="margin-bottom: 1.2rem;">
+                <label><i class="fas fa-lock icon-spacing"></i> {{ translate('Senha') }}</label>
+                <input type="password" id="add_password" name="password" class="form-control" placeholder="••••••••"
+                    required>
+            </div>
+            <div class="form-group" style="margin-bottom: 1.2rem;">
+                <label><i class="fas fa-check-double icon-spacing"></i> {{ translate('Confirmar Senha') }}</label>
+                <input type="password" id="confirm_password" name="confirm_password" class="form-control"
+                    placeholder="••••••••" required>
+                <small id="add-user-match-error" style="color: #ef4444; display: none; margin-top: 0.5rem;">
+                    <i class="fas fa-exclamation-circle"></i> {{ translate('As senhas não coincidem') }}
+                </small>
+            </div>
+   
+            <button type="submit" id="add-user-submit" class="btn btn-primary btn-block">
+                <i class="fas fa-user-check"></i> {{ translate('Criar Usuário') }}
+            </button>
+        </form>
+    </div>
+</div>
+
+<div id="syncConfigModal" class="modal">
+    <div class="modal-content" style="max-width: 550px;">
+        <span class="close">&times;</span>
+        <div class="modal-header">
+            <i class="fas fa-sync-alt"></i>
+            <h2>{{ translate('Periodicidade de Sincronização') }}</h2>
+        </div>
+        <hr style="margin: 1rem; border: none; border-top: 1px solid #ccc;">
+
+        <div>
+            <p style="color: var(--dark-gray); margin-bottom: 2rem; text-align: center;">
+                {{ translate('Selecione o intervalo entre as coletas automáticas de dados.') }}
+            </p>
+
+            <div class="sync-slider-container" style="padding: 0 1.5rem; margin-bottom: 2rem;">
+                <input type="range" id="sync-range" min="1" max="6" step="1" value="3"
+                    style="width: 100%; cursor: pointer;">
+                <div class="sync-labels"
+                    style="display: flex; justify-content: space-between; margin-top: 1rem; color: var(--dark-gray); font-size: 0.8rem; font-weight: 500;">
+                    <span>5m</span>
+                    <span>30m</span>
+                    <span>1h</span>
+                    <span>6h</span>
+                    <span>12h</span>
+                    <span>24h</span>
+                </div>
+                <div id="sync-current-value"
+                    style="text-align: center; margin-top: 1rem; font-weight: 700; color: var(--primary);">
+                    {{ translate('Intervalo atual') }}: <span id="sync-label-display">1 h</span>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button id="btn-sync-now" class="btn btn-outline" style="flex: 1;">
+                    <i class="fas fa-play"></i> {{ translate('Sincronizar Agora') }}
+                </button>
+                <button id="btn-save-sync" class="btn btn-primary" style="flex: 1;">
+                    <i class="fas fa-save"></i> {{ translate('Salvar Configuração') }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="exportPDFModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <div class="modal-header">
+            <i class="fas fa-file-pdf"></i>
+            <h2>{{ translate('Gerar Relatório') }}</h2>
+        </div>
+        <hr style="margin: 1rem 0; border: none; border-top: 1px solid #ccc;">
+        <div style="margin-bottom: 2rem;">
+            <p style="color: var(--dark-gray); margin-bottom: 1.5rem;">
+                {{ translate('Selecione os parâmetros para a exportação do relatório detalhado em formato PDF.') }}
+            </p>
+            <div class="form-group" style="background: var(--light); padding: 1rem; border-radius: 0.75rem;">
+                <label style="font-weight: 500; display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                    <input type="checkbox" id="include-details" checked style="width: auto;">
+                    {{ translate('Incluir detalhes técnicos completos') }}
+                </label>
+            </div>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem;">
+            <button class="btn btn-outline" onclick="closeModal('exportPDFModal')">
+                {{ translate('Cancelar') }}
+            </button>
+            <button class="btn btn-primary" id="generate-pdf-btn">
+                <i class="fas fa-download"></i> {{ translate('Exportar Agora') }}
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function closeModal(id) {
+        document.getElementById(id).classList.remove('active');
+    }
+
+    function confirmDeleteUser(username, formId) {
+        const msg = "{{ translate('Deseja realmente remover este usuário?') }} " + username;
+        if (confirm(msg)) {
+            document.getElementById(formId).submit();
         }
-    </script>
+    }
 
-    <div class="settings-grid">
-        <div class="settings-card">
-            <div class="settings-card-header">
-                <i class="fas fa-sync-alt"></i>
-                <h3>{{ translate('SYNC com Wazuh') }}</h3>
-            </div>
-            <div class="settings-card-body">
-                <p>{{ translate('Sincronize os dados do inventário com o Wazuh Manager para manter todas as informações atualizadas.') }}</p>
-                <a href="{{ url_for('get_data') }}" class="btn btn-primary">
-                    <i class="fas fa-sync"></i>{{ translate('Sincronizar com Wazuh') }}
-                </a>
-            </div>
-        </div>
-        
-        <div class="settings-card">
-            <div class="settings-card-header">
-                <i class="fas fa-bell"></i>
-                <h3>{{ translate('Notificações') }}</h3>
-            </div>
-            <div class="settings-card-body">
-                <p>{{ translate('Configure suas preferências de notificação para receber alertas importantes.') }}</p>
-                <button class="btn btn-outline" disabled>
-                    <i class="fas fa-clock"></i>{{ translate('Em breve') }}
-                </button>
-            </div>
-        </div>
+    document.addEventListener('DOMContentLoaded', () => {
+        const modals = {
+            mfa: document.getElementById('mfaModal'),
+            pdf: document.getElementById('exportPDFModal'),
+            password: document.getElementById('changePasswordModal'),
+            users: document.getElementById('userManagementModal'),
+            addUser: document.getElementById('addUserModal'),
+            sync: document.getElementById('syncConfigModal')
+        };
+        const closeButtons = document.querySelectorAll('.modal .close');
 
-        <div class="settings-card">
-            <div class="settings-card-header">
-                <i class="fas fa-file-pdf"></i>
-                <h3>{{ translate('Exportar Relatório') }}</h3>
-            </div>
-            <div class="settings-card-body">
-                <p>{{ translate('Exportar um relatório completo em PDF com todas as informações do sistema') }}</p>
-                <button class="btn btn-outline" id="export-pdf-btn">
-                    <i class="fas fa-download"></i> {{ translate('Exportar PDF') }}
-                </button>
-            </div>
-        </div>
-        
-        <div class="settings-card">
-            <div class="settings-card-header">
-                <i class="fas fa-shield-alt"></i>
-                <h3>{{ translate('Segurança') }}</h3>
-            </div>
-            <div class="settings-card-body">
-                <p>{{ translate('Configure a autenticação de dois fatores (MFA) para aumentar a segurança.') }}</p>
-                <button class="btn btn-outline" id="mfa-settings-btn">
-                    <i class="fas fa-lock"></i> {{ translate('Configurar MFA') }}
-                </button>
-            </div>
-        </div>
-    </div>
+        document.getElementById('mfa-settings-btn')
+            .addEventListener('click', () => {
+                fetchMfaStatus();
+                modals.mfa.classList.add('active');
+            });
+        document.getElementById('export-pdf-btn')
+            .addEventListener('click', () => {
+                modals.pdf.classList.add('active');
+            });
+        document.getElementById('change-password-btn')
+            .addEventListener('click', () => {
+                modals.password.classList.add('active');
+            });
 
-    <div id="mfaModal" class="modal" style="opacity: 0; transition: opacity 0.3s;">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2><i class="fas fa-shield-alt"></i>{{ translate('Autenticação em Duas Etapas') }}</h2>
-            <div id="mfa-modal-body"></div>
-        </div>
-    </div>
-    <script>
-        document.querySelectorAll('.modal').forEach(modal => {
-            modal.addEventListener('click', e => {
+        const userBtn = document.getElementById('user-management-btn');
+        if (userBtn) {
+            userBtn.addEventListener('click', () => {
+                modals.users.classList.add('active');
+            });
+        }
+
+        const addUserBtn = document.getElementById('add-user-btn');
+        if (addUserBtn) {
+            addUserBtn.addEventListener('click', () => {
+                modals.addUser.classList.add('active');
+            });
+        }
+
+        function setupPasswordMatch(pwdId, confirmId, errorId, submitId) {
+            const pwd = document.getElementById(pwdId);
+            const confirm = document.getElementById(confirmId);
+            const error = document.getElementById(errorId);
+            const submit = document.getElementById(submitId);
+
+            if (!pwd || !confirm) return;
+
+            function check() {
+                if (confirm.value && pwd.value !== confirm.value) {
+                    error.style.display = 'block';
+                    submit.disabled = true;
+                    confirm.style.borderColor = '#ef4444';
+                } else {
+                    error.style.display = 'none';
+                    submit.disabled = false;
+                    confirm.style.borderColor = '';
+                }
+            }
+
+            pwd.addEventListener('input', check);
+            confirm.addEventListener('input', check);
+        }
+
+        setupPasswordMatch('new_password', 'confirm_new_password', 'password-match-error', 'change-pwd-submit');
+        setupPasswordMatch('add_password', 'confirm_password', 'add-user-match-error', 'add-user-submit');
+
+        const syncSettingsBtn = document.getElementById('sync-settings-btn');
+        if (syncSettingsBtn) {
+            syncSettingsBtn.addEventListener('click', () => {
+                modals.sync.classList.add('active');
+            });
+        }
+
+        const syncRange = document.getElementById('sync-range');
+        const syncLabelDisplay = document.getElementById('sync-label-display');
+        const syncValues = {
+            1: {
+                label: '5 min',
+                seconds: 300
+            },
+            2: {
+                label: '30 min',
+                seconds: 1800
+            },
+            3: {
+                label: '1 h',
+                seconds: 3600
+            },
+            4: {
+                label: '6 h',
+                seconds: 21600
+            },
+            5: {
+                label: '12 h',
+                seconds: 43200
+            },
+            6: {
+                label: '24 h',
+                seconds: 86400
+            }
+        };
+
+        if (syncRange) {
+            syncRange.addEventListener('input', (e) => {
+                const val = e.target.value;
+                syncLabelDisplay.textContent = syncValues[val].label;
+            });
+
+            document.getElementById('btn-save-sync').addEventListener('click', () => {
+                const seconds = syncValues[syncRange.value].seconds;
+                fetch('/settings/update_sync', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        seconds: seconds
+                    })
+                }).then(r => r.json()).then(data => {
+                    if (data.success) {
+                        showToast('Configuração de sincronização atualizada!', 'success');
+                        modals.sync.classList.remove('active');
+                    } else {
+                        showToast('Erro ao atualizar: ' + (data.error || 'Erro desconhecido'), 'danger');
+                    }
+                });
+            });
+
+            document.getElementById('btn-sync-now').addEventListener('click', () => {
+                const btn = document.getElementById('btn-sync-now');
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sincronizando...';
+                btn.disabled = true;
+
+                fetch('/settings/sync_now', {
+                        method: 'POST'
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            showToast('Sincronização iniciada com sucesso!', 'success');
+                            modals.sync.classList.remove('active');
+                        } else {
+                            showToast('Erro ao iniciar sync: ' + data.error, 'danger');
+                        }
+                    })
+                    .finally(() => {
+                        btn.innerHTML = originalHtml;
+                        btn.disabled = false;
+                    });
+            });
+        }
+
+        closeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                btn.closest('.modal').classList.remove('active');
+            });
+        });
+
+        window.addEventListener('click', e => {
+            Object.values(modals).forEach(modal => {
                 if (e.target === modal) {
                     modal.classList.remove('active');
-                    setTimeout(() => modal.style.opacity = 0, 200);
-                }
-            });
-            modal.addEventListener('click', e => {
-                if (!e.target.closest('.modal-content')) {
-                    modal.classList.remove('active');
-                    setTimeout(() => modal.style.opacity = 0, 200);
                 }
             });
         });
-    </script>
 
-    <div id="exportPDFModal" class="modal" style="opacity: 0; transition: opacity 0.3s;">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2><i class="fas fa-file-pdf"></i>{{ translate('Exportar Relatório PDF') }}</h2>
-            <p>{{ translate('Escolha as opções para o relatório:') }}</p>
-            <div class="form-group">
-                <label><input type="checkbox" id="include-details" checked> {{ translate('Incluir detalhes completos') }}</label>
-            </div>
-           <!-- <div class="form-group">
-                <label><input type="checkbox" id="include-charts" checked> Incluir gráficos de análise</label>
-            </div>-->
-            <div class="actions">
-                <button class="btn btn-primary" id="generate-pdf-btn">
-                    <i class="fas fa-file-download"></i> {{ translate('Gerar PDF') }}
-                </button>
-                <button class="btn btn-outline" onclick="document.getElementById('exportPDFModal').classList.remove('active')">
-                    {{ translate('Cancelar') }}
-                </button>
-            </div>
-        </div>
-    </div>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const modals = {
-        mfa: document.getElementById('mfaModal'),
-        pdf: document.getElementById('exportPDFModal')
-    };
-    const closeButtons = document.querySelectorAll('.modal .close');
-
-    document.getElementById('mfa-settings-btn')
-        .addEventListener('click', () => {
-            fetchMfaStatus();
-            modals.mfa.classList.add('active');
-        });
-    document.getElementById('export-pdf-btn')
-        .addEventListener('click', () => {
-            modals.pdf.classList.add('active');
-        });
-
-    closeButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            btn.closest('.modal').classList.remove('active');
-        });
+        document.getElementById('generate-pdf-btn')
+            .addEventListener('click', () => {
+                const include = document.getElementById('include-details').checked ? '1' : '0';
+                window.location.href = `/export_pdf?include_details=${include}`;
+            });
     });
 
-    window.addEventListener('click', e => {
-        Object.values(modals).forEach(modal => {
-            if (e.target === modal) {
-                modal.classList.remove('active');
-            }
-        });
-    });
+    function fetchMfaStatus() {
+        fetch('/mfa_status')
+            .then(r => r.json())
+            .then(data => {
+                const body = document.getElementById('mfa-modal-body');
+                if (data.enabled) {
+                    body.innerHTML = `
+                <p style="margin-bottom:1rem;">
+                    {{ translate('MFA está') }} <strong class="status-text">{{ translate('habilitada') }}</strong>.
+                </p>
+                <button class="btn btn-primary" id="disable-mfa-btn">
+                    {{ translate('Desabilitar MFA') }}
+                </button>
+                `;
+                    document.getElementById('disable-mfa-btn').addEventListener('click', disableMfa);
+                } else {
+                    body.innerHTML = `
+                <p style="margin-bottom:1rem;">
+                    {{ translate('MFA está') }} <strong class="status-text">{{ translate('desabilitada') }}</strong>.
+                </p>
+                <button class="btn btn-primary" onclick="enableMfa()" style="margin-bottom:1rem;">
+                    {{ translate('Habilitar MFA') }}
+                </button>
+                <div id="mfa-setup-container" style="display:none;margin-top:1rem;">
+                    <div id="qr-code-container" style="margin-bottom:1rem;"></div>
+                    <p style="margin-bottom:0.5rem;text-align: center;">
+                        {{ translate('Secret') }}: <span id="mfa-secret"></span>
+                    </p>
+                    <input type="text" id="mfa-code"
+                        placeholder="{{ translate('Código de 6 dígitos') }}"
+                        class="form-control"
+                        style="margin-bottom:1rem;width: 80%;"/>
+                    <button class="btn btn-primary" onclick="verifyMfaSetup()">
+                        {{ translate('Verificar') }}
+                    </button>
+                </div>`;
+                }
+            });
+    }
 
-    document.getElementById('generate-pdf-btn')
-        .addEventListener('click', () => {
-            const include = document.getElementById('include-details').checked ? '1' : '0';
-            window.location.href = `/export_pdf?include_details=${include}`;
-        });
-});
-
-function fetchMfaStatus() {
-    fetch('/mfa_status')
-        .then(r => r.json())
-        .then(data => {
-            const body = document.getElementById('mfa-modal-body');
-            if (data.enabled) {
-                body.innerHTML = `
-                    <p>{{ translate('MFA está <strong>habilitada</strong>.') }}</p>
-                    <button class="btn btn-danger" onclick="disableMfa()">{{ translate('Desabilitar MFA') }}</button>`;
+    function enableMfa() {
+        fetch('/toggle_mfa', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                action: 'enable'
+            })
+        }).then(r => r.json()).then(data => {
+            if (data.success) {
+                document.getElementById('mfa-setup-container').style.display = 'block';
+                document.getElementById('qr-code-container')
+                    .innerHTML = `<img src="${data.qr_code}" alt="QR Code">`;
+                document.getElementById('mfa-secret').innerHTML = `<strong style="font-weight: bold;">${data.secret}</strong>`;
             } else {
-                body.innerHTML = `
-                    <p>{{ translate('MFA está ') }}<strong>{{ translate('desabilitada') }}</strong></p>
-                    <button class="btn btn-primary" onclick="enableMfa()">{{ translate('Habilitar MFA') }}</button>
-                    <div id="mfa-setup-container" style="display:none;margin-top:1rem;">
-                        <div id="qr-code-container"></div>
-                        <p>{{ translate('Secret') }}: <span id="mfa-secret"></span></p>
-                        <input type="text" id="mfa-code" placeholder="{{ translate('Código de 6 dígitos') }}" class="form-control"/>
-                        <button class="btn btn-primary" onclick="verifyMfaSetup()">{{ translate('Verificar') }}</button>
-                    </div>`;
+                alert('Erro: ' + (data.error || 'desconhecido'));
             }
         });
-}
+    }
 
-function enableMfa() {
-    fetch('/toggle_mfa', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ action:'enable' })
-    }).then(r => r.json()).then(data => {
-        if (data.success) {
-            document.getElementById('mfa-setup-container').style.display = 'block';
-            document.getElementById('qr-code-container')
-                .innerHTML = `<img src="${data.qr_code}" alt="QR Code">`;
-            document.getElementById('mfa-secret').textContent = data.secret;
-        } else {
-            alert('Erro: ' + (data.error||'desconhecido'));
-        }
-    });
-}
+    function disableMfa() {
+        if (!confirm('{{ translate("Desabilitar MFA?") }}')) return;
+        fetch('/toggle_mfa', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                action: 'disable'
+            })
+        }).then(r => r.json()).then(data => {
+            if (data.success) {
+                fetchMfaStatus(); 
+            } else {
+                alert('{{ translate("Erro:") }} ' + (data.error || '{{ translate("desconhecido") }}'));
+            }
+        });
+    }
 
-function disableMfa() {
-    if (!confirm('Desabilitar MFA?')) return;
-    fetch('/toggle_mfa', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ action:'disable' })
-    }).then(r=>r.json()).then(data=>{
-        if (data.success) {
-            fetchMfaStatus();
-            location.reload();
+    function verifyMfaSetup() {
+        const code = document.getElementById('mfa-code').value;
+        fetch('/verify_mfa_setup', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                code
+            })
+        }).then(r => r.json()).then(data => {
+            if (data.success) {
+                alert('MFA habilitada!');
+                document.getElementById('mfaModal').classList.remove('active');
+                fetchMfaStatus();
+                location.reload();
 
-        } else {
-            alert('Erro: ' + (data.error||'desconhecido'));
-        }
-    });
-}
+            } else {
+                document.getElementById('mfa-error').textContent = 'Erro: ' + (data.error || 'código inválido');
+            }
+        });
+    }
 
-function verifyMfaSetup() {
-    const code = document.getElementById('mfa-code').value;
-    fetch('/verify_mfa_setup', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ code })
-    }).then(r=>r.json()).then(data=>{
-        if (data.success) {
-            alert('MFA habilitada!');
-            document.getElementById('mfaModal').classList.remove('active');
-            fetchMfaStatus();
-            location.reload();
-            
-        } else {
-            document.getElementById('mfa-error').textContent = 'Erro: ' + (data.error||'código inválido');
-        }
-    });
-}
+
 </script>
-<style>
-    /* Grid responsivo */
-    .settings-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 1.5rem;
-        margin-top: 2rem;
-        padding: 0 1rem;
-    }
-
-    .settings-card {
-        background: white;
-        border-radius: var(--border-radius);
-        box-shadow: var(--box-shadow);
-        overflow: hidden;
-        transition: var(--transition);
-    }
-
-    .settings-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 10px 15px -3px rgba(99, 101, 241, 0.7), 0 4px 6px -2px rgba(99, 102, 241, 0.7);
-
-    }
-
-    .settings-card-header {
-        padding: 1.25rem 1.5rem;
-        background: var(--light);
-        border-bottom: 1px solid var(--light-gray);
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-
-    .settings-card-header i {
-        color: var(--primary);
-        font-size: 1.25rem;
-    }
-
-    .settings-card-header h3 {
-        font-size: 1.125rem;
-        font-weight: 600;
-        color: var(--dark);
-        margin: 0;
-    }
-
-    .settings-card-body {
-        padding: 1.5rem;
-    }
-
-    .settings-card-body p {
-        margin-bottom: 1rem;
-        color: var(--dark-gray);
-        line-height: 1.5;
-    }
-
-    /* Modal centralizado */
-    .modal {
-        display: none;
-        position: fixed;
-        /*top: 0;
-        left: 1;*/
-        width: 77%;
-        height: 77%;
-        backdrop-filter: blur(5px);
-        z-index: 1000;
-        justify-content: center;
-        align-items: center;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-
-    .modal.active {
-        display: flex;
-        opacity: 1;
-    }
-
-    .modal-content {
-        background: #fff;
-        padding: 2rem;
-        border-radius: 0.75rem;
-        width: 100%;
-        max-width: 600px;
-        position: relative;
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        transform: translateY(20px);
-        transition: transform 0.3s ease;
-    }
-
-    .modal.active .modal-content {
-        transform: translateY(0);
-    }
-
-    .close {
-        position: absolute;
-        top: 1rem;
-        right: 1.25rem;
-        font-size: 1.75rem;
-        color: #888;
-        cursor: pointer;
-        transition: color 0.2s;
-        background: none;
-        border: none;
-        width: 32px;
-        height: 32px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .close:hover {
-        color: #333;
-    }
-
-    .modal h2 {
-        margin-bottom: 1.5rem;
-        color: var(--dark);
-        font-size: 1.5rem;
-        padding-right: 1.5rem;
-    }
-
-    .form-group {
-        margin-bottom:0.5rem;
-    }
-
-    .form-control {
-        width: 100%;
-        padding: 0.75rem 1rem;
-        border: 1px solid var(--light-gray);
-        border-radius: 0.375rem;
-        font-size: 1rem;
-        transition: border-color 0.3s;
-        margin-bottom: 15px;
-    }
-
-    .form-control:focus {
-        outline: none;
-        border-color: var(--primary);
-        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
-    }
-
-    label {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        cursor: pointer;
-        color: var(--dark-gray);
-    }
-
-    #qr-code-container {
-        text-align: center;
-        margin: 1.5rem 0;
-    }
-
-    #qr-code-container img {
-        max-width: 200px;
-        border: 1px solid var(--light-gray);
-        padding: 0.5rem;
-        border-radius: 0.5rem;
-    }
-
-    .actions {
-        display: flex;
-        gap: 0.75rem;
-        margin-top: 1.5rem;
-    }
-
-    /* Status do MFA */
-    .status-indicator {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.25rem 0.75rem;
-        border-radius: 999px;
-        font-size: 0.85rem;
-        font-weight: 500;
-    }
-
-    .status-enabled {
-        background-color: #dcfce7;
-        color: #166534;
-        padding: 5px;
-        border-radius: 10px;
-    }
-
-    .status-disabled {
-        background-color: #fee2e2;
-        color: #b91c1c;
-        padding: 5px;
-        border-radius: 10px;
-    }
-
-    /* Info do usuário */
-    .user-info {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        margin-top: 1rem;
-        padding: 1rem;
-        background: var(--light);
-        border-radius: var(--border-radius);
-    }
-
-    .user-avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background-color: var(--primary);
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-    }
-</style>
+   
 {% endblock %}
