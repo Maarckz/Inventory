@@ -322,16 +322,15 @@ A comunicação entre o cliente e o servidor é protegida com **TLS/SSL**, garan
 
 # 07 - Preparação
 
+**OBS**: Esta configuração foi realizada em um **UBUNTU 24.04**
 
-## Overview
+O sistema realiza o inventário dos dispositivos com agentes Wazuh em duas camadas principais:
 
-O sistema realiza o inventário dos dispositivos com agentes Wazuh através de um fluxo integrado de três camadas principais (Coleta, Banco de Dados e Apresentação):
-
-- **Coletor de Dados**: Responsável por se conectar à API do Wazuh e coletar informações detalhadas de cada agente monitorado, incluindo dados de hardware, sistema operacional, rede e portas abertas. As informações são processadas e persistidas diretamente em um **banco de dados PostgreSQL** (rodando em container Docker), substituindo o antigo modelo de arquivos locais. Isso proporciona maior integridade dos dados, consistência e suporte a múltiplos usuários simultâneos.
-- **Aplicação Web (Flask)**: Consulta o **banco de dados PostgreSQL** para recuperar e apresentar os dados por meio de uma interface web segura e interativa. A aplicação disponibiliza dashboards estatísticos com atualização automática (tempo real), visualizações individuais por máquina, filtros dinâmicos, busca avançada e consultas personalizadas. Essa arquitetura permite uma análise, inspeção e auditoria do inventário de forma eficiente, centralizada e com alta performance.
+- **Coletor de Dados**: Responsável por se conectar à API do Wazuh e coletar informações detalhadas de cada agente monitorado, incluindo dados de hardware, sistema operacional, rede e portas abertas. As informações são processadas e armazenadas em arquivos JSON, organizados por hostname, de forma estruturada e padronizada para consumo posterior pela interface web.
+- **Aplicação Web (Flask)**: Consome os arquivos JSON gerados pelo coletor e apresenta os dados por meio de uma interface web segura e interativa. A aplicação disponibiliza dashboards estatísticos, visualizações individuais por máquina, filtros dinâmicos, busca avançada e consultas personalizadas. Essa interface facilita a análise, inspeção e auditoria do inventário de forma eficiente e centralizada.
 
 **Operation Flow**:
-```
+```text
 Wazuh Manager (API REST / SysCollector)
        │
        └─ Coleta de dados: hardware, SO, rede, portas, pacotes, processos
@@ -361,42 +360,44 @@ Dashboard do Usuário
        └─ Visualização centralizada, busca e análise por máquina
 ```
 
-**Criar usuários:**
-```bash
-# Aplicação
+**Criar usuário:**
+```shell
 sudo useradd -r -s /usr/sbin/nologin inventory
 ```
 
+**Instalar dependências:**
+```bash
+sudo apt install -y docker.io docker-compose-v2 python3-pip python3-venv
+```
 
 # 8 - Instalação do Inventory
 
-O inventory serve como uma solução para centralizar os dados de OSCollector do WAZUH.
-Ao invés de acessar maquina por maquina, é possivel ter uma visão geral e abrangente dos ativos.
+O inventory serve como uma solução para centralizar os dados de OSCollector do WAZUH. Ao invés de acessar maquina por maquina, é possivel ter uma visão geral e abrangente dos ativos.
 
 **Criar e configurar a pasta:**
 ```
 cd /opt
 sudo mkdir Inventory
-chown -R inventory:inventory ./Inventory
+sudo chown -R inventory:inventory ./Inventory
 ```
 
 **Clonar o repositório:**
 ```shell
-
-git clone https://github.com/Maarckz/Inventory.git
+sudo -u inventory git clone https://github.com/Maarckz/Inventory.git
 ```
+
 
 **Criar o `.env` dentro de Inventory e colar o conteúdo abaixo**
 ```shell
-cd Inventory && nano .env
+sudo -u inventory cd Inventory
+sudo -u inventory nano .env
 ```
 
-## Environment (`.env`)
-```bash
-
+### Environment (`.env`)
+```yml
 # Configurações de segurança
-SECRET_KEY=suachavesupersecreta_altere_esta_chave!
-SESSION_SALT=suachavesupersecreta_altere_esta_chave_salt!
+SECRET_KEY=MINHACHAVE
+SESSION_SALT=supersecreta_altere_esta_chave_salt!
 INVENTORY_DIR=data/inventory
 GROUPS_DIR=data/groups
 AUTH_FILE=data/auth/logins.json
@@ -404,7 +405,7 @@ LOG_DIR=logs
 
 # Configurações de rede
 HOST=0.0.0.0
-PORT=7000
+PORT=8000
 DEBUG=False
 
 # Configurações de HTTPS
@@ -413,50 +414,48 @@ SSL_CERT_PATH=ssl/cert.pem
 SSL_KEY_PATH=ssl/key.pem
 
 # Permitir apenas IPs de uma faixa específica
-ALLOWED_IP_RANGES=192.168.0.0/16
+ALLOWED_IP_RANGES=0.0.0.0/0
 
 WAZUH_PROTOCOL=https
-WAZUH_HOST=192.168.56.101
+WAZUH_HOST=192.168.0.26
 WAZUH_PORT=55000
 WAZUH_USER=wazuh-wui
-WAZUH_PASSWORD=ma?Pt3XvLxQzpU8.J3rIQ8.dYhxzV?pT
+WAZUH_PASSWORD=senha_do_wazuh-wui
+
+# Banco de Dados PostgreSQL
+DB_USER=inventorydb
+DB_PASS=senhadoinventorydb
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=inventory_db
 ```
 
-**As credenciais de API, devem ser consultadas dentro da  pasta de instalaçao do WAZUH**
+**As credenciais de API, devem ser consultadas dentro da pasta de instalaçao do WAZUH**
 ```shell
 sudo tar -O -xvf wazuh-install-files.tar wazuh-install-files/wazuh-passwords.txt
 ```
 
-**Instalar o PIP3:**
-```
-sudo apt install python3-pip python3-venv
-```
-
-
 **Criar o ambiente virtual e de permissões novamente**
-```
+```bash
 sudo -u inventory python3 -m venv /opt/Inventory/venv
 sudo chown -R inventory:inventory ./Inventory
 ```
 
-**Abra um shell como usuário inventory**
-```
-sudo -u inventory -s
+
+**Criar o ambiente .venv:**
+```bash
+sudo -u inventory python3 -m venv /opt/Inventory/.venv
 ```
 
-**Dentro do shell**
-```
-source /opt/Inventory/venv/bin/activate
+
+**Dentro do shell:**
+```bash
+sudo -u inventory bash -c "source /opt/Inventory/.venv/bin/activate && exec bash"
 ```
 
 **Instalar dependências com o usuário `Inventory`:**
 ```shell
-pip3 install flask flask_session bcrypt requests python-dotenv qrcode pyotp reportlab --break-system-packages
-```
-
-**Rodar o coletor (via Painel do Sistema ou Manualmente):**
-```shell
-python3 utils/get_data.py
+pip3 install -r requirements.txt
 ```
 
 **Criar TLS/SSL Cert:**
@@ -464,9 +463,22 @@ python3 utils/get_data.py
 openssl req -x509 -newkey rsa:4096 -nodes -out ssl/cert.pem -keyout ssl/key.pem -days 365 
 ```
 
+**Criação do Banco de Dados:**
+```cpp bash
+exit       #VOLTAR AO USUARIO DO SISTEMA
+
+cd postgres/
+
+#EDITAR AS CREDENCIAS SE FORAM ALTERADAS NO .env
+
+sudo docker compose up -d 
+```
+
 **Teste da aplicação WEB:**
 ```shell
-python3 app.py
+sudo -u inventory -s
+
+cd .. && source .venv/bin/activate && python3 app.py
 ```
 
 **Login e Password padrão:**
@@ -475,15 +487,31 @@ Login: admin
 Password: Meuadmin123
 ```
 
-> [!NOTE]
-> 1. É possivel criar e remover usuãrios pelo "./utils/man_users.py"
-> 2. Os dados contidos inicialmente sem o SYNC,no dahsboard, são apenas DEMOS, realize o SYNC para obter os dados reais.
+---
+
+## Se for necessário migrar o banco anterior para o atual:
+```
+exit       # VOLTAR AO USUARIO DO SISTEMA
+cp -a <diretorio_inventory_antigo>/data/. /opt/Inventory/data/
+sudo chown -R inventory:inventory ./Inventory
+sudo -u inventory -s      # VOLTAR PARA USUARIO INVENTORY
+source .venv/bin/activate
+python3 migrate_db.py 
+
+# REINICIAR A APLICAÇÃO OU SINCRONIZAR
+```
+
+
+
 
 # 9 - Criação do serviço utilitário
-Para manter os serviço disponivel mesmo após o reboot, sugiro a criação abaixo no diretório:
 
-**/etc/systemd/system/inventory.service**
-```bash
+Para manter os serviço disponivel mesmo após o reboot, sugiro a criação abaixo no diretório:
+```
+sudo nano /etc/systemd/system/inventory.service
+```
+
+```shell
 [Unit]
 Description=Inventory Application
 After=network.target
@@ -493,7 +521,7 @@ Wants=network-online.target
 # Exec
 Type=simple
 WorkingDirectory=/opt/Inventory
-ExecStart=/opt/Inventory/venv/bin/python3 /opt/Inventory/app.py
+ExecStart=/opt/Inventory/.venv/bin/python3 /opt/Inventory/app.py
 
 # Run as unprivileged account (or use DynamicUser=yes, ver abaixo)
 User=inventory
@@ -545,12 +573,6 @@ WantedBy=multi-user.target
 
 ```
 
-**Para verificar o usuário do serviço / processo:**
-```
-systemctl show -p MainPID --value inventory.service 
-ps -o user,pid,cmd -p <PID>
-```
-
 **Recarregue o daemon do sistema:**
 ```shell
 sudo systemctl daemon-reload
@@ -561,6 +583,12 @@ sudo systemctl daemon-reload
 sudo systemctl enable inventory.service && sudo systemctl start inventory.service
 ```
 
+**Para verificar o usuário do serviço / processo:**
+```
+systemctl show -p MainPID --value inventory.service 
+ps -o user,pid,cmd -p <PID>
+```
+
 
 
 ## 10. Operação e Manutenção
@@ -569,8 +597,8 @@ Rotinas de manutenção e monitoramento são essenciais para garantir a integrid
 
 ### 10.1 Rotinas de Manutenção Recomendadas
 
-• **Diária:** Executar o script coletor de dados (`python3 utils/get_data.py`) para garantir que o inventário de ativos permaneça atualizado.
-• **Semanal:** Realizar o backup dos arquivos JSON de inventário localizados no diretório `data/inventory/`.
+• **Diária:** Verificação dos logs em `logs/ audit.log  error.log  flask_sessions  info.log  security.log  warning.log`, ele pode indicar anomalias na aplicação. 
+• **Semanal:** Realizar o backup do banco de dados POSTGRESQL (DOCKER) `docker exec -t inventory_postgres pg_dump -U inventorydb inventory_db > backup_inventario_$(date +%Y%m%d).sql`.
 • **Mensal:** Conduzir uma auditoria dos usuários e acessos registrados para garantir a conformidade com as políticas de segurança.
 • **Anual:** Renovar os certificados TLS/SSL para manter a segurança da comunicação HTTPS.
 
