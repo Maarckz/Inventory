@@ -157,19 +157,23 @@ Acessível via navegador, a plataforma conta com as seguintes funcionalidades:
 
 
 
+
 ## 4. Estrutura de Diretórios
 
-A organização lógica do sistema se reflete em uma estrutura de diretórios clara e bem definida, projetada para separar a aplicação, os dados, os recursos estáticos e os utilitários. Essa separação facilita a manutenção, a escalabilidade e a aplicação de controles de segurança.
+A organização lógica do sistema evoluiu para suportar a nova arquitetura baseada em banco de dados relacional, mantendo pastas locais para configurações, logs e suporte a máquinas legadas. A separação entre a aplicação web, o container do banco de dados e os utilitários facilita a manutenção e o deployment.
 
-### 4.1. Estrutura simplificada
+### 4.1. Estrutura Simplificada
 
-|Diretório/Arquivo|Função|
+| Diretório/Arquivo | Função |
 |---|---|
-|`app.py`|Aplicação principal Flask.|
-|`data/inventory/`|Arquivos JSON das máquinas (inventário).|
-|`data/auth/logins.json`|Usuários e credenciais.|
-|`utils/`|Utilitários de gestão (_get_data.py_, _man_users.py_, _pdf_export.py_).|
-|`ssl/`|Certificados TLS/SSL para HTTPS.|
+| `app.py` | Aplicação principal Flask. |
+| `models.py` | Definição dos modelos/tabelas do banco de dados (SQLAlchemy). |
+| `postgres/` | Configuração do Docker Compose para o banco PostgreSQL. |
+| `migrate_db.py` | Script para migrar dados antigos (JSON) para o PostgreSQL. |
+| `utils/collector.py` | Novo módulo responsável pela coleta de dados na API do Wazuh. |
+| `data/` | Contém dados de autenticação local, grupos e cache/inventário legado. |
+| `logs/` | Logs de operação, auditoria e sessões de usuário. |
+| `ssl/` | Certificados TLS/SSL para conexões HTTPS. |
 
 A estrutura do projeto separa a aplicação, os dados e os utilitários de gestão:
 
@@ -181,64 +185,63 @@ A estrutura do projeto separa a aplicação, os dados e os utilitários de gest�
 |**Templates**|Arquivos HTML da interface do usuário.|
 |**Utilitários**|_Scripts_ para coleta de dados, gerenciamento de usuários e exportação de relatórios.|
 |**Certificados**|Arquivos para configuração de segurança HTTPS (TLS/SSL).|
-### 4.2. Estrutura completa:
-```
+
+### 4.2. Estrutura Completa
+
+```text
 INVENTORY/                        # Diretório raiz do projeto
 ├── app.py                        # Ponto de entrada principal da aplicação Flask
-├── data/                         # Dados persistentes da aplicação
+├── models.py                     # Definição das tabelas do Banco de Dados
+├── migrate_db.py                 # Script de migração (JSON -> PostgreSQL)
+├── reset_db.py                   # Script para limpar/resetar o banco de dados
+├── requirements.txt              # Dependências Python
+├── .env                          # Variáveis de ambiente (Senhas, IPs, Configurações)
+├── data/                         # Dados persistentes e configurações locais
 │   ├── auth/
-│   │   └── logins.json           # Credenciais de usuários e registros de login
-│   └── inventory/                # Inventário de agentes/máquinas
-│       ├── agent_1.json
-│       ├── agent_2.json
-│       └── agent_3.json
-├── ssl/                          # Certificados TLS/SSL para habilitar HTTPS
+│   │   └── logins.json           # Credenciais de usuários (configuração local)
+│   ├── groups/
+│   │   └── groups.json           # Cache de grupos do Wazuh
+│   └── inventory/                # Armazenamento local (ex: máquinas legadas ou cache)
+│       ├── hosts_antigos/        # Diretório para máquinas legadas
+│       └── [arquivos JSON...]    # Dados de hosts (quando aplicável)
+├── logs/                         # Logs de execução e segurança
+│   ├── audit.log                 # Log de auditoria
+│   ├── error.log                 # Log de erros
+│   ├── info.log                  # Log de informações gerais
+│   ├── security.log              # Log de eventos de segurança
+│   ├── warning.log               # Log de alertas
+│   └── flask_sessions/           # Sessões ativas dos usuários
+├── postgres/                     # Configuração do Banco de Dados (Docker)
+│   └── docker-compose.yml        # Orquestração do container PostgreSQL
+├── ssl/                          # Certificados TLS/SSL
 │   ├── cert.pem
 │   └── key.pem
-├── static/                       # Arquivos estáticos usados na interface
-│   ├── css/                      # Estilos globais e específicos
-│   │   ├── all.min.css
-│   │   ├── base.css
-│   │   ├── components.css
-│   │   ├── dashboard.css
-│   │   ├── error.css
-│   │   ├── login.css
-│   │   ├── machine_details.css
-│   │   ├── painel.css
-│   │   ├── search.css
-│   │   ├── settings.css
-│   │   └── styles.css
-│   ├── favicon.png               # Ícone do site
-│   ├── js/                       # Scripts JavaScript da aplicação
-│   │   ├── base.js
-│   │   ├── chart.js
-│   │   ├── common.js
-│   │   ├── dashboard.js
-│   │   ├── machine_details.js
-│   │   ├── painel.js
-│   │   └── search.js
-│   ├── logo.svg
-│   └── mlogo.svg
-├── templates/                     # Templates HTML renderizados pelo Flask
-│   ├── base.html                  # Template base (layout principal)
-│   ├── dashboard.html             # Painel principal
-│   ├── error.html                 # Página de erro
-│   ├── login.html                 # Tela de autenticação
-│   ├── machine_details.html       # Detalhes de uma máquina/agente
-│   ├── painel.html                # Painel geral das máquinas
-│   ├── search.html                # Tela de busca
-│   ├── settings.html              # Configurações do sistema
-│   └── verify_mfa.html            # Verificação de MFA
-└── utils/                         # Scripts utilitários de apoio
-    ├── create_machines.py         # Criação de inventário de máquinas
-    ├── get_data.py                # Coletor de dados do sistema
-    ├── get_groups.py              # Manipulação de grupos de agentes
-    ├── language.py                # Suporte a internacionalização/idiomas
-    ├── man_users.py               # Gerenciamento de usuários
-    ├── mfa_utils.py               # Funções auxiliares para MFA
-    └── pdf_export.py              # Exportação de relatórios em PDF
-
+├── static/                       # Arquivos estáticos
+│   ├── css/                      # Estilos da interface
+│   ├── js/                       # Scripts JavaScript (Dashboard, Gráficos, Tema)
+│   └── [images/icons]            # Logos e favicons
+├── templates/                    # Templates HTML (Jinja2)
+│   ├── admin_users.html          # Gestão de contas de usuários
+│   ├── legacy_machines.html      # Controle de máquinas legadas
+│   ├── dashboard.html            # Dashboard principal
+│   ├── painel.html               # Listagem de máquinas
+│   ├── search.html               # Busca avançada
+│   ├── machine_details.html      # Detalhes do ativo
+│   ├── settings.html             # Configurações do sistema
+│   ├── login.html                # Tela de login
+│   ├── verify_mfa.html           # Verificação de dois fatores
+│   ├── error.html                # Página de erro
+│   └── base.html                 # Template base (layout)
+└── utils/                        # Scripts utilitários e lógica de negócio
+    ├── collector.py              # Coletor de dados (substitui o antigo get_data.py)
+    ├── machine_handler.py        # Manipulação lógica de máquinas
+    ├── language.py               # Suporte a internacionalização (Inglês, Espanhol, Hindi)
+    ├── mfa_utils.py              # Funções auxiliares para MFA
+    └── pdf_export.py             # Exportação de relatórios PDF
 ```
+
+
+
 
 ## 5. Funcionalidades Detalhadas da Aplicação
 
