@@ -28,14 +28,36 @@ Os principais objetivos do sistema **INVENTORY** são:
 
 ## 2. Arquitetura da Solução e Fluxo de Dados
 
-A arquitetura do **INVENTORY** foi concebida em um modelo de três camadas, **coleta**, **armazenamento** e **apresentação**. Este desacoplamento permite que o coletor e a aplicação web sejam mantidos e escalados de forma independente. 
-Adicionalmente, o uso de arquivos _JSON locais_ como camada de armazenamento provê um repositório de dados simples e auditável, eliminando a complexidade e as dependências associadas a um banco de dados tradicional.
+A arquitetura do **INVENTORY** foi evoluída para um modelo de três camadas robusto: **coleta**, **armazenamento relacional** e **apresentação**. Este desacoplamento permite que o coletor e a aplicação web sejam mantidos e escalados de forma independente. A adoção de um banco de dados **PostgreSQL** (containerizado via Docker) como camada de persistência provê um repositório de dados confiável, estruturado e escalável, superando as limitações de performance e integridade do modelo anterior baseado em arquivos JSON.
 
 1. **Coleta de Dados (Wazuh Collector):** O processo se inicia com o componente coletor, que se conecta de forma segura à API REST do Wazuh Manager. Utilizando o módulo _SysCollector_, ele extrai informações dos agentes, incluindo detalhes de hardware, sistema operacional, configurações de rede, portas abertas, pacotes de software e processos em execução.
 
-2. **Armazenamento (JSON Data):** Os dados coletados são processados, estruturados e armazenados localmente em arquivos no formato JSON. Cada arquivo corresponde a um dispositivo específico, sendo nomeado pelo seu _hostname_, o que facilita o consumo posterior pela aplicação web e permite a fácil manutenção.
+2. **Armazenamento (PostgreSQL Database):** Diferente da versão anterior, os dados coletados não são mais salvos em arquivos locais. Eles são processados, estruturados e persistidos em um banco de dados relacional **PostgreSQL**. Essa migração permite transações mais seguras, consultas complexas mais rápidas e uma base sólida para as novas funcionalidades de dashboard em tempo real e multi-usuário.
 
-3. **Apresentação e Análise (Flask App):** A aplicação web, desenvolvida em _Flask_, consome os arquivos JSON para exibir as informações em uma interface interativa. Os dados são apresentados em dashboards estatísticos, painéis de listagem de máquinas e relatórios detalhados, permitindo que as equipes de TI e segurança analisem, inspecionem e auditem o inventário de forma centralizada.
+3. **Apresentação e Análise (Flask App):** A aplicação web, desenvolvida em Flask, conecta-se ao banco de dados PostgreSQL para recuperar e exibir as informações em uma interface interativa. Os dados são apresentados em dashboards estatísticos (com atualização automática), painéis de listagem de máquinas e relatórios detalhados, permitindo que as equipes de TI e segurança analisem, inspecionem e auditem o inventário de forma centralizada e eficiente.
+
+## 3. Componentes Principais
+
+A arquitetura é materializada por três componentes principais que trabalham em conjunto: o **Módulo Coletor**, o **Banco de Dados PostgreSQL** e a **Aplicação Web**. A solução mantém o padrão de arquitetura _MVC (Model-View-Controller)_, uma prática recomendada de segurança que impõe a separação de interesses. Ao isolar a lógica de manipulação de dados (agora gerida pelo banco de dados) da camada de apresentação, o padrão MVC reduz a superfície de ataque e facilita a manutenção e o desenvolvimento seguro.
+
+### 3.1 Módulo Coletor (INVENTORY Collector)
+O Coletor de Dados é o **principal** responsável pela extração de informações, atuando como a interface de comunicação entre o sistema *INVENTORY* e o ambiente _WAZUH_. Sua função é automatizar a coleta e a estruturação dos dados de inventário.
+
+| Função                           | Detalhamento                                                                                                                                                                                       |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Interface com a API do Wazuh** | Realiza a coleta e listagem de dados dos agentes monitorados, utilizando o módulo _SysCollector_ do Wazuh.                                                                                         |
+| **Autenticação**                 | Utiliza um Token JWT (JSON Web Token) para garantir o acesso seguro e autenticado à API do Wazuh.                                                                                                  |
+| **Listagem de Agentes:**         | Recupera a lista de todos os dispositivos monitorados via API.                                                                                                                                     |
+| **Dados Coletados**              | Extrai informações de Hardware (CPU, RAM, disco), Software (pacotes instalados), Rede (interfaces, portas abertas), Processos e detalhes do agente (status, hostname, ID).                         |
+| **Armazenamento**                | O coletor insere e atualiza os registros diretamente no **banco de dados relacional PostgreSQL**, garantindo integridade, consistência e suporte a múltiplas sessões simultâneas da aplicação web. |
+
+
+
+## SEPARACAO
+## SEPARACAO
+## SEPARACAO
+## SEPARACAO
+
 
 ## 3. Componentes Principais
 
@@ -306,10 +328,10 @@ A comunicação entre o cliente e o servidor é protegida com **TLS/SSL**, garan
 
 ## Overview
 
-O sistema realiza o inventário dos dispositivos com agentes Wazuh em duas camadas principais:
+O sistema realiza o inventário dos dispositivos com agentes Wazuh através de um fluxo integrado de três camadas principais (Coleta, Banco de Dados e Apresentação):
 
-- **Coletor de Dados**: Responsável por se conectar à API do Wazuh e coletar informações detalhadas de cada agente monitorado, incluindo dados de hardware, sistema operacional, rede e portas abertas. As informações são processadas e armazenadas em arquivos JSON, organizados por hostname, de forma estruturada e padronizada para consumo posterior pela interface web.
-- **Aplicação Web (Flask)**: Consome os arquivos JSON gerados pelo coletor e apresenta os dados por meio de uma interface web segura e interativa. A aplicação disponibiliza dashboards estatísticos, visualizações individuais por máquina, filtros dinâmicos, busca avançada e consultas personalizadas. Essa interface facilita a análise, inspeção e auditoria do inventário de forma eficiente e centralizada.
+- **Coletor de Dados**: Responsável por se conectar à API do Wazuh e coletar informações detalhadas de cada agente monitorado, incluindo dados de hardware, sistema operacional, rede e portas abertas. As informações são processadas e persistidas diretamente em um **banco de dados PostgreSQL** (rodando em container Docker), substituindo o antigo modelo de arquivos locais. Isso proporciona maior integridade dos dados, consistência e suporte a múltiplos usuários simultâneos.
+- **Aplicação Web (Flask)**: Consulta o **banco de dados PostgreSQL** para recuperar e apresentar os dados por meio de uma interface web segura e interativa. A aplicação disponibiliza dashboards estatísticos com atualização automática (tempo real), visualizações individuais por máquina, filtros dinâmicos, busca avançada e consultas personalizadas. Essa arquitetura permite uma análise, inspeção e auditoria do inventário de forma eficiente, centralizada e com alta performance.
 
 **Operation Flow**:
 ```
