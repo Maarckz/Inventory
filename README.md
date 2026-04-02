@@ -313,11 +313,33 @@ O sistema realiza o inventário dos dispositivos com agentes Wazuh em duas camad
 
 **Operation Flow**:
 ```
-Wazuh Collector → JSON Data → Flask App → Dashboard / Panel
-       │               │              │             └─ Visualização por máquina
-       │               │              └─ Leitura e parsing dos arquivos
-       │               └─ Armazenamento estruturado por hostname
-       └─ Coleta via API: hardware, SO, rede, portas abertas, programas e processos.
+Wazuh Manager (API REST / SysCollector)
+       │
+       └─ Coleta de dados: hardware, SO, rede, portas, pacotes, processos
+               │
+               ▼
+Coletor Python
+       │
+       └─ Consome API do Wazuh e normaliza os dados
+               │
+               ▼
+Parser
+       │
+       └─ Estrutura e organiza os dados (JSON → modelo relacional)
+               │
+               ▼
+PostgreSQL (Docker)
+       │
+       └─ Armazenamento estruturado por hostname / grupos / atributos
+               │
+               ▼
+Flask Web App
+       │
+       └─ Consultas SQL + regras de negócio
+               │
+               ▼
+Dashboard do Usuário
+       └─ Visualização centralizada, busca e análise por máquina
 ```
 
 **Criar usuários:**
