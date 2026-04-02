@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const section = header.parentElement;
         const body = section.querySelector('.section-body');
         const icon = section.querySelector('.toggle-icon');
-        
+
         if (body.style.display === 'none') {
             body.style.display = 'block';
             icon.classList.remove('fa-chevron-right');
@@ -30,15 +30,15 @@ document.addEventListener('DOMContentLoaded', function() {
         rows.sort((a, b) => {
             const aValue = a.children[columnIndex].textContent;
             const bValue = b.children[columnIndex].textContent;
-            
+
             if (sortType === 'number') {
                 const numA = parseFloat(aValue) || 0;
                 const numB = parseFloat(bValue) || 0;
                 return isAscending ? numA - numB : numB - numA;
             } else {
-                return isAscending 
-                    ? aValue.localeCompare(bValue) 
-                    : bValue.localeCompare(aValue);
+                return isAscending ?
+                    aValue.localeCompare(bValue) :
+                    bValue.localeCompare(aValue);
             }
         });
 

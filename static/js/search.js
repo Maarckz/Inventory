@@ -1,20 +1,21 @@
 document.addEventListener('DOMContentLoaded', function() {
     const getCellValue = (tr, idx) => {
         const cell = tr.children[idx];
-        if (idx === 8) { 
+        if (idx === 8) {
             return cell.querySelector('.status').textContent.trim();
         }
-        if (idx === 2) { 
+        if (idx === 2) {
             return cell.querySelector('strong').textContent.trim().toLowerCase();
         }
-        if (idx === 9) { 
+        if (idx === 9) {
             const dateText = cell.textContent.trim();
             if (!dateText) return 0;
 
             try {
                 const [datePart, timePart] = dateText.split(' ');
                 const [day, month, year] = datePart.split('/').map(Number);
-                let hours = 0, minutes = 0;
+                let hours = 0,
+                    minutes = 0;
 
                 if (timePart) {
                     [hours, minutes] = timePart.split(':').map(Number);
@@ -39,11 +40,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         if (idx === 8) {
-            const statusOrder = { 'Ativo': 1, 'Inativo': 0 };
+            const statusOrder = {
+                'Ativo': 1,
+                'Inativo': 0
+            };
             return statusOrder[valA] - statusOrder[valB];
         }
 
-        return valA.localeCompare(valB, 'pt', { sensitivity: 'base' });
+        return valA.localeCompare(valB, 'pt', {
+            sensitivity: 'base'
+        });
     };
 
     document.querySelectorAll('th[data-sort]').forEach(th => {
