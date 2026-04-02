@@ -1,12 +1,12 @@
-import pyotp
-import qrcode
-from io import BytesIO
-import base64
-import time
 from flask import session
+from io import BytesIO
+import qrcode
+import base64
+import pyotp
+import time
 import os
 
-MFA_ISSUER = "Inventory System"
+MFA_ISSUER = "Inventory"
 SESSION_SALT = os.getenv('SESSION_SALT', 'default_salt_value')
 
 def generate_mfa_secret():
