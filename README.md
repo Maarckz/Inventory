@@ -272,7 +272,7 @@ O sistema permite a _exportação de relatórios_ completos do inventário em fo
   <a href="https://github.com/maarckz/Inventory" target="_blank"><img  src="https://github.com/Maarckz/Inventory/blob/main/Images/I7_CONFIG.png?raw=true"/> 
 </div>
 
-### 5.4. Sincronização automatica e manual
+### 5.5. Sincronização automatica e manual
 
 Com a intenção de facilitar a utilização do sistema, foi desenvolvido uma area de configuração de sincronização com o API WAZUH, com ingestao dos dados em periodos especificos.
 
@@ -301,7 +301,7 @@ Para reforçar a segurança do login, o sistema suporta **Autenticação Multifa
 </div>
 
 
-### 6.2. Gerenciamento de Contas
+### 6.3. Gerenciamento de Contas
 Para ajudar a controlar e descentrazar as atividades dos analistas, foi desenvolvido a area de contas de usuários, podendo ser definido um usuario comum, para ser observador, ou outros administradores.
 
 <div align="left">
@@ -313,14 +313,14 @@ Para ajudar a controlar e descentrazar as atividades dos analistas, foi desenvol
 </div>
 
     
-### 6.3. Controle de Acesso à Rede
+### 6.4. Controle de Acesso à Rede
 O acesso à interface web pode ser restrito a faixas de rede específicas. Essa configuração é controlada pela variável de ambiente `ALLOWED_IP_RANGES`, permitindo que apenas usuários de redes confiáveis (como a rede corporativa interna) possam acessar a aplicação.
 
-### 6.4. Segurança da Camada de Transporte e Auditoria
+### 6.5. Segurança da Camada de Transporte e Auditoria
 A comunicação entre o cliente e o servidor é protegida com **TLS/SSL**, garantindo a criptografia de todo o tráfego via HTTPS. A aplicação também implementa **Headers de Segurança HTTP** para mitigar ataques comuns a aplicações web. Além disso, o sistema mantém logs detalhados de segurança (`security.log`) e auditoria (`audit.log`), registrando eventos relevantes para garantir a rastreabilidade completa das ações.
 
 
-# 02 - Preparação
+# 07 - Preparação
 
 
 ## Overview
@@ -563,18 +563,18 @@ sudo systemctl enable inventory.service && sudo systemctl start inventory.servic
 
 
 
-## 7. Operação e Manutenção
+## 10. Operação e Manutenção
 
 Rotinas de manutenção e monitoramento são essenciais para garantir a integridade, a atualização e a segurança contínua dos dados gerenciados pelo INVENTORY.
 
-### 7.1 Rotinas de Manutenção Recomendadas
+### 10.1 Rotinas de Manutenção Recomendadas
 
 • **Diária:** Executar o script coletor de dados (`python3 utils/get_data.py`) para garantir que o inventário de ativos permaneça atualizado.
 • **Semanal:** Realizar o backup dos arquivos JSON de inventário localizados no diretório `data/inventory/`.
 • **Mensal:** Conduzir uma auditoria dos usuários e acessos registrados para garantir a conformidade com as políticas de segurança.
 • **Anual:** Renovar os certificados TLS/SSL para manter a segurança da comunicação HTTPS.
 
-### 7.2 Logs do Sistema
+### 10.2 Logs do Sistema
 
 Os logs são ferramentas críticas para o monitoramento da saúde do sistema e para a solução de problemas.
 
@@ -584,7 +584,7 @@ Os logs são ferramentas críticas para o monitoramento da saúde do sistema e p
 • `security.log`: Registra eventos de segurança, como tentativas de login (bem-sucedidas e falhas), ativação de MFA e bloqueios de IP.
 • `audit.log`: Fornece uma trilha de auditoria de acessos e atividades realizadas pelos usuários na plataforma.
 
-### 7.3 Solução de Problemas Comuns
+### 10.3 Solução de Problemas Comuns
 
 | Problema Comum          | Ação Recomendada                                                                                                                        |
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
@@ -592,7 +592,7 @@ Os logs são ferramentas críticas para o monitoramento da saúde do sistema e p
 | **Erro de certificado** | Confirme se os caminhos `SSL_CERT_PATH` e `SSL_KEY_PATH` no arquivo `.env` estão corretos e se os arquivos de certificado existem.      |
 | **Acesso negado**       | Verifique se o endereço IP de origem do acesso está incluído nas faixas permitidas pela variável `ALLOWED_IP_RANGES`.                   |
 
-## 8. Melhorias Futuras
+## 11. Melhorias Futuras
 
 O **INVENTORY** é um projeto em desenvolvimento ativo, com um _roadmap_ claro para aprimoramentos focados em escalabilidade, integração e segurança, garantindo sua relevância e robustez a longo prazo.
 
@@ -604,7 +604,7 @@ O **INVENTORY** é um projeto em desenvolvimento ativo, com um _roadmap_ claro p
 | **Segurança e Integração:** | - Implementação de criptografia para os arquivos JSON de inventário em repouso.<br>- Integração com serviços de diretório (LDAP/Active Directory) para autenticação centralizada.<br>- Integração com sistemas de tickets (Jira, ServiceNow, etc.).<br> |
 _Essas melhorias planejadas reforçam o compromisso do projeto com a evolução contínua._
 
-## 9. Conclusão
+## 12. Conclusão
 
 O sistema **INVENTORY** preenche uma lacuna estratégica ao eliminar a cegueira sobre os ativos de TI, transformando os dados brutos de telemetria coletados pelo **Wazuh** em uma plataforma centralizada de visualização, busca e auditoria. Ele oferece uma _solução leve e segura_ que se integra de forma transparente a infraestruturas existentes, _sem a necessidade de agentes adicionais._
 
