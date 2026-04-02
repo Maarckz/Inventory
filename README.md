@@ -395,9 +395,7 @@ sudo -u inventory nano .env
 
 ### Environment (`.env`)
 ```yml
-###########################################
-## CONFIGURAÇÕES DE SEGURANÇA E AMBIENTE ##
-###########################################
+# Configurações de segurança
 SECRET_KEY=MINHACHAVE
 SESSION_SALT=supersecreta_altere_esta_chave_salt!
 INVENTORY_DIR=data/inventory
@@ -405,34 +403,26 @@ GROUPS_DIR=data/groups
 AUTH_FILE=data/auth/logins.json
 LOG_DIR=logs
 
-###########################
-## CONFIGURAÇÕES DE REDE ##
-###########################
+# Configurações de rede
 HOST=0.0.0.0
 PORT=8000
 DEBUG=False
 
-############################
-## CONFIGURAÇÕES DE HTTPS ##
-############################
+# Configurações de HTTPS
 USE_HTTPS=True
 SSL_CERT_PATH=ssl/cert.pem
 SSL_KEY_PATH=ssl/key.pem
 
-######################################
-## PERMITIR IPS DE FAIXA ESPECIFICA ##
-######################################
+# Permitir apenas IPs de uma faixa específica
 ALLOWED_IP_RANGES=0.0.0.0/0
 
 WAZUH_PROTOCOL=https
 WAZUH_HOST=192.168.0.26
 WAZUH_PORT=55000
 WAZUH_USER=wazuh-wui
-WAZUH_PASSWORD=3n+MbgXj4L*8eFEyg5jq7xko3MbYXVfA
+WAZUH_PASSWORD=senha_do_wazuh-wui
 
-###############################
-## BANCO DE DADOS PostgreSQL ##
-###############################
+# Banco de Dados PostgreSQL
 DB_USER=inventorydb
 DB_PASS=senhadoinventorydb
 DB_HOST=localhost
@@ -645,7 +635,3 @@ _Essas melhorias planejadas reforçam o compromisso do projeto com a evolução 
 ## 12. Conclusão
 
 O sistema **INVENTORY** preenche uma lacuna estratégica ao eliminar a cegueira sobre os ativos de TI, transformando os dados brutos de telemetria coletados pelo **Wazuh** em uma plataforma centralizada de visualização, busca e auditoria. Ele oferece uma _solução leve e segura_ que se integra de forma transparente a infraestruturas existentes, _sem a necessidade de agentes adicionais._
-
-
-
-

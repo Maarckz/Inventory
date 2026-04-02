@@ -1,28 +1,33 @@
 ###########################
 ## IMPORTAR  BIBLIOTECAS ##
 ###########################
-import os
-import json
-import time
-import pyotp
-import fcntl
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, make_response
+from models import db, User, HostInventory, Group, SystemSetting
+from logging.handlers import RotatingFileHandler
+from utils.pdf_export import generate_pdf_report
+from utils.collector import sync_wazuh_data
+from flask_apscheduler import APScheduler
+from datetime import datetime, timedelta
+from flask_sqlalchemy import SQLAlchemy
+from utils.language import LANGUAGES
+from asgiref.wsgi import WsgiToAsgi
+from collections import defaultdict
+from flask_session import Session
+from dotenv import load_dotenv
+from datetime import datetime
+from functools import wraps
+from io import BytesIO
+import ipaddress
+import logging
 import qrcode
 import base64
 import struct
 import socket
-import logging
 import bcrypt
-import ipaddress
-from io import BytesIO
-from datetime import datetime
-from dotenv import load_dotenv
-from flask_session import Session
-from collections import defaultdict
-from utils.language import LANGUAGES
-from datetime import datetime, timedelta
-from utils.pdf_export import generate_pdf_report
-from logging.handlers import RotatingFileHandler
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, make_response
+import pyotp
+import fcntl
+import time
+import os
 
 
 #############################################
@@ -34,8 +39,6 @@ load_dotenv()
 ############################
 ## CONFIGURACOES INICIAIS ##
 ############################
-
-#CONFIGURACOES DO FLASK
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY')
 app.config['STATIC_FOLDER'] = 'static'
@@ -54,6 +57,72 @@ app.config['SESSION_FILE_DIR'] = os.path.join(os.getenv('LOG_DIR'), 'flask_sessi
 app.config['SESSION_PERMANENT'] = True
 Session(app)
 
+
+##############################
+## CONFIGURACOES POSTGRESQL ##
+##############################
+db_user = os.getenv("DB_USER")
+db_pass = os.getenv("DB_PASS")
+db_host = os.getenv("DB_HOST", "localhost")
+db_port = os.getenv("DB_PORT", "5432")
+db_name = os.getenv("DB_NAME")
+
+if not all([db_user, db_pass, db_name]):
+    raise RuntimeError("Variáveis de banco incompletas")
+
+database_url = (
+    f"postgresql+psycopg2://{db_user}:"
+    f"{db_pass}@{db_host}:{db_port}/{db_name}"
+)
+
+
+
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+
+db.init_app(app)
+
+
+###########################################
+## CONFIGURACOES DO SYNC (AUTOMATIZADOR) ##
+###########################################
+scheduler = APScheduler()
+scheduler.init_app(app)
+scheduler.start()
+
+def scheduled_sync():
+    with app.app_context():
+        sync_wazuh_data(app)
+
+
+
+
+with app.app_context():
+    db.create_all()
+    
+    sync_setting = SystemSetting.query.filter_by(key='sync_interval').first()
+    if not sync_setting:
+        sync_setting = SystemSetting(key='sync_interval', value={'seconds': 3600})
+        db.session.add(sync_setting)
+        db.session.commit()
+    
+    interval_seconds = sync_setting.value.get('seconds', 3600)
+    
+    if scheduler.get_job('wazuh_sync'):
+        scheduler.remove_job('wazuh_sync')
+        
+    scheduler.add_job(id='wazuh_sync', func=scheduled_sync, trigger='interval', seconds=interval_seconds)
+    app.logger.info(f"Sincronização agendada para cada {interval_seconds} segundos.")
+
+    if not User.query.first():
+        hashed = bcrypt.hashpw('Meuadmin123'.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        admin_user = User(username='admin', password_hash=hashed, role='admin')
+        db.session.add(admin_user)
+        db.session.commit()
+        app.logger.info("Usuário padrão criado (admin / Meuadmin123)")
+
+
 INVENTORY_DIR = os.getenv('INVENTORY_DIR')
 GROUPS_DIR = os.getenv('GROUPS_DIR')
 LOG_DIR = os.getenv('LOG_DIR')
@@ -63,9 +132,7 @@ SSL_KEY = os.getenv('SSL_KEY_PATH')
 USE_HTTPS = os.getenv('USE_HTTPS').lower() == 'true'
 ALLOWED_IP_RANGES = os.getenv('ALLOWED_IP_RANGES').split(',')
 
-os.makedirs(INVENTORY_DIR, exist_ok=True)
 os.makedirs(LOG_DIR, exist_ok=True)
-os.makedirs(os.path.dirname(AUTH_FILE), exist_ok=True)
 os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)
 
 ssl_context = None
@@ -153,47 +220,24 @@ setup_logging()
 security_logger = logging.getLogger('security')
 audit_logger = logging.getLogger('audit')
 
-def load_json(file_path):
-    try:
-        if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        return None
-    except (json.JSONDecodeError, IOError) as e:
-        app.logger.error(f"Erro ao carregar JSON: {str(e)}")
-        return None
-
-def load_all_json_files(directory):
-    data = []
-    try:
-        for filename in os.listdir(directory):
-            if filename.endswith('.json'):
-                file_path = os.path.join(directory, filename)
-                json_data = load_json(file_path)
-                if json_data:
-                    data.append(json_data)
-    except OSError as e:
-        app.logger.error(f"Erro ao listar arquivos: {str(e)}")
-    return data
-
-MACHINES_CACHE = {'data': None, 'last_update': 0}
-STATS_CACHE = {'data': None, 'last_update': 0}
+app.MACHINES_CACHE = {'data': None, 'last_update': 0}
+app.STATS_CACHE = {'data': None, 'last_update': 0}
 CACHE_TIMEOUT = 40
 
 def get_cached_machines():
     current_time = time.time()
-    if not MACHINES_CACHE['data'] or (current_time - MACHINES_CACHE['last_update']) > CACHE_TIMEOUT:
-        MACHINES_CACHE['data'] = get_all_machines()
-        MACHINES_CACHE['last_update'] = current_time
-    return MACHINES_CACHE['data']
+    if not app.MACHINES_CACHE['data'] or (current_time - app.MACHINES_CACHE['last_update']) > CACHE_TIMEOUT:
+        app.MACHINES_CACHE['data'] = get_all_machines()
+        app.MACHINES_CACHE['last_update'] = current_time
+    return app.MACHINES_CACHE['data']
 
 def get_cached_stats():
     current_time = time.time()
-    if not STATS_CACHE['data'] or (current_time - STATS_CACHE['last_update']) > CACHE_TIMEOUT:
+    if not app.STATS_CACHE['data'] or (current_time - app.STATS_CACHE['last_update']) > CACHE_TIMEOUT:
         machines = get_cached_machines()
-        STATS_CACHE['data'] = get_machine_stats(machines)
-        STATS_CACHE['last_update'] = current_time
-    return STATS_CACHE['data']
+        app.STATS_CACHE['data'] = get_machine_stats(machines)
+        app.STATS_CACHE['last_update'] = current_time
+    return app.STATS_CACHE['data']
 
 
 def formatar_data(data_iso):
@@ -216,162 +260,101 @@ def get_ram_range(ram_gb):
     return "64+GB" if ram_gb > 0 else "Unknown"
 
 def get_machine_stats(machines):
-    stats = {
-        'os': defaultdict(int),
-        'cpu': defaultdict(int),
-        'ram': defaultdict(int),
-        'status': {'Ativo': 0, 'Inativo': 0},
-        'ports': defaultdict(int),
-        'processes': defaultdict(int),
-        'total': 0
-    }
+    os_counts = {}
+    cpu_counts = {}
+    ram_counts = {}
+    status_counts = {'Ativo': 0, 'Inativo': 0}
+    port_counts = {}
+    proc_counts = {}
+    software_counts = {}
+    total = 0
     
     for machine in machines:
-        # Process OS stats
-        os_name = machine.get('os_name', 'Unknown')
-        stats['os'][os_name] += 1
+        # OS
+        name = machine.get('os_name', 'Unknown')
+        os_counts[name] = os_counts.get(name, 0) + 1
         
-        # Process CPU stats
-        cpu_name = machine.get('cpu_name', 'Unknown')
-        stats['cpu'][cpu_name] += 1
+        # CPU
+        cpu = machine.get('cpu_name', 'Unknown')
+        cpu_counts[cpu] = cpu_counts.get(cpu, 0) + 1
         
-        # Process RAM stats com mais granularidade
+        # RAM
         ram_gb = machine.get('ram_gb', 0)
-        stats['ram'][get_ram_range(ram_gb)] += 1
+        range_key = get_ram_range(ram_gb)
+        ram_counts[range_key] = ram_counts.get(range_key, 0) + 1
         
+        # Status
         status = machine.get('device_status', 'Inativo')
-        stats['status'][status] += 1
+        status_counts[status] = status_counts.get(status, 0) + 1
         
+        # Ports
         for port in machine.get('ports', []):
-            ip = port.get('local', {}).get('ip', '')
-            if ip and '.' in ip:  # Simplificação, mas eficaz
-                port_number = port.get('local', {}).get('port', 'Unknown')
-                if port_number != 'N/A' and port_number != 'Unknown':
-                    stats['ports'][str(port_number)] += 1
+            local = port.get('local', {})
+            ip = local.get('ip', '')
+            if ip and ('.' in ip or ':' in ip):
+                p_num = str(local.get('port', 'Unknown'))
+                if p_num not in ('N/A', 'Unknown'):
+                    port_counts[p_num] = port_counts.get(p_num, 0) + 1
         
+        # Processes
         for proc in machine.get('processes', []):
-            proc_name = proc.get('name', 'Unknown')
-            if proc_name != 'N/A' and proc_name != 'Unknown':
-                stats['processes'][proc_name] += 1
-        
-        stats['total'] += 1
-    
-    return stats
-        
+            p_name = proc.get('name', 'Unknown')
+            if p_name not in ('N/A', 'Unknown'):
+                proc_counts[p_name] = proc_counts.get(p_name, 0) + 1
 
-def process_machine_data(raw_data):
-    if not raw_data or 'agent_info' not in raw_data:
-        return None
+        # Software
+        for pkg in machine.get('packages', []):
+            pkg_name = pkg.get('name', 'Unknown')
+            if pkg_name not in ('N/A', 'Unknown'):
+                software_counts[pkg_name] = software_counts.get(pkg_name, 0) + 1
         
-    processed = {
-        'hostname': raw_data['agent_info'].get('name', 'N/A'),
-        'ip_address': raw_data['agent_info'].get('ip', 'N/A'),
-        'device_status': 'Ativo' if raw_data['agent_info'].get('status') == 'active' else 'Inativo',
-        'last_seen': raw_data['agent_info'].get('lastKeepAlive', 'N/A'),
-        'id': raw_data['agent_info'].get('id', 'N/A'),
-        'groups': raw_data.get('groups', []),
-        
+        total += 1
+    
+    return {
+        'os': os_counts,
+        'cpu': cpu_counts,
+        'ram': ram_counts,
+        'status': status_counts,
+        'ports': port_counts,
+        'processes': proc_counts,
+        'software': software_counts,
+        'total': total
     }
-    
-    # Hardware info
-    if raw_data.get('inventory', {}).get('hardware'):
-        hardware = raw_data['inventory']['hardware'][0]
-        processed['cpu_name'] = hardware.get('cpu', {}).get('name', 'Unknown')
-        processed['cpu_cores'] = hardware.get('cpu', {}).get('cores', 'N/A')
         
-        ram_total = hardware.get('ram', {}).get('total', 0)
-        processed['ram_total'] = round(ram_total / (1024 * 1024), 2) if ram_total else 0
-        processed['ram_gb'] = round(ram_total / (1024 * 1024)) if ram_total else 0
-        processed['ram_usage'] = hardware.get('ram', {}).get('usage', 'N/A')
-        processed['board_serial'] = hardware.get('board_serial', 'N/A')
-    
-    # OS info
-    if raw_data.get('inventory', {}).get('os'):
-        os_info = raw_data['inventory']['os'][0]
-        processed['os_sysname'] = os_info.get('sysname', 'N/A')
-        processed['os_name'] = os_info.get('os', {}).get('name', 'Unknown')
-        processed['os_version'] = os_info.get('os', {}).get('version', 'N/A')
-        processed['os_codename'] = os_info.get('os', {}).get('codename', '')
-        processed['os_platform'] = os_info.get('os', {}).get('platform', 'N/A')
-        processed['os_architecture'] = os_info.get('architecture', 'N/A')
-        processed['os_full'] = f"{processed['os_name']} {processed['os_version']} ({processed['os_codename']})"
-        processed['os_kernel'] = os_info.get('release', os_info.get('os_release', 'N/A'))
-    
-    # Network interfaces
-    processed['netiface'] = []
-    if raw_data.get('inventory', {}).get('netiface'):
-        for iface in raw_data['inventory']['netiface']:
-            processed['netiface'].append({
-                'name': iface.get('name', 'N/A'),
-                'mac': iface.get('mac', 'N/A'),
-                'state': iface.get('state', 'N/A'),
-                'mtu': iface.get('mtu', 'N/A'),
-                'type': iface.get('type', 'N/A')
-            })
-    
-    # Network ports
-    processed['ports'] = []
-    if raw_data.get('inventory', {}).get('ports'):
-        for port in raw_data['inventory']['ports']:
-            processed['ports'].append({
-                'local': {
-                    'port': port.get('local', {}).get('port', 'N/A'),
-                    'ip': port.get('local', {}).get('ip', 'N/A')
-                },
-                'process': port.get('process', 'N/A'),
-                'pid': port.get('pid', 'N/A'),
-                'state': port.get('state', 'N/A'),
-                'protocol': port.get('protocol', 'N/A')
-            })
-    
-    # Network addresses
-    processed['netaddr'] = []
-    if raw_data.get('inventory', {}).get('netaddr'):
-        for addr in raw_data['inventory']['netaddr']:
-            processed['netaddr'].append({
-                'iface': addr.get('iface', 'N/A'),
-                'address': addr.get('address', 'N/A'),
-                'netmask': addr.get('netmask', 'N/A'),
-                'proto': addr.get('proto', 'N/A'),
-                'broadcast': addr.get('broadcast', 'N/A')
-            })
-    # Pacotes instalados
-    processed['packages'] = []
-    if raw_data.get('inventory', {}).get('packages'):
-        for pkg in raw_data['inventory']['packages']:
-            processed['packages'].append({
-                'name': pkg.get('name', 'N/A'),
-                'version': pkg.get('version', 'N/A'),
-                'description': pkg.get('description', 'N/A'),
-                'install_time': pkg.get('install_time', 'N/A'),
-                'architecture': pkg.get('architecture', 'N/A'),
-                'format': pkg.get('format', 'N/A')
-            })
 
-    # Processos em execução
-    processed['processes'] = []
-    if raw_data.get('inventory', {}).get('processes'):
-        for proc in raw_data['inventory']['processes']:
-            processed['processes'].append({
-                'pid': proc.get('pid', 'N/A'),
-                'name': proc.get('name', 'N/A'),
-                'state': proc.get('state', 'N/A'),
-                'pid': proc.get('pid', 'N/A'),
-                'euser': proc.get('euser', 'N/A'),
-                'cmd': proc.get('cmd', 'N/A')
-            })
-    
-    
-    return processed
+from utils.machine_handler import process_machine_data, get_machine_fallback
 
 def get_all_machines():
-    raw_machines = load_all_json_files(INVENTORY_DIR)
-    machines = []
-    for machine in raw_machines:
-        processed = process_machine_data(machine)
-        if processed:
-            machines.append(processed)
-    return machines
+    try:
+        hosts = HostInventory.query.filter_by(is_legacy=False).all()
+        machines_list = []
+        processed_count = 0
+        for h in hosts:
+            try:
+                processed = process_machine_data(h.data)
+                if processed:
+                    machines_list.append(processed)
+                    processed_count += 1
+            except Exception as e:
+                app.logger.error(f"Erro ao processar máquina: {e}")
+        
+        app.logger.info(f"[Dashboard] Carregados {len(machines_list)} hosts do banco de dados para o cache.")
+        return machines_list
+    except Exception as e:
+        app.logger.error(f"Erro fatal ao buscar máquinas do banco: {e}")
+        return []
+
+def get_cached_machines():
+    if not hasattr(app, 'MACHINES_CACHE'):
+        app.MACHINES_CACHE = {'data': None, 'last_update': 0}
+        
+    if app.MACHINES_CACHE['data'] is None:
+        machines = get_all_machines()
+        app.MACHINES_CACHE['data'] = machines
+        app.MACHINES_CACHE['last_update'] = time.time()
+        return machines
+    
+    return app.MACHINES_CACHE['data']
 
 def verify_password(stored_hash, password):
     try:
@@ -399,6 +382,23 @@ def is_ip_allowed(ip):
     
     return False
 
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'username' not in session:
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'username' not in session or session.get('role') != 'admin':
+            flash("Acesso negado. Apenas administradores.", "danger")
+            return redirect(url_for('dashboard'))
+        return f(*args, **kwargs)
+    return decorated_function
+
 @app.before_request
 def check_access():
     client_ip = request.remote_addr
@@ -416,9 +416,9 @@ def check_access():
             security_logger.warning(f"ACESSO BLOQUEADO - IP não permitido: {client_ip}, Usuário: {username}, Endpoint: {request.endpoint}")
             return render_template('error.html', error_code=403, message="Acesso não permitido a partir do seu endereço IP"), 403
 
-# Rotas
 @app.route('/')
 @app.route('/dashboard')
+@login_required
 def dashboard():
     
     if 'username' not in session:
@@ -438,118 +438,95 @@ def get_chart_data():
     
     stats = get_cached_stats()
     machines = get_cached_machines()
-    
-    common_services = {
-        '22': 'SSH',
-        '80': 'HTTP',
-        '443': 'HTTPS',
-        '21': 'FTP',
-        '25': 'SMTP',
-        '53': 'DNS',
-        '3306': 'MySQL',
-        '5432': 'PostgreSQL',
-        '27017': 'MongoDB',
-        '6379': 'Redis',
-        '11211': 'Memcached',
-        '9200': 'Elk'
-    }
-    
-    port_details = defaultdict(lambda: {'count': 0, 'protocol': 'tcp'})
-    
-    for machine in machines:
-        for port in machine.get('ports', []):
-            port_num = str(port.get('local', {}).get('port', ''))
-            protocol = port.get('protocol', 'tcp').lower()
-            
-            if port_num and port_num != 'N/A':
-                port_details[port_num]['count'] += 1
-                if protocol == 'udp':  
-                    port_details[port_num]['protocol'] = protocol
-    
-    sorted_ports = sorted(port_details.items(), key=lambda x: x[1]['count'], reverse=True)[:10]
-    
-    port_labels = []
-    port_data = []
-    port_protocols = []
-    
-    for port, details in sorted_ports:
-        service = common_services.get(port, '')
-        protocol = details['protocol'].upper()
+    try:
+        app.logger.debug(f"[Dashboard] Iniciando formatação de dados para {len(machines)} máquinas.")
         
-        if service:
-            label = f"{service} - {port}/{protocol}"
-        else:
-            label = f"{port}/{protocol}"
+        common_services = {
+            '22': 'SSH', '80': 'HTTP', '443': 'HTTPS', '21': 'FTP', '53': 'DNS',
+            '3306': 'MySQL', '5432': 'PostgreSQL', '27017': 'MongoDB', '6379': 'Redis'
+        }
         
-        port_labels.append(label)
-        port_data.append(details['count'])
-        port_protocols.append(details['protocol'])
-
-    sorted_processes = sorted(stats['processes'].items(), key=lambda x: x[1], reverse=True)[:10]
-    process_labels = [proc for proc, count in sorted_processes]
-    process_data = [count for proc, count in sorted_processes]
-    
-    groups = []
-    with open(os.path.join(GROUPS_DIR, 'groups.json')) as f:
-        groups = json.load(f)
-    
-    recent_machines = sorted(machines, 
-                           key=lambda x: x.get('last_seen', ''),
-                           reverse=True)[:5]
-    
-    timeline_data = {'dates': [], 'active': [], 'inactive': []}
-    today = datetime.now().date()
-    
-    for i in range(6, -1, -1):
-        date = today - timedelta(days=i)
-        date_str = date.strftime('%d/%m')
-        timeline_data['dates'].append(date_str)
-        
-        active_count = 0
-        inactive_count = 0
-        
+        port_details = defaultdict(lambda: {'count': 0, 'protocol': 'tcp'})
         for machine in machines:
-            if machine.get('last_seen') != 'N/A':
-                try:
-                    machine_date = datetime.fromisoformat(machine['last_seen']).date()
-                    if machine_date == date:
-                        if machine.get('device_status') == 'Ativo':
-                            active_count += 1
-                        else:
-                            inactive_count += 1
-                except (ValueError, TypeError):
-                    continue
+            try:
+                for port in machine.get('ports', []):
+                    if isinstance(port, dict):
+                        port_num = str(port.get('local', {}).get('port', ''))
+                        if port_num and port_num != 'N/A':
+                            port_details[port_num]['count'] += 1
+                            if port.get('protocol', '').lower() == 'udp':
+                                port_details[port_num]['protocol'] = 'udp'
+            except Exception as e:
+                app.logger.error(f"Erro ao processar portas de uma máquina: {e}")
         
-        timeline_data['active'].append(active_count)
-        timeline_data['inactive'].append(inactive_count)
-    
-    return jsonify({
-        'os_labels': list(stats['os'].keys()),
-        'os_data': list(stats['os'].values()),
-        'cpu_labels': list(stats['cpu'].keys()),
-        'cpu_data': list(stats['cpu'].values()),
-        'ram_labels': list(stats['ram'].keys()),
-        'ram_data': list(stats['ram'].values()),
-        'port_labels': port_labels,
-        'port_data': port_data,
-        'port_protocols': port_protocols,
-        'process_labels': process_labels,
-        'process_data': process_data,
-        'active_count': stats.get('status', {}).get('Ativo', 0),
-        'inactive_count': stats.get('status', {}).get('Inativo', 0),
-        'last_update': [machine.get('agent_info', {}).get('lastKeepAlive', 0) for machine in machines],
-        'groups': groups,
-        'timeline_dates': timeline_data['dates'],
-        'timeline_active': timeline_data['active'],
-        'timeline_inactive': timeline_data['inactive'],
-        'recent_machines': [
-            {
-                'name': m.get('hostname', 'N/A'),
-                'os': m.get('os_name', 'N/A'),
-                'status': m.get('device_status', 'N/A')
-            } for m in recent_machines
-        ]
-    })
+        sorted_ports = sorted(port_details.items(), key=lambda x: x[1]['count'], reverse=True)[:10]
+        port_labels = []
+        port_data = []
+        port_protocols = []
+        for port, details in sorted_ports:
+            service = common_services.get(port, '')
+            label = f"{service} - {port}/{details['protocol'].upper()}" if service else f"{port}/{details['protocol'].upper()}"
+            port_labels.append(label)
+            port_data.append(details['count'])
+            port_protocols.append(details['protocol'])
+
+        sorted_processes = sorted(stats.get('processes', {}).items(), key=lambda x: x[1], reverse=True)[:10]
+        process_labels = [proc for proc, count in sorted_processes]
+        process_data = [count for proc, count in sorted_processes]
+        
+        groups_data = []
+        try:
+            groups_objs = Group.query.filter_by(is_legacy=False).all()
+            groups_data = [g.data for g in groups_objs if g.data]
+        except Exception:
+            pass
+
+        timeline_data = {'dates': [], 'active': [], 'inactive': []}
+        today = datetime.now().date()
+        for i in range(6, -1, -1):
+            date = today - timedelta(days=i)
+            timeline_data['dates'].append(date.strftime('%d/%m'))
+            a, inat = 0, 0
+            for machine in machines:
+                ls = machine.get('last_seen')
+                if ls and ls != 'N/A':
+                    try:
+                        m_date = datetime.fromisoformat(ls).date() if isinstance(ls, str) else ls.date()
+                        if m_date == date:
+                            if machine.get('device_status') == 'Ativo': a += 1
+                            else: inat += 1
+                    except Exception: continue
+            timeline_data['active'].append(a)
+            timeline_data['inactive'].append(inat)
+
+        response_data = {
+            'os_labels': list(stats.get('os', {}).keys()),
+            'os_data': list(stats.get('os', {}).values()),
+            'cpu_labels': list(stats.get('cpu', {}).keys()),
+            'cpu_data': list(stats.get('cpu', {}).values()),
+            'ram_labels': list(stats.get('ram', {}).keys()),
+            'ram_data': list(stats.get('ram', {}).values()),
+            'port_labels': port_labels,
+            'port_data': port_data,
+            'port_protocols': port_protocols,
+            'process_labels': process_labels,
+            'process_data': process_data,
+            'active_count': stats.get('status', {}).get('Ativo', 0),
+            'inactive_count': stats.get('status', {}).get('Inativo', 0),
+            'last_update': [m.get('last_seen', 0) for m in machines[:5]],
+            'groups': groups_data,
+            'timeline_dates': timeline_data['dates'],
+            'timeline_active': timeline_data['active'],
+            'timeline_inactive': timeline_data['inactive'],
+            'recent_machines': [
+                {'name': m.get('hostname', 'N/A'), 'os': m.get('os_name', 'N/A'), 'status': translate(m.get('device_status', 'N/A'))}
+                for m in sorted(machines, key=lambda x: str(x.get('last_seen', '')), reverse=True)[:5]
+            ]
+        }
+        return jsonify(response_data)
+    except Exception as e:
+        app.logger.error(f"Erro crítico em /get_chart_data: {e}")
+        return jsonify({'error': str(e), 'os_labels': [], 'os_data': []}), 500
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -563,19 +540,19 @@ def login():
         
         if not username or not password:
             flash('Preencha todos os campos', 'error')
-            #flash(translate('Preencha todos os campos'), 'categoria')
             return render_template('login.html')
         
-        users = load_json(AUTH_FILE) or []
-        user = next((u for u in users if u['username'] == username), None)
+        user = User.query.filter_by(username=username).first()
         
-        if user and verify_password(user['password_hash'], password):
-            if user.get('mfa_enabled', False):
+        if user and bcrypt.checkpw(password.encode('utf-8'), user.password_hash.encode('utf-8')):
+            if user.mfa_enabled:
                 session['mfa_username'] = username
-                session['mfa_expire'] = time.time() + 300  
+                session['mfa_expire'] = time.time() + 300 # 5 min
                 return redirect(url_for('verify_mfa'))
             
             session['username'] = username
+            session['role'] = user.role
+            session['user_id'] = user.id
             session['user_ip'] = client_ip  
             session['user_agent'] = request.headers.get('User-Agent', '') 
             session['login_time'] = time.time() 
@@ -584,7 +561,6 @@ def login():
             return redirect(url_for('dashboard'))
         else:
             security_logger.warning(f"TENTATIVA DE LOGIN FALHA - Usuário: {username}, IP: {client_ip}")
-            #flash(translate('Credenciais inválidas'), 'categoria')
             flash('Credenciais inválidas', 'error')
     
     return render_template('login.html')
@@ -592,7 +568,6 @@ def login():
 @app.route('/verify_mfa', methods=['GET', 'POST'])
 def verify_mfa():
     if 'mfa_username' not in session or time.time() > session.get('mfa_expire', 0):
-        #flash(translate('Sessão expirada. Faça login novamente'), 'categoria')
         flash('Sessão expirada. Faça login novamente', 'error')
         session.pop('mfa_username', None)
         return redirect(url_for('login'))
@@ -601,14 +576,16 @@ def verify_mfa():
     
     if request.method == 'POST':
         code = request.form.get('code', '')
-        users = load_json(AUTH_FILE) or []
-        user = next((u for u in users if u['username'] == username), None)
+        user = User.query.filter_by(username=username).first()
         
-        if user and user.get('mfa_enabled', False) and user.get('mfa_secret'):
-            totp = pyotp.TOTP(user['mfa_secret'])
+        if user and user.mfa_enabled and user.mfa_secret:
+            totp = pyotp.TOTP(user.mfa_secret)
             if totp.verify(code, valid_window=1):
                 session.pop('mfa_username', None)
+                
                 session['username'] = username
+                session['role'] = user.role 
+                
                 session['user_ip'] = request.remote_addr  
                 session['user_agent'] = request.headers.get('User-Agent', '') 
                 session['login_time'] = time.time() 
@@ -616,11 +593,9 @@ def verify_mfa():
                 security_logger.info(f"LOGIN MFA BEM-SUCEDIDO - Usuário: {username}, IP: {request.remote_addr}")
                 return redirect(url_for('dashboard'))
         
-        #flash(translate('Código MFA inválido'), 'categoria')
         flash('Código MFA inválido', 'error')
     
     return render_template('verify_mfa.html')
-
 @app.route('/logout')
 def logout():
     username = session.get('username', 'Desconhecido')
@@ -631,7 +606,114 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
+
+@app.route('/admin/users')
+@admin_required
+def manage_users():
+    users = User.query.all()
+    return render_template('admin_users.html', users=users)
+
+
+@app.route('/admin/users/add', methods=['POST'])
+@admin_required
+def add_user():
+    username = request.form.get('username')
+    password = request.form.get('password')
+    confirm_password = request.form.get('confirm_password')
+    role = request.form.get('role', 'user')
+    
+    if not username or not password:
+        flash("Usuário e senha são obrigatórios.", "danger")
+        return redirect(url_for('settings'))
+    
+    if password != confirm_password:
+        flash("As senhas não coincidem.", "danger")
+        return redirect(url_for('settings'))
+    
+    if User.query.filter_by(username=username).first():
+        flash("Usuário já existe.", "danger")
+        return redirect(url_for('settings'))
+    
+    hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    novo_usuario = User(username=username, password_hash=hashed, role=role)
+    db.session.add(novo_usuario)
+    db.session.commit()
+    flash(f"Usuário {username} criado com sucesso.", "success")
+    return redirect(url_for('settings'))
+
+@app.route('/admin/users/delete/<int:user_id>', methods=['POST'])
+@admin_required
+def delete_user(user_id):
+    user = User.query.get_or_404(user_id)
+    if user.username == 'admin':
+        flash("Não é possível remover o administrador principal.", "danger")
+    else:
+        db.session.delete(user)
+        db.session.commit()
+        flash(f"Usuário {user.username} removido com sucesso.", "success")
+    return redirect(url_for('settings'))
+
+@app.route('/settings/update_sync', methods=['POST'])
+@admin_required
+def update_sync():
+    data = request.get_json()
+    seconds = data.get('seconds')
+    if seconds is None:
+        return jsonify(success=False, error="Intervalo inválido"), 400
+    
+    sync_setting = SystemSetting.query.filter_by(key='sync_interval').first()
+    if not sync_setting:
+        sync_setting = SystemSetting(key='sync_interval', value={'seconds': int(seconds)})
+        db.session.add(sync_setting)
+    else:
+        sync_setting.value = {'seconds': int(seconds)}
+    
+    db.session.commit()
+    
+    if scheduler.get_job('wazuh_sync'):
+        scheduler.remove_job('wazuh_sync')
+    
+    scheduler.add_job(id='wazuh_sync', func=scheduled_sync, trigger='interval', seconds=int(seconds))
+    
+    return jsonify(success=True)
+
+@app.route('/settings/sync_now', methods=['POST'])
+@admin_required
+def sync_now():
+    try:
+        import threading
+        threading.Thread(target=sync_wazuh_data, args=(app,)).start()
+        app.MACHINES_CACHE['data'] = None
+        app.STATS_CACHE['data'] = None
+        
+        app.logger.info("Sincronização manual disparada pelo administrador.")
+        return jsonify(success=True)
+    except Exception as e:
+        app.logger.error(f"Erro ao disparar sincronização manual: {e}")
+        return jsonify(success=False, error=str(e))
+
+@app.route('/settings/change_password', methods=['POST'])
+@login_required
+def change_password():
+    current_password = request.form.get('current_password')
+    new_password = request.form.get('new_password')
+    confirm_new_password = request.form.get('confirm_new_password')
+    
+    if new_password != confirm_new_password:
+        flash("A nova senha e a confirmação não coincidem.", "danger")
+        return redirect(url_for('settings'))
+    
+    user = User.query.filter_by(username=session['username']).first()
+    if user and bcrypt.checkpw(current_password.encode('utf-8'), user.password_hash.encode('utf-8')):
+        user.password_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        db.session.commit()
+        flash("Senha alterada com sucesso.", "success")
+    else:
+        flash("Senha atual incorreta.", "danger")
+    return redirect(url_for('settings'))
+
 @app.route('/painel')
+@login_required
 def painel():
     if 'username' not in session:
         return redirect(url_for('login'))
@@ -653,6 +735,7 @@ def painel():
                           total=total_machines)
 
 @app.route('/search')
+@login_required
 def search():
     if 'username' not in session:
         return redirect(url_for('login'))
@@ -665,7 +748,6 @@ def search():
     if not query:
         return render_template('search.html', results=machines, query="")
 
-    # --- LÓGICA ESPECIAL PARA RAM (RANGE E VALORES) ---
     if query.startswith('ram_gb:'):
         ram_query = query.replace('ram_gb:', '').replace('gb', '').strip()
         
@@ -713,7 +795,6 @@ def search():
         
         return render_template('search.html', results=results, query=query)
 
-    # --- LÓGICA PARA TAGS (ports:, agent_info:, inventory:xxx:) ---
     if ':' in query:
         tag_parts = query.split(':')
         tag = tag_parts[0].strip()
@@ -782,7 +863,6 @@ def search():
                 results.append(m)
                 added_hostnames.add(hostname)
                 
-    # --- PESQUISA GLOBAL (SEM TAGS) ---
     else:
         for m in machines:
             hostname = m.get('hostname', '')
@@ -825,7 +905,6 @@ def machine_details(hostname):
         return redirect(url_for('login'))
     
     if not hostname.replace('.', '').replace('-', '').isalnum():
-        #flash(translate('Nome de host inválido'), 'categoria')
         flash('Nome de host inválido', 'error')
         return redirect(url_for('painel'))
     
@@ -833,7 +912,9 @@ def machine_details(hostname):
     machine = next((m for m in machines if m.get('hostname') == hostname), None)
     
     if not machine:
-        #flash(translate('Máquina não encontrada'), 'categoria')
+        machine = get_machine_fallback(hostname)
+
+    if not machine:
         flash('Máquina não encontrada', 'error')
         return redirect(url_for('painel'))
     
@@ -845,23 +926,25 @@ def settings():
         return redirect(url_for('login'))
     
     machines = get_cached_machines()
-    return render_template('settings.html', machines=machines)
+    users = []
+    if session.get('role') == 'admin':
+        users = User.query.all()
+    return render_template('settings.html', machines=machines, users=users)
 
 @app.route('/get_data')
 def get_data():
     if 'username' not in session:
         return redirect(url_for('login'))
 
-    script_path = os.path.join(os.path.dirname(__file__), 'utils', 'get_data.py')
-    groups_script_path = os.path.join(os.path.dirname(__file__), 'utils', 'get_groups.py')
     try:
-        os.popen(f'python3 {script_path} &')
-        os.popen(f'python3 {groups_script_path} &')
-        app.logger.info("Coleta de dados iniciada")
-        flash(translate('Coleta de dados iniciada, aguarde alguns minutos.'), 'success')
-        return redirect(url_for('dashboard'))
+        import threading
+        thread = threading.Thread(target=sync_wazuh_data, args=(app,))
+        thread.start()
+        app.logger.info("Sincronização iniciada via get_data")
+        flash(translate('Sincronização iniciada, aguarde alguns instantes.'), 'success')
+        return redirect(url_for('settings'))
     except Exception as e:
-        app.logger.error(f"Erro ao iniciar coleta: {str(e)}")
+        app.logger.error(f"Erro ao iniciar sincronização: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/mfa_status')
@@ -869,14 +952,12 @@ def mfa_status():
     if 'username' not in session:
         return jsonify({'error': 'Não autenticado'}), 401
     
-    username = session['username']
-    users = load_json(AUTH_FILE) or []
-    user = next((u for u in users if u['username'] == username), None)
+    user = User.query.filter_by(username=session['username']).first()
     
     if user:
         return jsonify({
-            'enabled': user.get('mfa_enabled', False),
-            'configured': bool(user.get('mfa_secret', ''))
+            'enabled': user.mfa_enabled,
+            'configured': bool(user.mfa_secret)
         })
     return jsonify({'error': 'Usuário não encontrado'}), 404
 
@@ -885,28 +966,23 @@ def toggle_mfa():
     if 'username' not in session:
         return jsonify({'success': False, 'error': 'Não autenticado'}), 401
     
-    username = session['username']
-    users = load_json(AUTH_FILE) or []
-    user_index = next((i for i, u in enumerate(users) if u['username'] == username), None)
+    user = User.query.filter_by(username=session['username']).first()
     
-    if user_index is None:
+    if not user:
         return jsonify({'success': False, 'error': 'Usuário não encontrado'}), 404
     
-    user = users[user_index]
     action = request.json.get('action')
     
     if action == 'enable':
         secret = pyotp.random_base32()
-        user['mfa_secret'] = secret
-        user['mfa_enabled'] = False
+        user.mfa_secret = secret
+        user.mfa_enabled = False
         
-        # Salvar alterações
         try:
-            with open(AUTH_FILE, 'w') as f:
-                json.dump(users, f)
+            db.session.commit()
             totp_uri = pyotp.totp.TOTP(secret).provisioning_uri(
-                name=username,
-                issuer_name="Inventory System"
+                name=user.username,
+                issuer_name="Inventory"
             )
             img = qrcode.make(totp_uri)
             buffered = BytesIO()
@@ -915,17 +991,18 @@ def toggle_mfa():
             qr_code = f"data:image/png;base64,{img_str}"
             return jsonify({'success': True, 'qr_code': qr_code, 'secret': secret})
         except Exception as e:
+            db.session.rollback()
             app.logger.error(f"Erro ao gerar segredo MFA: {str(e)}")
             return jsonify({'success': False, 'error': 'Erro ao gerar segredo MFA'}), 500
     
     elif action == 'disable':
-        user['mfa_enabled'] = False
-        user['mfa_secret'] = ''
+        user.mfa_enabled = False
+        user.mfa_secret = None
         try:
-            with open(AUTH_FILE, 'w') as f:
-                json.dump(users, f)
+            db.session.commit()
             return jsonify({'success': True})
         except Exception as e:
+            db.session.rollback()
             app.logger.error(f"Erro ao desabilitar MFA: {str(e)}")
             return jsonify({'success': False, 'error': 'Erro ao desabilitar MFA'}), 500
     
@@ -936,30 +1013,23 @@ def verify_mfa_setup():
     if 'username' not in session:
         return jsonify({'success': False, 'error': 'Não autenticado'}), 401
     
-    username = session['username']
-    code = request.json.get('code', '')
-    
-    users = load_json(AUTH_FILE) or []
-    user_index = next((i for i, u in enumerate(users) if u['username'] == username), None)
-    if user_index is None:
+    user = User.query.filter_by(username=session['username']).first()
+    if not user:
         return jsonify({'success': False, 'error': 'Usuário não encontrado'}), 404
     
-    user = users[user_index]
-    if not user.get('mfa_secret'):
-        return jsonify({'success': False, 'error': 'Segredo MFA não encontrado'}), 400
+    code = request.json.get('code', '')
     
-    totp = pyotp.TOTP(user['mfa_secret'])
+    totp = pyotp.TOTP(user.mfa_secret)
     if totp.verify(code, valid_window=1):
-        user['mfa_enabled'] = True
-        users[user_index] = user
+        user.mfa_enabled = True
         
         try:
-            with open(AUTH_FILE, 'w') as f:
-                json.dump(users, f)
+            db.session.commit()
             return jsonify({'success': True})
         except Exception as e:
-            app.logger.error(f"Erro ao ativar MFA: {str(e)}")
-            return jsonify({'success': False, 'error': 'Erro ao ativar MFA'}), 500
+            db.session.rollback()
+            app.logger.error(f"Erro ao salvar MFA: {str(e)}")
+            return jsonify({'success': False, 'error': 'Erro ao salvar MFA'}), 500
     else:
         return jsonify({'success': False, 'error': 'Código inválido'}), 400
 
@@ -1032,6 +1102,28 @@ def handle_errors(error):
                           error_details=error_message), code
 
 
+@app.route('/settings/legacy_machines')
+@admin_required
+def legacy_machines():
+    legacy_hosts = HostInventory.query.filter_by(is_legacy=True).order_by(HostInventory.hostname).all()
+    return render_template('legacy_machines.html', hosts=legacy_hosts)
+
+@app.route('/settings/delete_legacy_host/<int:id>', methods=['POST'])
+@admin_required
+def delete_legacy_host(id):
+    host = HostInventory.query.get_or_404(id)
+    if not host.is_legacy:
+        return jsonify({'error': 'Apenas máquinas legadas podem ser excluídas por aqui.'}), 400
+    
+    try:
+        db.session.delete(host)
+        db.session.commit()
+        if hasattr(app, 'MACHINES_CACHE'):
+            app.MACHINES_CACHE['data'] = None
+        return jsonify({'success': True, 'message': f'Host {host.hostname} excluído com sucesso.'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     host = os.getenv('HOST', '0.0.0.0')
@@ -1047,3 +1139,5 @@ if __name__ == '__main__':
         port=port,
         ssl_context=ssl_context
     )
+
+asgi_app = WsgiToAsgi(app)
