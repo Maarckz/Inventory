@@ -45,29 +45,32 @@ O Coletor de Dados é o **principal** responsável pela extração de informaç�
 
 
 ```
-Dados Coletados:
+**Dados Coletados:**
 
-Informações Básicas
-    Hostname
-    Agent ID
-    Sistema Operacional
-    Arquitetura
-    Serial da placa
-    Última varredura
-Hardware
-    CPU
-    Núcleos
-    Memória RAM
-Rede
-    Interfaces de rede
-    Portas de rede abertas
-    Configurações de rede
-Software
-    Pacotes instalados
-    Processos em execução
-Classificação de Atividade
-    Dispositivos classificados como ativos ou inativos conforme a última sincronização.
-Grupos do WAZUH
+- **Informações Básicas**
+    - Hostname
+    - Agent ID
+    - Sistema Operacional
+    - Arquitetura
+    - Serial da placa
+    - Última varredura
+- **Hardware**
+    - CPU
+    - Núcleos
+    - Memória RAM
+- **Rede**
+    - Interfaces de rede
+    - Endereço MAC 
+    - Endereço IP
+    - Portas de rede abertas
+    - Configurações de rede
+- **Software**
+    - Pacotes instalados
+    - Processos em execução
+- **Classificação de Atividade**
+    - Dispositivos classificados como ativos ou inativos conforme a última sincronização.
+- **Grupos do WAZUH**
+
 ```
 
 | Função                           | Detalhamento                                                                                                                                                                                       |
