@@ -272,7 +272,7 @@ O sistema permite a _exportação de relatórios_ completos do inventário em fo
 > Devido a uma restrição de segurança da própria API do Wazuh, a sincronização pode ser lenta de acordo com a quantidade de hosts a serem sincronizados.
 
 <div align="left">
-  <a href="https://github.com/maarckz/Inventory" target="_blank"><img  src="https://github.com/Maarckz/Inventory/blob/main/Images/I6_CONFIG.png?raw=true"/> 
+  <a href="https://github.com/maarckz/Inventory" target="_blank"><img  src="https://github.com/Maarckz/Inventory/blob/main/Images/I7_CONFIG.png?raw=true"/> 
 </div>
 
 ## 6. Arquitetura de Segurança
