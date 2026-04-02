@@ -43,39 +43,6 @@ A arquitetura é materializada por três componentes principais que trabalham em
 ### 3.1 Módulo Coletor (INVENTORY Collector)
 O Coletor de Dados é o **principal** responsável pela extração de informações, atuando como a interface de comunicação entre o sistema *INVENTORY* e o ambiente _WAZUH_. Sua função é automatizar a coleta e a estruturação dos dados de inventário.
 
-| Função                           | Detalhamento                                                                                                                                                                                       |
-| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Interface com a API do Wazuh** | Realiza a coleta e listagem de dados dos agentes monitorados, utilizando o módulo _SysCollector_ do Wazuh.                                                                                         |
-| **Autenticação**                 | Utiliza um Token JWT (JSON Web Token) para garantir o acesso seguro e autenticado à API do Wazuh.                                                                                                  |
-| **Listagem de Agentes:**         | Recupera a lista de todos os dispositivos monitorados via API.                                                                                                                                     |
-| **Dados Coletados**              | Extrai informações de Hardware (CPU, RAM, disco), Software (pacotes instalados), Rede (interfaces, portas abertas), Processos e detalhes do agente (status, hostname, ID).                         |
-| **Armazenamento**                | O coletor insere e atualiza os registros diretamente no **banco de dados relacional PostgreSQL**, garantindo integridade, consistência e suporte a múltiplas sessões simultâneas da aplicação web. |
-
-
-
-## SEPARACAO
-## SEPARACAO
-## SEPARACAO
-## SEPARACAO
-
-
-## 3. Componentes Principais
-
-A arquitetura  é materializada por dois componentes de software principais que trabalham em conjunto: o **Módulo Coletor** e a **Aplicação Web**. A solução adota o padrão de arquitetura _MVC (Model-View-Controller)_, uma prática recomendada de segurança que impõe a separação de interesses. Ao isolar a lógica de manipulação de dados da camada de apresentação, o padrão MVC reduz a superfície de ataque e facilita a manutenção e o desenvolvimento seguro.
-
-### 3.1 Módulo Coletor (INVENTORY Collector)
-O Coletor de Dados é o **principal** responsável pela extração de informações, atuando como a interface de comunicação entre o sistema *INVENTORY* e o ambiente _WAZUH_. Sua função é automatizar a coleta e a estruturação dos dados de inventário.
-
-
-### 1. Collector Module
-
-Interage com a API do Wazuh seguindo os passos abaixo:
-
-- **JWT Authentication**: Obtém um token de acesso para requisições autenticadas.
-- **Listagem de Agentes**: Recupera os dispositivos monitorados via API.
-- **Inventory Collection**: Extrai especificações de hardware, detalhes do sistema operacional, informações de rede e portas abertas para cada agente.
-- **Classificação de Status**: Marca os dispositivos de acordo com status da última sincronização, entre ativos e inativos.
-- **Local Storage**: Grava arquivos JSON estruturados, nomeados de acordo com o hostname de cada dispositivo.
 
 ```
 Dados Coletados:
@@ -103,15 +70,14 @@ Classificação de Atividade
 Grupos do WAZUH
 ```
 
+| Função                           | Detalhamento                                                                                                                                                                                       |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Interface com a API do Wazuh** | Realiza a coleta e listagem de dados dos agentes monitorados, utilizando o módulo _SysCollector_ do Wazuh.                                                                                         |
+| **Autenticação**                 | Utiliza um Token JWT (JSON Web Token) para garantir o acesso seguro e autenticado à API do Wazuh.                                                                                                  |
+| **Listagem de Agentes:**         | Recupera a lista de todos os dispositivos monitorados via API.                                                                                                                                     |
+| **Dados Coletados**              | Extrai informações de Hardware (CPU, RAM, disco), Software (pacotes instalados), Rede (interfaces, portas abertas), Processos e detalhes do agente (status, hostname, ID).                         |
+| **Armazenamento**                | O coletor insere e atualiza os registros diretamente no **banco de dados relacional PostgreSQL**, garantindo integridade, consistência e suporte a múltiplas sessões simultâneas da aplicação web. |
 
-
-| Função                           | Detalhamento                                                                                                                                                               |
-| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Interface com a API do Wazuh** | Realiza a coleta e listagem de dados dos agentes monitorados, utilizando o módulo _SysCollector_ do Wazuh.                                                                 |
-| **Autenticação**                 | Utiliza um Token JWT (JSON Web Token) para garantir o acesso seguro e autenticado à API do Wazuh.                                                                          |
-| **Dados Coletados**              | Extrai informações de Hardware (CPU, RAM, disco), Software (pacotes instalados), Rede (interfaces, portas abertas), Processos e detalhes do agente (status, hostname, ID). |
-| **Armazenamento**                | Organiza e armazena os dados em arquivos JSON estruturados, nomeados pelo _hostname_ de cada dispositivo.                                                                  |
-| **Utilitários**                  | Inclui os scripts `get_data.py` (coletor principal) e `get_groups.py` (coletor de grupos de agentes Wazuh).                                                                |
 
 ### 3.2 Aplicação Web (Flask)
 
