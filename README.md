@@ -277,7 +277,7 @@ O sistema permite a _exportação de relatórios_ completos do inventário em fo
 Com a intenção de facilitar a utilização do sistema, foi desenvolvido uma area de configuração de sincronização com o API WAZUH, com ingestao dos dados em periodos especificos.
 
 <div align="left">
-  <a href="https://github.com/maarckz/Inventory" target="_blank"><img  src="https://github.com/Maarckz/Inventory/blob/main/Images/I7_CONFIG.png?raw=true"/> 
+  <a href="https://github.com/maarckz/Inventory" target="_blank"><img  src="https://github.com/Maarckz/Inventory/blob/main/Images/X5_SYNC.png?raw=true"/> 
 </div>
 
 
@@ -312,25 +312,6 @@ Para ajudar a controlar e descentrazar as atividades dos analistas, foi desenvol
   <a href="https://github.com/maarckz/Inventory" target="_blank"><img src="https://github.com/Maarckz/Inventory/blob/main/Images/X4_SENHA.png?raw=true"/> 
 </div>
 
-### 6.2. Gerenciamento de Contas
-
-
-
-
-### 6.2. Autenticação Multifator (MFA)
-Para reforçar a segurança do login, o sistema suporta **Autenticação Multifator (MFA)** baseada no padrão _TOTP (Time-based One-Time Password)_. Esta funcionalidade é compatível com aplicativos autenticadores populares, como o _Google Authenticator_, pode ser configurada de forma simples através da leitura de um QR code e oferece suporte a **backup de códigos de recuperação**.
-
-<div align="left">
-  <a href="https://github.com/maarckz/Inventory" target="_blank"><img src="https://github.com/Maarckz/Inventory/blob/main/Images/MFA.png?raw=true"/> 
-</div>
-
-
-### 6.2. Autenticação Multifator (MFA)
-Para reforçar a segurança do login, o sistema suporta **Autenticação Multifator (MFA)** baseada no padrão _TOTP (Time-based One-Time Password)_. Esta funcionalidade é compatível com aplicativos autenticadores populares, como o _Google Authenticator_, pode ser configurada de forma simples através da leitura de um QR code e oferece suporte a **backup de códigos de recuperação**.
-
-<div align="left">
-  <a href="https://github.com/maarckz/Inventory" target="_blank"><img src="https://github.com/Maarckz/Inventory/blob/main/Images/MFA.png?raw=true"/> 
-</div>
     
 ### 6.3. Controle de Acesso à Rede
 O acesso à interface web pode ser restrito a faixas de rede específicas. Essa configuração é controlada pela variável de ambiente `ALLOWED_IP_RANGES`, permitindo que apenas usuários de redes confiáveis (como a rede corporativa interna) possam acessar a aplicação.
