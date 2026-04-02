@@ -272,6 +272,15 @@ O sistema permite a _exportação de relatórios_ completos do inventário em fo
   <a href="https://github.com/maarckz/Inventory" target="_blank"><img  src="https://github.com/Maarckz/Inventory/blob/main/Images/I7_CONFIG.png?raw=true"/> 
 </div>
 
+### 5.4. Sincronização automatica e manual
+
+Com a intenção de facilitar a utilização do sistema, foi desenvolvido uma area de configuração de sincronização com o API WAZUH, com ingestao dos dados em periodos especificos.
+
+<div align="left">
+  <a href="https://github.com/maarckz/Inventory" target="_blank"><img  src="https://github.com/Maarckz/Inventory/blob/main/Images/I7_CONFIG.png?raw=true"/> 
+</div>
+
+
 ## 6. Arquitetura de Segurança
 
 A segurança é uma prioridade no design do sistema **INVENTORY**. A arquitetura emprega uma estratégia de **"defesa em profundidade"**, com controles implementados nas camadas de autenticação, sessão, rede e transporte para proteger de forma abrangente o acesso aos dados centralizados de inventário.
@@ -283,6 +292,38 @@ A proteção de credenciais e o controle de acesso são realizados por meio de u
 • **Controle de Força Bruta:** O sistema implementa um mecanismo de bloqueio de IP após um número configurável de tentativas de login falhas.
 • **Verificação de IP de Origem:** Cada login é validado contra o endereço IP de origem para mitigar o risco de sequestro de sessão ou uso de credenciais roubadas de locais não autorizados.
 • **Timeout Automático:** As sessões de usuário expiram automaticamente após um período de inatividade (padrão de 15 minutos), mitigando o risco de acesso não autorizado a estações de trabalho desatendidas.
+
+### 6.2. Autenticação Multifator (MFA)
+Para reforçar a segurança do login, o sistema suporta **Autenticação Multifator (MFA)** baseada no padrão _TOTP (Time-based One-Time Password)_. Esta funcionalidade é compatível com aplicativos autenticadores populares, como o _Google Authenticator_, pode ser configurada de forma simples através da leitura de um QR code e oferece suporte a **backup de códigos de recuperação**.
+
+<div align="left">
+  <a href="https://github.com/maarckz/Inventory" target="_blank"><img src="https://github.com/Maarckz/Inventory/blob/main/Images/MFA.png?raw=true"/> 
+</div>
+
+
+### 6.2. Gerenciamento de Contas
+Para ajudar a controlar e descentrazar as atividades dos analistas, foi desenvolvido a area de contas de usuários, podendo ser definido um usuario comum, para ser observador, ou outros administradores.
+
+<div align="left">
+  <a href="https://github.com/maarckz/Inventory" target="_blank"><img src="https://github.com/Maarckz/Inventory/blob/main/Images/X3_CONTAS.png?raw=true"/> 
+</div>
+
+<div align="left">
+  <a href="https://github.com/maarckz/Inventory" target="_blank"><img src="https://github.com/Maarckz/Inventory/blob/main/Images/X4_SENHA.png?raw=true"/> 
+</div>
+
+### 6.2. Gerenciamento de Contas
+
+
+
+
+### 6.2. Autenticação Multifator (MFA)
+Para reforçar a segurança do login, o sistema suporta **Autenticação Multifator (MFA)** baseada no padrão _TOTP (Time-based One-Time Password)_. Esta funcionalidade é compatível com aplicativos autenticadores populares, como o _Google Authenticator_, pode ser configurada de forma simples através da leitura de um QR code e oferece suporte a **backup de códigos de recuperação**.
+
+<div align="left">
+  <a href="https://github.com/maarckz/Inventory" target="_blank"><img src="https://github.com/Maarckz/Inventory/blob/main/Images/MFA.png?raw=true"/> 
+</div>
+
 
 ### 6.2. Autenticação Multifator (MFA)
 Para reforçar a segurança do login, o sistema suporta **Autenticação Multifator (MFA)** baseada no padrão _TOTP (Time-based One-Time Password)_. Esta funcionalidade é compatível com aplicativos autenticadores populares, como o _Google Authenticator_, pode ser configurada de forma simples através da leitura de um QR code e oferece suporte a **backup de códigos de recuperação**.
