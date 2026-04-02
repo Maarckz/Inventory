@@ -43,9 +43,7 @@
 }
 
 .machine-table th {
-    background: var(--light-gray); 
     font-weight: 600;
-    color: var(--dark-gray);
     text-transform: uppercase;
     font-size: 0.75rem;
     position: relative;
