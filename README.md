@@ -291,7 +291,7 @@ A proteção de credenciais e o controle de acesso são realizados por meio de u
 Para reforçar a segurança do login, o sistema suporta **Autenticação Multifator (MFA)** baseada no padrão _TOTP (Time-based One-Time Password)_. Esta funcionalidade é compatível com aplicativos autenticadores populares, como o _Google Authenticator_, pode ser configurada de forma simples através da leitura de um QR code e oferece suporte a **backup de códigos de recuperação**.
 
 <div align="left">
-  <a href="https://github.com/maarckz/Inventory" target="_blank"><img src="https://github.com/Maarckz/Inventory/blob/main/Images/I7_MFA.png?raw=true"/> 
+  <a href="https://github.com/maarckz/Inventory" target="_blank"><img src="https://github.com/Maarckz/Inventory/blob/main/Images/MFA.png?raw=true"/> 
 </div>
     
 ### 6.3. Controle de Acesso à Rede
