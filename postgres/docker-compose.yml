@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:16
+    container_name: inventory_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: inventorydb
+      POSTGRES_PASSWORD: senhadoinventorydb
+      POSTGRES_DB: inventory_db
+    ports:
+      - "5432:5432"
+    volumes:
+    #DADOS REMOTOS
+      - postgres_data:/var/lib/postgresql/data
+    
+    #DADOS LOCAIS
+    #  - ./postgres_data:/var/lib/postgresql/data
+
+
+volumes:
+  postgres_data:
