@@ -1,6 +1,6 @@
 ## 1. Apresentação
 
-O **INVENTORY** é a solução definitiva para a gestão centralizada do inventário de máquinas corporativas, desenvolvida para ambientes que exigem alta visibilidade, rastreabilidade e segurança. O sistema transforma os dados de telemetria brutos coletados pela sua plataforma **Wazuh** (via _SysCollector_) em uma **Interface Web Segura e Moderna**.
+O **INVENTORY** é uma solução para a gestão centralizada do inventário de máquinas corporativas, desenvolvida para ambientes que exigem alta visibilidade, rastreabilidade e segurança. O sistema transforma os dados de telemetria brutos coletados pela sua plataforma **Wazuh** (via _SysCollector_) em uma **Interface Web Segura e Moderna**.
 
 
 <div align="left">
