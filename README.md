@@ -755,10 +755,8 @@ GROQ_BASE_URL=
 # CHAVES EXTRAS de outra org/projeto da Groq (cada org tem cota
 # própria). Elas entram na cadeia por último, só quando a principal
 # seguir limitada:
-#   GROQ_API_KEYS=gsk_outra1,gsk_outra2     (separadas por vírgula)
-#   GROQ_API_KEY_2=gsk_outra                (ou individualmente)
-#   GROQ_API_KEY_3=gsk_outra
-GROQ_API_KEYS=
+#   GROQ_API_KEY_2=gsk_outra                (separadas por vírgula)
+#   GROQ_API_KEY_3=gsk_outra                (ou individualmente)
 GROQ_API_KEY_2=
 GROQ_API_KEY_3=
 ```
