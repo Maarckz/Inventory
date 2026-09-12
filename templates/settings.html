@@ -1,0 +1,1902 @@
+{% extends "base.html" %}
+{% block title %}Configurações · Inventory{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}">
+{% endblock %}
+{% block extra_js %}
+{% endblock %}
+{% block content %}
+<div class="user-info" style="margin: 0 20px;">
+    <div class="user-avatar">
+        {{ session.username[0] | upper }}
+    </div>
+    <div class="user-details">
+        <div><strong>{{ session.username | upper }}</strong></div>
+        <div class="status-indicator" id="mfa-status">
+            <i class="fas fa-spinner fa-spin"></i>
+            Verificando...
+        </div>
+    </div>
+</div>
+<style>
+</style>
+
+<script>
+
+    fetchMfaStatusChip();
+    function fetchMfaStatusChip() {
+        fetch('/mfa_status')
+            .then(r => r.json())
+            .then(data => {
+                const statusElement = document.getElementById('mfa-status');
+                if (data.error) {
+                    statusElement.className = 'status-indicator status-disabled';
+                    statusElement.innerHTML = `<i class="fas fa-exclamation-circle"></i> MFA`;
+                    return;
+                }
+                statusElement.innerHTML = `
+                        <i class="fas fa-${data.enabled ? 'check-circle' : 'times-circle'}"></i>
+                        ${data.enabled ? '{{ translate("MFA ativado") }}' : '{{ translate("MFA desativado") }}'}
+                    `;
+                statusElement.className = data.enabled ? 'status-indicator status-enabled' : 'status-indicator status-disabled';
+            })
+            .catch(() => {
+                const statusElement = document.getElementById('mfa-status');
+                statusElement.className = 'status-indicator status-disabled';
+                statusElement.innerHTML = `<i class="fas fa-times-circle"></i> MFA`;
+            });
+    }
+</script>
+
+<div class="settings-grid">
+    {% if session.role == 'admin' %}
+    <div class="settings-card">
+        <div class="settings-card-header">
+            <i class="fas fa-sync-alt"></i>
+            <h3>{{ translate('SYNC com Wazuh') }}</h3>
+        </div>
+        <div class="settings-card-body">
+            <p>{{ translate('Configure a frequência com que o sistema coleta dados do Wazuh API.') }}</p>
+            <button class="btn btn-primary" id="sync-settings-btn">
+                <i class="fas fa-sliders-h"></i> {{ translate('Configurar Sync') }}
+            </button>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if session.role == 'admin' %}
+    <div class="settings-card">
+        <div class="settings-card-header">
+            <i class="fas fa-robot"></i>
+            <h3>{{ translate('Assistente & Notificações') }}</h3>
+        </div>
+        <div class="settings-card-body">
+            <p>{{ translate('Configuração do assistente e as preferências de notificações e alertas.') }}</p>
+
+            <button class="btn btn-primary" id="central-config-btn">
+                <i class="fas fa-cog"></i> {{ translate('Configurar') }}
+            </button>
+        </div>
+    </div>
+    {% else %}
+    <div class="settings-card">
+        <div class="settings-card-header">
+            <i class="fas fa-robot"></i>
+            <h3>{{ translate('Assistente & Notificações') }}</h3>
+        </div>
+        <div class="settings-card-body">
+            <p>{{ translate('As notificações de segurança, parque e compliance aparecem no FAB (canto inferior direito), junto ao Assistente IA.') }}</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="settings-card">
+        <div class="settings-card-header">
+            <i class="fas fa-file-pdf"></i>
+            <h3>{{ translate('Exportar Relatório') }}</h3>
+        </div>
+        <div class="settings-card-body">
+
+            <p>{{ translate('Gera o relatório do parque completo em PDF, no idioma selecionado.') }}</p>
+            <button class="btn btn-outline" id="export-pdf-btn">
+                <i class="fas fa-download"></i> {{ translate('Exportar PDF') }}
+            </button>
+        </div>
+    </div>
+
+    <div class="settings-card">
+        <div class="settings-card-header">
+            <i class="fas fa-shield-alt"></i>
+            <h3>{{ translate('Segurança') }}</h3>
+        </div>
+        <div class="settings-card-body">
+            <p>{{ translate('Configure a autenticação de dois fatores (MFA) para aumentar a segurança.') }}</p>
+            <button class="btn btn-outline" id="mfa-settings-btn">
+                <i class="fas fa-lock"></i> {{ translate('Configurar MFA') }}
+            </button>
+        </div>
+    </div>
+
+    <div class="settings-card">
+        <div class="settings-card-header">
+            <i class="fas fa-key"></i>
+            <h3>{{ translate('Alterar Senha') }}</h3>
+        </div>
+        <div class="settings-card-body">
+            <p>{{ translate('Mantenha sua conta segura alterando sua senha periodicamente.') }}</p>
+            <button class="btn btn-primary" id="change-password-btn">
+                <i class="fas fa-edit"></i> {{ translate('Alterar Minha Senha') }}
+            </button>
+        </div>
+    </div>
+
+    {% if session.role == 'admin' %}
+    <div class="settings-card">
+        <div class="settings-card-header">
+            <i class="fas fa-users-cog"></i>
+            <h3>{{ translate('Gestão de Usuários') }}</h3>
+        </div>
+        <div class="settings-card-body">
+            <p>{{ translate('Adicione, remova ou edite as permissões dos usuários do sistema.') }}</p>
+            <button class="btn btn-primary" id="user-management-btn">
+                <i class="fas fa-users"></i> {{ translate('Gerenciar Usuários') }}
+            </button>
+        </div>
+    </div>
+
+    <div class="settings-card">
+        <div class="settings-card-header">
+            <i class="fas fa-history"></i>
+            <h3>{{ translate('Máquinas Legadas') }}</h3>
+        </div>
+        <div class="settings-card-body">
+            <p>{{ translate('Gerencie e exclua registros antigos de máquinas que não estão mais sincronizadas.') }}</p>
+            <a href="{{ url_for('legacy_machines') }}" class="btn btn-primary">
+                <i class="fas fa-trash-alt"></i> {{ translate('Ver Legado') }}
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="settings-card support-card">
+        <div class="settings-card-header">
+            <i class="fa-brands fa-github"></i>
+            <h3>{{ translate('Apoie o projeto') }}</h3>
+        </div>
+        <div class="settings-card-body">
+            <p>{{ translate('Apoie o Inventory com uma estrela, reportando problemas ou contribuindo com código.') }}</p>
+            <a href="https://github.com/Maarckz/Inventory" target="_blank" rel="noopener noreferrer"
+               class="btn btn-primary support-btn">
+                <i class="fa-brands fa-github"></i> {{ translate('Ir para o repositório') }}
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block modals %}
+<div id="mfaModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <div class="modal-header">
+            <i class="fas fa-shield-alt"></i>
+            <h2>{{ translate('Autenticação em Duas Etapas') }}</h2>
+        </div>
+        <div id="mfa-modal-body" style="margin-top: 1rem;"></div>
+    </div>
+</div>
+
+<div id="changePasswordModal" class="modal">
+    <div class="modal-content" style="max-width: 460px;">
+        <span class="close">&times;</span>
+        <div class="modal-header">
+            <i class="fas fa-key"></i>
+            <h2>{{ translate('Alterar Minha Senha') }}</h2>
+        </div>
+
+        <form id="pwd-form" novalidate>
+            <div class="form-group pwd-group">
+                <label>
+                    <i class="fas fa-unlock-alt icon-spacing"></i>
+                    {{ translate('Senha Atual') }}
+                </label>
+                <div class="pwd-field">
+                    <input type="password" id="current_password" name="current_password" class="form-control"
+                        placeholder="{{ translate('Digite sua senha atual') }}" autocomplete="current-password" required>
+                    <button type="button" class="pwd-toggle" data-target="current_password" data-visible="0"
+                        aria-label="{{ translate('Mostrar senha') }}">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-group pwd-group">
+                <label>
+                    <i class="fas fa-lock icon-spacing"></i>
+                    {{ translate('Nova Senha') }}
+                </label>
+                <div class="pwd-field">
+                    <input type="password" id="new_password" name="new_password" class="form-control"
+                        placeholder="{{ translate('Digite a nova senha') }}" autocomplete="new-password" required>
+                    <button type="button" class="pwd-toggle" data-target="new_password" data-visible="0"
+                        aria-label="{{ translate('Mostrar senha') }}">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <div class="pwd-meter" id="pwd-meter" style="display:none;">
+                    <div class="pwd-meter-bar"><span id="pwd-meter-fill"></span></div>
+                    <small class="pwd-meter-label" id="pwd-meter-label"></small>
+                </div>
+            </div>
+
+            <div class="form-group pwd-group">
+                <label>
+                    <i class="fas fa-check-double icon-spacing"></i>
+                    {{ translate('Confirmar Nova Senha') }}
+                </label>
+                <div class="pwd-field">
+                    <input type="password" id="confirm_new_password" name="confirm_new_password" class="form-control"
+                        placeholder="{{ translate('Repita a nova senha') }}" autocomplete="new-password" required>
+                    <button type="button" class="pwd-toggle" data-target="confirm_new_password" data-visible="0"
+                        aria-label="{{ translate('Mostrar senha') }}">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <small id="password-match-error" class="error-text">
+                    <i class="fas fa-exclamation-circle"></i>
+                    {{ translate('As senhas não coincidem') }}
+                </small>
+            </div>
+
+            <div id="pwd-error" class="mfa-error" style="display:none;"></div>
+
+            <button type="submit" id="change-pwd-submit" class="btn btn-primary btn-block mfa-btn">
+                <i class="fas fa-save"></i>
+                {{ translate('Salvar alterações') }}
+            </button>
+        </form>
+    </div>
+</div>
+
+{% if session.role == 'admin' %}
+<div id="userManagementModal" class="modal">
+    <div class="modal-content user-mgmt-modal" style="max-width: 860px;">
+        <span class="close">&times;</span>
+        <div class="modal-header">
+            <i class="fas fa-users-cog"></i>
+            <h2>{{ translate('Gestão de Usuários') }}</h2>
+        </div>
+
+        <div class="usr-toolbar">
+            <p class="usr-desc">
+                <b>{{ users|length }}</b>&nbsp;{{ translate('usuários ativos') }} — {{ translate('Lista de usuários ativos no sistema.') }}
+            </p>
+            <button id="add-user-btn" class="btn btn-primary">
+                <i class="fas fa-plus"></i> {{ translate('Novo Usuário') }}
+            </button>
+        </div>
+
+        <div class="user-list-section">
+            <div class="table-responsive usr-table-wrap">
+                <table class="table user-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>{{ translate('Usuário') }}</th>
+                            <th>{{ translate('Nome Completo') }}</th>
+                            <th>{{ translate('Função') }}</th>
+                            <th class="usr-col-actions">{{ translate('Ações') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in users %}
+                        <tr data-user-row="{{ u.id }}">
+                            <td><span class="badge-id">#{{ u.id }}</span></td>
+                            <td>
+                                <div class="usr-id-cell">
+                                    <div class="avatar-sm">{{ (u.full_name or u.username)[0] | upper }}</div>
+                                    <span class="usr-username">{{ u.username }}</span>
+                                </div>
+                            </td>
+                            <td class="usr-fullname">{{ u.full_name or '—' }}</td>
+                            <td><span class="role-badge {{ u.role }}">{{ u.role | upper }}</span></td>
+                            <td class="usr-col-actions">
+                                {% if u.username != 'admin' %}
+                                <button type="button" class="btn-icon btn-danger-soft usr-del-btn"
+                                    data-user-id="{{ u.id }}" data-username="{{ u.username }}" data-armed="0"
+                                    title="{{ translate('Remover') }}">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                                {% else %}
+                                <span class="usr-locked"><i class="fas fa-lock"></i></span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div id="addUserModal" class="modal">
+    <div class="modal-content" style="max-width: 500px;">
+        <span class="close">&times;</span>
+        <div class="modal-header">
+            <i class="fas fa-user-plus"></i>
+            <h2>{{ translate('Novo Usuário') }}</h2>
+        </div>
+
+        <form id="add-user-form" novalidate>
+            <div class="form-group" style="margin-bottom: 1.2rem;">
+                <label>
+                    <i class="fas fa-id-card icon-spacing"></i>
+                    {{ translate('Nome Completo') }}
+                </label>
+                <input type="text" name="full_name" class="form-control" maxlength="120"
+                    placeholder="ex: João da Silva" autocomplete="name">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-user icon-spacing"></i>
+                        {{ translate('Nome de Usuário') }}
+                    </label>
+                    <input type="text" name="username" class="form-control" placeholder="ex: joao.silva"
+                        autocomplete="username" required>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-user-tag icon-spacing"></i>
+                        {{ translate('Função') }}
+                    </label>
+                    <select name="role" class="form-control">
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group" style="margin-bottom: 1.2rem;">
+                <label><i class="fas fa-lock icon-spacing"></i> {{ translate('Senha') }}</label>
+                <div class="pwd-field">
+                    <input type="password" id="add_password" name="password" class="form-control" placeholder="••••••••"
+                        autocomplete="new-password" required>
+                    <button type="button" class="pwd-toggle" data-target="add_password" data-visible="0"
+                        aria-label="{{ translate('Mostrar senha') }}">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="form-group" style="margin-bottom: 1.2rem;">
+                <label><i class="fas fa-check-double icon-spacing"></i> {{ translate('Confirmar Senha') }}</label>
+                <div class="pwd-field">
+                    <input type="password" id="confirm_password" name="confirm_password" class="form-control"
+                        placeholder="••••••••" autocomplete="new-password" required>
+                    <button type="button" class="pwd-toggle" data-target="confirm_password" data-visible="0"
+                        aria-label="{{ translate('Mostrar senha') }}">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <small id="add-user-match-error" class="error-text" style="display: none;">
+                    <i class="fas fa-exclamation-circle"></i> {{ translate('As senhas não coincidem') }}
+                </small>
+            </div>
+
+            <div id="add-user-error" class="mfa-error" style="display:none;"></div>
+
+            <button type="submit" id="add-user-submit" class="btn btn-primary btn-block mfa-btn">
+                <i class="fas fa-user-check"></i> {{ translate('Criar Usuário') }}
+            </button>
+        </form>
+    </div>
+</div>
+
+<div id="syncConfigModal" class="modal">
+    <div class="modal-content" style="max-width: 550px;">
+        <span class="close">&times;</span>
+        <div class="modal-header">
+            <i class="fas fa-sync-alt"></i>
+            <h2>{{ translate('Periodicidade de Sincronização') }}</h2>
+        </div>
+
+        <div>
+            <p style="color: var(--dark-gray); margin-bottom: 1.5rem; text-align: center;">
+                {{ translate('Selecione o intervalo entre as coletas automáticas de dados.') }}
+            </p>
+
+            <div class="sync-slider-container">
+
+                <div class="sync-row">
+                    <div class="sync-row-head">
+                        <i class="fas fa-shield-halved"></i>
+                        <span class="sync-name">Wazuh</span>
+                        <span class="sync-val" id="sync-label-display">1 h</span>
+                    </div>
+                    <input type="range" id="sync-range" class="sync-range" min="300" max="86400" step="300"
+                        value="{{ sync_seconds }}">
+                </div>
+
+                <div class="sync-row">
+                    <div class="sync-row-head">
+                        <i class="fas fa-broadcast-tower"></i>
+                        <span class="sync-name">Ping Sweep</span>
+                        <label class="sync-switch" title="{{ translate('Varredura de ping automática nas redes configuradas') }}">
+                            <input type="checkbox" id="sw-pingsweep" {% if discovery.auto_scan.enabled %}checked{% endif %}>
+                            <span class="sync-switch-track"></span>
+                        </label>
+                        <span class="sync-val" id="val-pingsweep">5 min</span>
+                    </div>
+                    <input type="range" id="rng-pingsweep" class="sync-range" min="5" max="360" step="5"
+                        value="{{ discovery.auto_scan.interval_minutes }}" {% if not discovery.auto_scan.enabled %}disabled{% endif %}>
+                </div>
+
+                <div class="sync-row">
+                    <div class="sync-row-head">
+                        <i class="fas fa-tower-broadcast"></i>
+                        <span class="sync-name">ARP Discovery</span>
+                        <label class="sync-switch" title="{{ translate('Varredura ARP silenciosa entre um scan e outro (sem ping).') }}">
+                            <input type="checkbox" id="sw-arp" {% if discovery.arp_monitor.enabled %}checked{% endif %}>
+                            <span class="sync-switch-track"></span>
+                        </label>
+                        <span class="sync-val" id="val-arp">5 min</span>
+                    </div>
+                    <input type="range" id="rng-arp" class="sync-range" min="5" max="360" step="5"
+                        value="{{ discovery.arp_monitor.interval_minutes }}" {% if not discovery.arp_monitor.enabled %}disabled{% endif %}>
+                </div>
+
+                <div class="sync-row">
+                    <div class="sync-row-head">
+                        <i class="fas fa-clone"></i>
+                        <span class="sync-name">{{ translate('Mesclar duplicados automaticamente') }}</span>
+                        <label class="sync-switch" title="{{ translate('OFF (recomendado): duplicados ficam no NetScope e a exclusão é manual, com checkboxes na Tabela de Ativos. ON: o scan manda o duplicado direto para a lixeira.') }}">
+                            <input type="checkbox" id="sw-automerge" {% if auto_merge %}checked{% endif %}>
+                            <span class="sync-switch-track"></span>
+                        </label>
+                        <span class="sync-val" id="val-automerge">{{ translate('Manual') }}</span>
+                    </div>
+                    <div class="sync-hint" style="margin-top:6px;">
+                        <i class="fas fa-circle-info"></i>
+                        <span>{{ translate('Desligado: os duplicados ficam no NetScope e você escolhe quem excluir (checkboxes na Tabela de Ativos — vão para a lixeira).') }}</span>
+                    </div>
+                </div>
+
+                <div class="sync-hint">
+                    <i class="fas fa-circle-info"></i>
+                    <span>{{ translate('Ao salvar, a contagem recomeça do momento do salvamento.') }}</span>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button id="btn-sync-now" class="btn btn-outline" style="flex: 1;"
+                        title="{{ translate('Executa: sync Wazuh + Ping Sweep + ARP Discovery') }}">
+                    <i class="fas fa-play"></i> {{ translate('Sincronizar Agora') }}
+                </button>
+                <button id="btn-save-sync" class="btn btn-primary" style="flex: 1;">
+                    <i class="fas fa-save"></i> {{ translate('Salvar Configuração') }}
+                </button>
+            </div>
+
+            <div class="sync-hint" style="margin-top: .75rem;">
+                <i class="fas fa-circle-info"></i>
+                <span>{{ translate('O Sincronizar Agora executa as 3 ações: sync Wazuh, Ping Sweep e ARP Discovery.') }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if session.role == 'admin' %}
+<div id="centralModal" class="modal">
+    <div class="modal-content" style="max-width: 520px;">
+        <span class="close">&times;</span>
+        <div class="modal-header">
+            <i class="fas fa-robot"></i>
+            <h2>{{ translate('Assistente & Notificações') }}</h2>
+        </div>
+
+        <div class="central-tabs" role="tablist">
+            <button type="button" class="central-tab active" id="central-tab-ai" data-pane="ai" role="tab">
+                <i class="fas fa-robot"></i> {{ translate('Assistente IA') }}
+            </button>
+            <button type="button" class="central-tab" id="central-tab-notif" data-pane="notif" role="tab">
+                <i class="fas fa-bell"></i> {{ translate('Notificações') }}
+            </button>
+
+            <button type="button" class="central-tab" id="central-tab-rules" data-pane="rules" role="tab">
+                <i class="fas fa-gavel"></i> {{ translate('Regras') }}
+            </button>
+        </div>
+
+        <div id="central-pane-ai" class="central-pane">
+
+            <p id="ai-modal-status" style="font-size:.8rem; margin:0 0 .9rem; text-align:center;">
+                {% if assistant_cfg.configured %}
+                    {% if assistant_cfg.source == 'env' %}
+                    <i class="fas fa-circle-check" style="color: var(--green);"></i>
+                    {{ translate('Configurado via .env — modelo') }} <b>{{ assistant_cfg.model }}</b>
+                    {% else %}
+                    <i class="fas fa-circle-check" style="color: var(--green);"></i>
+                    {{ translate('Configurado via painel — modelo') }} <b>{{ assistant_cfg.model }}</b>
+                    {% endif %}
+                {% else %}
+                    <i class="fas fa-circle-info" style="color: var(--gray);"></i>
+                    {{ translate('Não configurado — use GROQ_API_KEY no .env ou o botão abaixo.') }}
+                {% endif %}
+            </p>
+
+            <div class="form-group">
+                <label><i class="fas fa-key icon-spacing"></i> {{ translate('Chave da API (Groq)') }}</label>
+                <input type="password" id="ai-api-key" class="form-control"
+                       placeholder="gsk_…" autocomplete="off">
+                {% if assistant_cfg.source == 'env' %}
+                <div class="sync-hint" style="margin-top:.5rem;">
+                    <i class="fas fa-circle-info"></i>
+                    <span>{{ translate('A chave do .env (GROQ_API_KEY) está ativa — ela tem prioridade. O que salvar aqui fica como alternativa.') }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-microchip icon-spacing"></i> {{ translate('Modelo') }}</label>
+
+                <div style="display: flex; gap: .5rem;">
+                    <input type="text" id="ai-model-input" class="form-control"
+                           list="ai-model-list"
+                           value="{{ assistant_cfg.model or 'openai/gpt-oss-20b' }}"
+                           autocomplete="off" spellcheck="false" style="flex: 1;">
+                    <button type="button" id="ai-models-btn" class="btn btn-outline"
+                            title="{{ translate('Atualizar lista de modelos do provedor') }}"
+                            style="flex: 0 0 auto; padding: .45rem .7rem;">
+                        <i class="fas fa-arrow-rotate-right"></i>
+                    </button>
+                </div>
+                <datalist id="ai-model-list"></datalist>
+                <div id="ai-model-warn" style="display:none; margin-top:.5rem;"
+                     class="sync-hint">
+                    <i class="fas fa-triangle-exclamation" style="color:#f59e0b;"></i>
+                    <span>{{ translate('O modelo atual não consta na lista do provedor — escolha um da lista para evitar o erro “modelo não encontrado”.') }}</span>
+                </div>
+            </div>
+
+            <div class="sync-hint" style="margin-bottom: 1rem;">
+                <i class="fas fa-circle-info"></i>
+                <span>{{ translate('Deixe a chave vazia para remover a configuração atual (sem efeito se a chave vem do .env).') }}</span>
+            </div>
+
+            <div id="ai-test-result" style="display:none; margin-bottom: 1rem; padding: .65rem .9rem; border-radius: 10px; font-size: .8rem;"></div>
+
+            <div style="display: flex; gap: .75rem;">
+                <button type="button" id="ai-test-btn" class="btn btn-outline" style="flex: 1;">
+                    <i class="fas fa-plug-circle-check"></i> {{ translate('Testar conexão') }}
+                </button>
+                <button type="button" id="ai-save-btn" class="btn btn-primary" style="flex: 1;">
+                    <i class="fas fa-save"></i> {{ translate('Salvar') }}
+                </button>
+            </div>
+        </div>
+
+        <div id="central-pane-notif" class="central-pane" style="display:none;">
+            <p style="color: var(--dark-gray); margin-bottom: 1.1rem; text-align: center;">
+                {{ translate('A central no FAB alerta sobre segurança do parque, gestão de ativos e compliance. Tudo é gravado no banco de dados.') }}
+            </p>
+            <div class="notif-prefs" style="display:grid; gap:.55rem; margin-bottom:.9rem;">
+                <label style="display:flex; align-items:center; gap:.6rem; cursor:pointer; font-size:.85rem;">
+                    <input type="checkbox" id="notif-enabled" {% if notif_prefs.enabled %}checked{% endif %} style="width:auto;">
+                    {{ translate('Central de notificações ativa') }}
+                </label>
+                <label style="display:flex; align-items:center; gap:.6rem; cursor:pointer; font-size:.85rem;">
+                    <input type="checkbox" id="notif-security" {% if notif_prefs.security %}checked{% endif %} style="width:auto;">
+                    <i class="fas fa-shield-halved" style="color:#ef4444;"></i> {{ translate('Segurança (conflitos, portas de risco, agentes, EOL)') }}
+                </label>
+                <label style="display:flex; align-items:center; gap:.6rem; cursor:pointer; font-size:.85rem;">
+                    <input type="checkbox" id="notif-asset" {% if notif_prefs.asset %}checked{% endif %} style="width:auto;">
+                    <i class="fas fa-laptop" style="color:#6366f1;"></i> {{ translate('Parque (novos dispositivos, ausentes, duplicados, topologia)') }}
+                </label>
+                <label style="display:flex; align-items:center; gap:.6rem; cursor:pointer; font-size:.85rem;">
+                    <input type="checkbox" id="notif-compliance" {% if notif_prefs.compliance %}checked{% endif %} style="width:auto;">
+                    <i class="fas fa-clipboard-check" style="color:#10b981;"></i> {{ translate('Compliance (cobertura de agentes, sem responsável)') }}
+                </label>
+                <label style="display:flex; align-items:center; gap:.6rem; font-size:.85rem;">
+                    {{ translate('Cobertura mínima de agentes (%)') }}
+                    <input type="number" id="notif-coverage" min="0" max="100" value="{{ notif_prefs.coverage_min or 80 }}"
+                           style="width:76px;" class="form-control" autocomplete="off">
+                </label>
+            </div>
+            <button class="btn btn-primary" id="notif-save-btn" style="width: 100%;">
+                <i class="fas fa-save"></i> {{ translate('Salvar preferências') }}
+            </button>
+        </div>
+
+        <div id="central-pane-rules" class="central-pane" style="display:none;">
+            <p style="color: var(--dark-gray); margin-bottom: .9rem; text-align: center;">
+                {{ translate('Crie regras que geram novas notificações a partir dos dados do NetScope — avaliadas a cada verificação, junto das regras nativas.') }}
+            </p>
+
+            <div id="rules-list" style="display:grid; gap:.5rem; margin-bottom:1rem;"></div>
+
+            <div id="rule-form" style="border:1px solid rgba(99,102,241,.25); border-radius:12px; padding: .9rem; background: rgba(99,102,241,.04);">
+                <div class="form-group" style="margin-bottom:.7rem;">
+                    <label><i class="fas fa-tag icon-spacing"></i> {{ translate('Nome da regra') }}</label>
+                    <input type="text" id="rule-name" class="form-control" maxlength="80"
+                           placeholder="{{ translate('Ex.: Servidores Windows 7 legados') }}" autocomplete="off">
+                </div>
+                <div style="display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:.6rem; margin-bottom:.7rem;">
+                    <div class="form-group" style="margin:0; min-width:0;">
+                        <label>{{ translate('Campo') }}</label>
+                        <select id="rule-field" class="form-control"></select>
+                    </div>
+                    <div class="form-group" style="margin:0; min-width:0;">
+                        <label>{{ translate('Operador') }}</label>
+                        <select id="rule-op" class="form-control"></select>
+                    </div>
+                </div>
+                <div style="display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:.6rem; margin-bottom:.7rem;">
+                    <div class="form-group" style="margin:0; min-width:0;">
+                        <label>{{ translate('Valor') }}</label>
+                        <input type="text" id="rule-value" class="form-control" maxlength="160"
+                               placeholder="{{ translate('Ex.: 3389 ou Windows 7') }}" autocomplete="off">
+                    </div>
+                    <div class="form-group" style="margin:0; min-width:0;">
+                        <label>{{ translate('Gravidade') }}</label>
+                        <select id="rule-severity" class="form-control">
+                            <option value="info">{{ translate('Informativo') }}</option>
+                            <option value="warning" selected>{{ translate('Aviso') }}</option>
+                            <option value="critical">{{ translate('Crítico') }}</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin:0; min-width:0;">
+                        <label>{{ translate('Repetir após (h)') }}</label>
+                        <input type="number" id="rule-cooldown" class="form-control" min="1" max="720" value="24">
+                    </div>
+                </div>
+                <label style="display:flex; align-items:center; gap:.5rem; cursor:pointer; font-size:.82rem; margin-bottom:.75rem;">
+                    <input type="checkbox" id="rule-enabled" checked style="width:auto;">
+                    {{ translate('Regra ativa') }}
+                </label>
+                <div style="display:flex; gap:.6rem;">
+                    <button type="button" id="rule-save-btn" class="btn btn-primary" style="flex:1;">
+                        <i class="fas fa-save"></i> {{ translate('Salvar regra') }}
+                    </button>
+                    <button type="button" id="rule-cancel-btn" class="btn btn-outline" style="display:none; flex:1;">
+                        {{ translate('Cancelar edição') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div id="exportPDFModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <div class="modal-header">
+            <i class="fas fa-file-pdf"></i>
+            <h2>{{ translate('Gerar Relatório') }}</h2>
+        </div>
+        <div style="margin-bottom: 2rem;">
+            <p style="color: var(--dark-gray); margin-bottom: 1.5rem;">
+                {{ translate('Selecione os parâmetros para a exportação do relatório detalhado em formato PDF.') }}
+
+            </p>
+            <div class="form-group" style="background: var(--light); padding: 1rem; border-radius: 0.75rem;">
+                <label style="font-weight: 500; display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                    <input type="checkbox" id="include-details" checked style="width: auto;">
+                    {{ translate('Incluir detalhes técnicos completos') }}
+                </label>
+            </div>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem;">
+            <button class="btn btn-outline" onclick="closeModal('exportPDFModal')">
+                {{ translate('Cancelar') }}
+            </button>
+            <button class="btn btn-primary" id="generate-pdf-btn">
+                <i class="fas fa-download"></i> {{ translate('Exportar Agora') }}
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    function closeModal(id) {
+        const m = document.getElementById(id);
+        if (!m) return;
+        if (window.closeModalFade) window.closeModalFade(m);
+        else m.classList.remove('active');
+    }
+
+    function settingsEscapeHtml(s) {
+        return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[c]));
+    }
+
+    function settingsSetBtnLoading(btn, loading, loadingText) {
+        if (!btn) return;
+        if (loading) {
+            btn.dataset.originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + loadingText;
+        } else {
+            btn.disabled = false;
+            if (btn.dataset.originalHtml) btn.innerHTML = btn.dataset.originalHtml;
+        }
+    }
+
+    function settingsShowError(id, msg, focusEl) {
+        const el = document.getElementById(id);
+        if (el) {
+            el.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + settingsEscapeHtml(msg);
+            el.style.display = 'block';
+        }
+        if (focusEl) {
+            focusEl.classList.add('shake');
+            setTimeout(() => focusEl.classList.remove('shake'), 400);
+            try { focusEl.focus(); } catch (e) {  }
+        }
+    }
+
+    function settingsHideError(id) {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    }
+
+    function pwdStrength(pwd) {
+        let score = 0;
+        if (pwd.length >= 8) score++;
+        if (pwd.length >= 12) score++;
+        if (/[a-z]/.test(pwd) && /[A-Z]/.test(pwd)) score++;
+        if (/\d/.test(pwd)) score++;
+        if (/[^A-Za-z0-9]/.test(pwd)) score++;
+        return score;
+    }
+
+    function pwdRenderMeter() {
+        const pwd = document.getElementById('new_password');
+        const meter = document.getElementById('pwd-meter');
+        const fill = document.getElementById('pwd-meter-fill');
+        const label = document.getElementById('pwd-meter-label');
+        if (!pwd || !meter) return;
+        if (!pwd.value) { meter.style.display = 'none'; return; }
+        meter.style.display = 'flex';
+        const score = pwdStrength(pwd.value);
+        const levels = [
+            { cls: 'weak',  width: '20%',  txt: '{{ translate("Fraca") }}' },
+            { cls: 'weak',  width: '35%',  txt: '{{ translate("Fraca") }}' },
+            { cls: 'weak',  width: '50%',  txt: '{{ translate("Fraca") }}' },
+            { cls: 'mid',   width: '70%',  txt: '{{ translate("Média") }}' },
+            { cls: 'good',  width: '85%',  txt: '{{ translate("Forte") }}' },
+            { cls: 'good',  width: '100%', txt: '{{ translate("Forte") }}' }
+        ];
+        const lv = levels[score];
+        fill.className = lv.cls;
+        fill.style.width = lv.width;
+        label.textContent = '{{ translate("Força da senha") }}: ' + lv.txt;
+    }
+
+    function submitChangePassword(e) {
+        e.preventDefault();
+        const btn = document.getElementById('change-pwd-submit');
+        if (btn.disabled) return;
+        const cur = document.getElementById('current_password');
+        const pwd = document.getElementById('new_password');
+        const conf = document.getElementById('confirm_new_password');
+
+        if (!cur.value || !pwd.value || !conf.value) {
+            settingsShowError('pwd-error', '{{ translate("Preencha todos os campos.") }}', !cur.value ? cur : (!pwd.value ? pwd : conf));
+            return;
+        }
+        if (pwd.value !== conf.value) {
+            settingsShowError('pwd-error', '{{ translate("As senhas não coincidem") }}', conf);
+            return;
+        }
+        settingsHideError('pwd-error');
+        settingsSetBtnLoading(btn, true, '{{ translate("Salvando...") }}');
+
+        const body = new URLSearchParams({
+            current_password: cur.value,
+            new_password: pwd.value,
+            confirm_new_password: conf.value
+        });
+        fetch('{{ url_for("change_password") }}', {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: body
+        })
+        .then(r => r.json().then(d => ({ ok: r.ok, d })))
+        .then(({ ok, d }) => {
+            if (ok && d.success) {
+                showToast('{{ translate("Senha alterada com sucesso!") }}', 'success');
+                const form = document.getElementById('pwd-form');
+                form.innerHTML = `
+                    <div class="mfa-state mfa-state--success">
+                        <div class="mfa-state-icon mfa-state-icon--ok">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <h4 class="mfa-state-title">{{ translate('Senha alterada com sucesso!') }}</h4>
+                        <p class="mfa-hint">{{ translate('Recarregando...') }}</p>
+                    </div>`;
+                setTimeout(() => location.reload(), 1400);
+            } else {
+                settingsSetBtnLoading(btn, false);
+                const wrong = (d.error || '').indexOf('incorreta') >= 0 || (d.error || '').indexOf('incorrect') >= 0;
+                settingsShowError('pwd-error', d.error || '{{ translate("Erro de comunicação com o servidor.") }}', wrong ? cur : pwd);
+            }
+        })
+        .catch(() => {
+            settingsSetBtnLoading(btn, false);
+            settingsShowError('pwd-error', '{{ translate("Erro de comunicação com o servidor.") }}');
+        });
+    }
+
+    function submitAddUser(e) {
+        e.preventDefault();
+        const btn = document.getElementById('add-user-submit');
+        if (btn.disabled) return;
+        const form = document.getElementById('add-user-form');
+        const uname = form.elements['username'];
+
+        settingsHideError('add-user-error');
+        settingsSetBtnLoading(btn, true, '{{ translate("Criando...") }}');
+
+        const body = new URLSearchParams(new FormData(form));
+        fetch('{{ url_for("add_user") }}', {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: body
+        })
+        .then(r => r.json().then(d => ({ ok: r.ok, d })))
+        .then(({ ok, d }) => {
+            if (ok && d.success) {
+                showToast(settingsEscapeHtml(d.message || '{{ translate("Usuário criado com sucesso!") }}'), 'success');
+                form.innerHTML = `
+                    <div class="mfa-state mfa-state--success">
+                        <div class="mfa-state-icon mfa-state-icon--ok">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                        <h4 class="mfa-state-title">${settingsEscapeHtml(d.message || '{{ translate("Usuário criado com sucesso!") }}')}</h4>
+                        <p class="mfa-hint">{{ translate('Recarregando...') }}</p>
+                    </div>`;
+                setTimeout(() => location.reload(), 1400);
+            } else {
+                settingsSetBtnLoading(btn, false);
+                settingsShowError('add-user-error', d.error || '{{ translate("Erro de comunicação com o servidor.") }}', uname);
+            }
+        })
+        .catch(() => {
+            settingsSetBtnLoading(btn, false);
+            settingsShowError('add-user-error', '{{ translate("Erro de comunicação com o servidor.") }}');
+        });
+    }
+
+    function wireDeleteButtons() {
+        document.querySelectorAll('.usr-del-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (btn.dataset.armed !== '1') {
+                    btn.dataset.armed = '1';
+                    btn.dataset.originalHtml = btn.innerHTML;
+                    btn.classList.add('armed');
+                    btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> <span>{{ translate("Confirmar exclusão") }}?</span>';
+                    btn.title = '{{ translate("Clique novamente para confirmar") }}';
+                    btn._timer = setTimeout(() => {
+                        btn.dataset.armed = '0';
+                        btn.classList.remove('armed');
+                        if (btn.dataset.originalHtml) btn.innerHTML = btn.dataset.originalHtml;
+                        btn.title = '{{ translate("Remover") }}';
+                    }, 4000);
+                    return;
+                }
+                clearTimeout(btn._timer);
+                settingsSetBtnLoading(btn, true, '{{ translate("Removendo...") }}');
+                fetch('/admin/users/delete/' + btn.dataset.userId, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(r => r.json().then(d => ({ ok: r.ok, d })))
+                .then(({ ok, d }) => {
+                    if (ok && d.success) {
+                        showToast(settingsEscapeHtml(d.message), 'success');
+                        const row = document.querySelector('[data-user-row="' + btn.dataset.userId + '"]');
+                        if (row) {
+                            row.style.transition = 'opacity .4s';
+                            row.style.opacity = '0';
+                            setTimeout(() => location.reload(), 500);
+                        } else {
+                            setTimeout(() => location.reload(), 500);
+                        }
+                    } else {
+                        settingsSetBtnLoading(btn, false);
+                        btn.dataset.armed = '0';
+                        btn.classList.remove('armed');
+                        if (btn.dataset.originalHtml) btn.innerHTML = btn.dataset.originalHtml;
+                        showToast(settingsEscapeHtml(d.error || 'Erro'), 'danger');
+                    }
+                })
+                .catch(() => {
+                    settingsSetBtnLoading(btn, false);
+                    btn.dataset.armed = '0';
+                    btn.classList.remove('armed');
+                    if (btn.dataset.originalHtml) btn.innerHTML = btn.dataset.originalHtml;
+                    showToast('{{ translate("Erro de comunicação com o servidor.") }}', 'danger');
+                });
+            });
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const modals = {
+            mfa: document.getElementById('mfaModal'),
+            pdf: document.getElementById('exportPDFModal'),
+            password: document.getElementById('changePasswordModal'),
+            users: document.getElementById('userManagementModal'),
+            addUser: document.getElementById('addUserModal'),
+            sync: document.getElementById('syncConfigModal')
+        };
+        const closeButtons = document.querySelectorAll('.modal .close');
+
+        document.getElementById('mfa-settings-btn')
+            .addEventListener('click', () => {
+                fetchMfaStatus();
+                modals.mfa.classList.add('active');
+            });
+        document.getElementById('export-pdf-btn')
+            .addEventListener('click', () => {
+                modals.pdf.classList.add('active');
+            });
+        document.getElementById('change-password-btn')
+            .addEventListener('click', () => {
+
+                modals.password.classList.add('active');
+            });
+
+        const userBtn = document.getElementById('user-management-btn');
+        if (userBtn) {
+            userBtn.addEventListener('click', () => {
+                modals.users.classList.add('active');
+            });
+        }
+
+        const addUserBtn = document.getElementById('add-user-btn');
+        if (addUserBtn) {
+            addUserBtn.addEventListener('click', () => {
+                modals.addUser.classList.add('active');
+            });
+        }
+
+        function setupPasswordMatch(pwdId, confirmId, errorId, submitId) {
+            const pwd = document.getElementById(pwdId);
+            const confirm = document.getElementById(confirmId);
+            const error = document.getElementById(errorId);
+            const submit = document.getElementById(submitId);
+
+            if (!pwd || !confirm) return;
+
+            function check() {
+                if (confirm.value && pwd.value !== confirm.value) {
+                    error.style.display = 'block';
+                    submit.disabled = true;
+                    confirm.style.borderColor = '#ef4444';
+                } else {
+                    error.style.display = 'none';
+                    submit.disabled = false;
+                    confirm.style.borderColor = '';
+                }
+            }
+
+            pwd.addEventListener('input', check);
+            confirm.addEventListener('input', check);
+        }
+
+        setupPasswordMatch('new_password', 'confirm_new_password', 'password-match-error', 'change-pwd-submit');
+        setupPasswordMatch('add_password', 'confirm_password', 'add-user-match-error', 'add-user-submit');
+
+        const pwdForm = document.getElementById('pwd-form');
+        if (pwdForm) pwdForm.addEventListener('submit', submitChangePassword);
+        const addUserForm = document.getElementById('add-user-form');
+        if (addUserForm) addUserForm.addEventListener('submit', submitAddUser);
+
+        document.querySelectorAll('.pwd-toggle').forEach(toggle => {
+            toggle.addEventListener('click', () => {
+                const input = document.getElementById(toggle.dataset.target);
+                if (!input) return;
+                const visible = toggle.dataset.visible === '1';
+                input.type = visible ? 'password' : 'text';
+                toggle.dataset.visible = visible ? '0' : '1';
+                toggle.innerHTML = `<i class="fas fa-${visible ? 'eye' : 'eye-slash'}"></i>`;
+                toggle.setAttribute('aria-label', visible ? '{{ translate("Mostrar senha") }}' : '{{ translate("Ocultar senha") }}');
+                input.focus();
+            });
+        });
+
+        const newPwd = document.getElementById('new_password');
+        if (newPwd) newPwd.addEventListener('input', pwdRenderMeter);
+
+        wireDeleteButtons();
+
+        const syncSettingsBtn = document.getElementById('sync-settings-btn');
+        if (syncSettingsBtn) {
+            syncSettingsBtn.addEventListener('click', () => {
+                modals.sync.classList.add('active');
+            });
+        }
+
+        function syncFmtMins(m) {
+            m = Math.round(Number(m) || 5);
+            if (m < 60) return m + ' min';
+            const h = Math.floor(m / 60), r = m % 60;
+            return r ? (h + ' h ' + r) : (h + ' h');
+        }
+        function syncFmtSecs(s) {
+            s = Math.round(Number(s) || 3600);
+            if (s < 3600) return Math.round(s / 60) + ' min';
+            return syncFmtMins(Math.round(s / 60));
+        }
+
+        function syncPaintRange(rng) {
+            if (!rng) return;
+            const min = Number(rng.min) || 0, max = Number(rng.max) || 100;
+            const pct = ((Number(rng.value) - min) / (max - min)) * 100;
+            rng.style.setProperty('--fill', pct);
+        }
+
+        const syncRange = document.getElementById('sync-range');
+        const syncLabelDisplay = document.getElementById('sync-label-display');
+        const rngPing = document.getElementById('rng-pingsweep');
+        const valPing = document.getElementById('val-pingsweep');
+        const swPing = document.getElementById('sw-pingsweep');
+        const rngArp = document.getElementById('rng-arp');
+        const valArp = document.getElementById('val-arp');
+        const swArp = document.getElementById('sw-arp');
+
+        if (syncRange && syncLabelDisplay) {
+            syncLabelDisplay.textContent = syncFmtSecs(syncRange.value);
+            syncPaintRange(syncRange);
+        }
+        if (rngPing && valPing) { valPing.textContent = syncFmtMins(rngPing.value); syncPaintRange(rngPing); }
+        if (rngArp && valArp) { valArp.textContent = syncFmtMins(rngArp.value); syncPaintRange(rngArp); }
+
+        function syncBindSwitch(sw, rng) {
+            if (sw && rng) rng.disabled = !sw.checked;
+        }
+        syncBindSwitch(swPing, rngPing);
+        syncBindSwitch(swArp, rngArp);
+
+        if (syncRange && syncLabelDisplay) {
+            syncRange.addEventListener('input', () => {
+                syncLabelDisplay.textContent = syncFmtSecs(syncRange.value);
+                syncPaintRange(syncRange);
+            });
+        }
+        if (rngPing && valPing) {
+            rngPing.addEventListener('input', () => {
+                valPing.textContent = syncFmtMins(rngPing.value);
+                syncPaintRange(rngPing);
+            });
+        }
+        if (rngArp && valArp) {
+            rngArp.addEventListener('input', () => {
+                valArp.textContent = syncFmtMins(rngArp.value);
+                syncPaintRange(rngArp);
+            });
+        }
+        if (swPing) swPing.addEventListener('change', () => syncBindSwitch(swPing, rngPing));
+        if (swArp) swArp.addEventListener('change', () => syncBindSwitch(swArp, rngArp));
+
+        document.getElementById('btn-save-sync').addEventListener('click', async () => {
+            const btn = document.getElementById('btn-save-sync');
+            if (btn.disabled) return;
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> {{ translate("Salvando...") }}';
+
+            try {
+
+                const r1 = await fetch('/settings/update_sync', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ seconds: parseInt(syncRange.value, 10) })
+                }).then(r => r.json());
+
+                const r2 = await fetch('/settings/update_discovery', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        ping_enabled: swPing ? swPing.checked : false,
+                        ping_interval: rngPing ? parseInt(rngPing.value, 10) : 5,
+                        arp_enabled: swArp ? swArp.checked : true,
+                        arp_interval: rngArp ? parseInt(rngArp.value, 10) : 5
+                    })
+                }).then(r => r.json());
+
+                if (r1.success && r2.success) {
+                    showToast('{{ translate("Configuração de sincronização atualizada!") }}', 'success');
+                    (window.closeModalFade || ((m) => m.classList.remove('active')))(modals.sync);
+                } else {
+                    const err = (r1.error || r2.error || '{{ translate("Erro desconhecido") }}');
+                    showToast('{{ translate("Erro ao atualizar: ") }}' + err, 'danger');
+                }
+            } catch (e) {
+                showToast('{{ translate("Erro de comunicação com o servidor.") }}', 'danger');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
+        });
+
+        document.getElementById('btn-sync-now').addEventListener('click', () => {
+            const btn = document.getElementById('btn-sync-now');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> {{ translate("Sincronizando...") }}';
+            btn.disabled = true;
+
+            fetch('/settings/sync_now', {
+                    method: 'POST'
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+
+                        showToast('{{ translate("Sincronização, Ping Sweep e ARP iniciados com sucesso!") }}', 'success');
+                        (window.closeModalFade || ((m) => m.classList.remove('active')))(modals.sync);
+
+                        const ourSeq = data.seq || 0;
+                        const poll = setInterval(() => {
+                            fetch('/settings/sync_status')
+                                .then(r => r.json())
+                                .then(st => {
+                                    if (st.running) return;
+                                    if ((st.done_seq || 0) < ourSeq) return;
+                                    clearInterval(poll);
+                                    showToast('{{ translate("Sincronização concluída! Atualizando a página…") }}', 'success');
+                                    setTimeout(() => window.location.reload(), 1200);
+                                })
+                                .catch(() => {});
+                        }, 2000);
+
+                        setTimeout(() => clearInterval(poll), 600000);
+                    } else {
+                        showToast('{{ translate("Erro ao iniciar sync: ") }}' + data.error, 'danger');
+                    }
+                })
+                .finally(() => {
+                    btn.innerHTML = originalHtml;
+                    btn.disabled = false;
+                });
+        });
+
+        const aiModal = document.getElementById('centralModal');
+        const centralOpenBtn = document.getElementById('central-config-btn');
+        function centralShowPane(pane) {
+            if (!aiModal) return;
+            aiModal.querySelectorAll('.central-tab').forEach(function (b) {
+                b.classList.toggle('active', b.getAttribute('data-pane') === pane);
+            });
+            const pa = document.getElementById('central-pane-ai');
+            const pn = document.getElementById('central-pane-notif');
+            const pr = document.getElementById('central-pane-rules');
+            if (pa) pa.style.display = (pane === 'ai') ? '' : 'none';
+            if (pn) pn.style.display = (pane === 'notif') ? '' : 'none';
+            if (pr) pr.style.display = (pane === 'rules') ? '' : 'none';
+
+            if (pane === 'ai') loadModelList();
+            if (pane === 'rules') loadRules();
+        }
+        if (aiModal) {
+            aiModal.querySelectorAll('.central-tab').forEach(function (b) {
+                b.addEventListener('click', function () {
+                    centralShowPane(b.getAttribute('data-pane'));
+                });
+            });
+        }
+        const aiSaveBtn = document.getElementById('ai-save-btn');
+        if (centralOpenBtn && aiModal) {
+            centralOpenBtn.addEventListener('click', () => {
+                centralShowPane('ai');
+                aiModal.classList.add('active');
+                const k = document.getElementById('ai-api-key');
+                if (k) { k.value = ''; setTimeout(() => k.focus(), 200); }
+            });
+        }
+
+        const aiModelList = document.getElementById('ai-model-list');
+        const aiModelWarn = document.getElementById('ai-model-warn');
+        async function loadModelList() {
+            if (!aiModelList) return;
+            const key = (document.getElementById('ai-api-key') || {}).value || '';
+            try {
+                const r = await fetch('/settings/assistant_models', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(key.trim() ? { api_key: key.trim() } : {})
+                }).then(r => r.json());
+                const ids = Array.isArray(r.models) ? r.models : [];
+                aiModelList.textContent = '';
+                ids.forEach(id => {
+                    const o = document.createElement('option');
+                    o.value = id;
+                    aiModelList.appendChild(o);
+                });
+                const cur = ((document.getElementById('ai-model-input') || {}).value || '').trim();
+                if (aiModelWarn) {
+                    aiModelWarn.style.display =
+                        (ids.length && cur && !ids.includes(cur)) ? 'flex' : 'none';
+                }
+            } catch (e) {  }
+        }
+        const aiModelsBtn = document.getElementById('ai-models-btn');
+        if (aiModelsBtn) {
+            aiModelsBtn.addEventListener('click', async () => {
+                if (aiModelsBtn.disabled) return;
+                aiModelsBtn.disabled = true;
+                const ic = aiModelsBtn.querySelector('i');
+                if (ic) ic.className = 'fas fa-spinner fa-spin';
+                await loadModelList();
+                aiModelsBtn.disabled = false;
+                if (ic) ic.className = 'fas fa-arrow-rotate-right';
+            });
+        }
+        const aiModelInput = document.getElementById('ai-model-input');
+        if (aiModelInput && aiModelWarn) {
+            aiModelInput.addEventListener('input', () => {
+                aiModelWarn.style.display = 'none';
+            });
+        }
+
+        if (aiSaveBtn) {
+            aiSaveBtn.addEventListener('click', async () => {
+                if (aiSaveBtn.disabled) return;
+                const key = (document.getElementById('ai-api-key') || {}).value || '';
+                const model = (document.getElementById('ai-model-input') || {}).value || '';
+                const originalHtml = aiSaveBtn.innerHTML;
+                aiSaveBtn.disabled = true;
+                aiSaveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> {{ translate("Salvando...") }}';
+                try {
+                    const r = await fetch('/settings/update_assistant', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ api_key: key, model: model })
+                    }).then(r => r.json());
+                    if (r.success) {
+                        showToast('{{ translate("Assistente IA configurado com sucesso!") }}', 'success');
+                        (window.closeModalFade || ((m) => m.classList.remove('active')))(aiModal);
+
+                        const line = document.getElementById('ai-modal-status');
+                        if (line) {
+                            if (r.configured) {
+                                const src = r.source === 'env'
+                                    ? '{{ translate("Configurado via .env — modelo") }}'
+                                    : '{{ translate("Configurado via painel — modelo") }}';
+                                line.innerHTML = '<i class="fas fa-circle-check" style="color: var(--green);"></i> ' + src + ' <b>' + (r.model || '').replace(/[<>&]/g, '') + '</b>';
+                            } else {
+                                line.innerHTML = '<i class="fas fa-circle-info" style="color: var(--gray);"></i> {{ translate("Não configurado — use GROQ_API_KEY no .env ou o botão abaixo.") }}';
+                            }
+                        }
+                    } else {
+                        showToast('{{ translate("Erro ao atualizar: ") }}' + (r.error || ''), 'danger');
+                    }
+                } catch (e) {
+                    showToast('{{ translate("Erro de comunicação com o servidor.") }}', 'danger');
+                } finally {
+                    aiSaveBtn.disabled = false;
+                    aiSaveBtn.innerHTML = originalHtml;
+                }
+            });
+        }
+
+        const aiTestBtn = document.getElementById('ai-test-btn');
+        const aiTestResult = document.getElementById('ai-test-result');
+        const AI_ERR_MSG = {
+            no_api_key: '{{ translate("Nenhuma chave configurada (nem no .env, nem no painel).") }}',
+            invalid_api_key: '{{ translate("Chave recusada pelo provedor (401). Confira o valor de gsk_…") }}',
+            rate_limited: '{{ translate("Limite de requisições atingido — tente de novo em instantes.") }}',
+            bad_response: '{{ translate("Resposta inesperada do provedor.") }}'
+        };
+        function aiShowTest(ok, msg) {
+            if (!aiTestResult) return;
+            aiTestResult.style.display = 'block';
+            aiTestResult.style.background = ok ? 'rgba(16,185,129,.12)' : 'rgba(239,68,68,.12)';
+            aiTestResult.style.border = ok ? '1px solid rgba(16,185,129,.4)' : '1px solid rgba(239,68,68,.4)';
+            aiTestResult.innerHTML = (ok
+                ? '<i class="fas fa-circle-check" style="color:#10b981"></i> '
+                : '<i class="fas fa-circle-xmark" style="color:#ef4444"></i> ')
+                + msg;
+        }
+        if (aiTestBtn && aiModal) {
+            aiTestBtn.addEventListener('click', async () => {
+                if (aiTestBtn.disabled) return;
+                const key = (document.getElementById('ai-api-key') || {}).value || '';
+                const model = (document.getElementById('ai-model-input') || {}).value || '';
+                aiTestBtn.disabled = true;
+                const originalHtml = aiTestBtn.innerHTML;
+                aiTestBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> {{ translate("Testando...") }}';
+                aiTestResult.style.display = 'none';
+                try {
+                    const r = await fetch('/settings/test_assistant', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ api_key: key.trim() ? key : null, model: model })
+                    }).then(r => r.json());
+                    if (r.success) {
+                        let msg = '{{ translate("Conexão OK — chave válida.") }} '
+                            + '{{ translate("Modelos disponíveis:") }} ' + (r.models || 0);
+                        if (r.model_available === false) {
+                            msg += ' · ⚠ {{ translate("o modelo informado não consta na conta — confira o nome.") }}';
+                        }
+                        aiShowTest(true, msg);
+                    } else {
+                        aiShowTest(false, AI_ERR_MSG[r.error]
+                            || ('{{ translate("Falha no teste:") }} ' + (r.error || '?')));
+                    }
+                } catch (e) {
+                    aiShowTest(false, '{{ translate("Erro de comunicação com o servidor.") }}');
+                } finally {
+                    aiTestBtn.disabled = false;
+                    aiTestBtn.innerHTML = originalHtml;
+                }
+            });
+        }
+
+        const swAutoMerge = document.getElementById('sw-automerge');
+        const valAutoMerge = document.getElementById('val-automerge');
+        if (swAutoMerge) {
+            swAutoMerge.addEventListener('change', async () => {
+                swAutoMerge.disabled = true;
+                try {
+                    const r = await fetch('/settings/update_dedup', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ auto_merge: swAutoMerge.checked })
+                    }).then(r => r.json());
+                    if (r.success) {
+                        if (valAutoMerge) valAutoMerge.textContent = r.auto_merge
+                            ? '{{ translate("Automático") }}' : '{{ translate("Manual") }}';
+                        showToast(r.auto_merge
+                            ? '{{ translate("Mesclagem automática LIGADA — duplicados vão para a lixeira após o scan.") }}'
+                            : '{{ translate("Mesclagem automática DESLIGADA — duplicados ficam no NetScope (exclusão manual).") }}',
+                            'success');
+                    } else {
+                        showToast('{{ translate("Erro ao salvar: ") }}' + (r.error || ''), 'danger');
+                        swAutoMerge.checked = !swAutoMerge.checked;
+                    }
+                } catch (e) {
+                    showToast('{{ translate("Erro de comunicação com o servidor.") }}', 'danger');
+                    swAutoMerge.checked = !swAutoMerge.checked;
+                } finally {
+                    swAutoMerge.disabled = false;
+                }
+            });
+        }
+
+        const notifSaveBtn = document.getElementById('notif-save-btn');
+        if (notifSaveBtn) {
+            notifSaveBtn.addEventListener('click', async () => {
+                if (notifSaveBtn.disabled) return;
+                notifSaveBtn.disabled = true;
+                const originalHtml = notifSaveBtn.innerHTML;
+                notifSaveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> {{ translate("Salvando...") }}';
+                try {
+                    const body = {
+                        enabled: document.getElementById('notif-enabled').checked,
+                        security: document.getElementById('notif-security').checked,
+                        asset: document.getElementById('notif-asset').checked,
+                        compliance: document.getElementById('notif-compliance').checked,
+                        coverage_min: parseInt((document.getElementById('notif-coverage') || {}).value || '80', 10)
+                    };
+                    const r = await fetch('/settings/update_notifications', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(body)
+                    }).then(r => r.json());
+                    if (r.success) {
+                        showToast('{{ translate("Preferências de notificações salvas.") }}', 'success');
+                    } else {
+                        showToast('{{ translate("Erro ao salvar: ") }}' + (r.error || ''), 'danger');
+                    }
+                } catch (e) {
+                    showToast('{{ translate("Erro de comunicação com o servidor.") }}', 'danger');
+                } finally {
+                    notifSaveBtn.disabled = false;
+                    notifSaveBtn.innerHTML = originalHtml;
+                }
+            });
+        }
+
+        const RULE_META = { items: [], fields: {}, ops: {} };
+        let editingRuleId = '';
+        const rulesListEl = document.getElementById('rules-list');
+        const ruleNameEl = document.getElementById('rule-name');
+        const ruleFieldEl = document.getElementById('rule-field');
+        const ruleOpEl = document.getElementById('rule-op');
+        const ruleValueEl = document.getElementById('rule-value');
+        const ruleSeverityEl = document.getElementById('rule-severity');
+        const ruleCooldownEl = document.getElementById('rule-cooldown');
+        const ruleEnabledEl = document.getElementById('rule-enabled');
+        const ruleSaveBtn = document.getElementById('rule-save-btn');
+        const ruleCancelBtn = document.getElementById('rule-cancel-btn');
+
+        function fillRuleSelects() {
+            if (!ruleFieldEl || !ruleOpEl) return;
+            if (ruleFieldEl.options.length) return;
+            Object.entries(RULE_META.fields || {}).forEach(([k, label]) => {
+                const o = document.createElement('option');
+                o.value = k; o.textContent = label;
+                ruleFieldEl.appendChild(o);
+            });
+            Object.entries(RULE_META.ops || {}).forEach(([k, label]) => {
+                const o = document.createElement('option');
+                o.value = k; o.textContent = label;
+                ruleOpEl.appendChild(o);
+            });
+        }
+
+        function ruleConditionLabel(r) {
+            const f = (RULE_META.fields || {})[r.field] || r.field;
+            const op = (RULE_META.ops || {})[r.op] || r.op;
+            return f + ' ' + op + ' "' + (r.value || '') + '"';
+        }
+
+        function renderRules() {
+            if (!rulesListEl) return;
+            rulesListEl.textContent = '';
+            if (!RULE_META.items.length) {
+                const e = document.createElement('div');
+                e.style.cssText = 'color: var(--dark-gray); font-size:.82rem; text-align:center; padding:.4rem;';
+                e.textContent = '{{ translate("Nenhuma regra personalizada criada — use o formulário abaixo.") }}';
+                rulesListEl.appendChild(e);
+                return;
+            }
+            RULE_META.items.forEach(r => {
+                const row = document.createElement('div');
+                row.style.cssText = 'display:flex; align-items:center; gap:.6rem; padding:.55rem .7rem;'
+                    + 'border:1px solid rgba(15,23,42,.08); border-radius:10px; background:#fff;';
+                const body = document.createElement('div');
+                body.style.cssText = 'flex:1; min-width:0;';
+                const nm = document.createElement('div');
+                nm.style.cssText = 'font-weight:600; font-size:.84rem;';
+                nm.textContent = r.name;
+                const cond = document.createElement('div');
+                cond.style.cssText = 'font-size:.74rem; color: var(--dark-gray);';
+                cond.textContent = ruleConditionLabel(r)
+                    + ' · ' + (r.severity || 'warning')
+                    + ' · ' + (r.cooldown_h || 24) + 'h'
+                    + (r.enabled === false ? ' · {{ translate("inativa") }}' : '');
+                body.appendChild(nm);
+                body.appendChild(cond);
+                row.appendChild(body);
+
+                const editBtn = document.createElement('button');
+                editBtn.type = 'button';
+                editBtn.className = 'btn btn-outline';
+                editBtn.style.cssText = 'padding:.25rem .55rem; font-size:.75rem;';
+                editBtn.innerHTML = '<i class="fas fa-pen"></i>';
+                editBtn.addEventListener('click', () => startEditRule(r));
+                row.appendChild(editBtn);
+
+                const delBtn = document.createElement('button');
+                delBtn.type = 'button';
+                delBtn.className = 'btn btn-outline';
+                delBtn.style.cssText = 'padding:.25rem .55rem; font-size:.75rem; color:#ef4444; border-color:rgba(239,68,68,.4);';
+                delBtn.innerHTML = '<i class="fas fa-trash-can"></i>';
+                delBtn.addEventListener('click', async () => {
+                    if (!window.confirm('{{ translate("Excluir a regra") }} "' + r.name + '"?')) return;
+                    try {
+                        const rr = await fetch('/notifications/api/rules_delete', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ id: r.id })
+                        }).then(x => x.json());
+                        if (rr.ok) {
+                            showToast('{{ translate("Regra excluída.") }}', 'success');
+                            loadRules();
+                        } else {
+                            showToast('{{ translate("Erro ao excluir: ") }}' + (rr.error || ''), 'danger');
+                        }
+                    } catch (e) {
+                        showToast('{{ translate("Erro de comunicação com o servidor.") }}', 'danger');
+                    }
+                });
+                row.appendChild(delBtn);
+                rulesListEl.appendChild(row);
+            });
+        }
+
+        function resetRuleForm() {
+            editingRuleId = '';
+            if (ruleNameEl) ruleNameEl.value = '';
+            if (ruleValueEl) ruleValueEl.value = '';
+            if (ruleFieldEl) ruleFieldEl.value = 'hostname';
+            if (ruleOpEl) ruleOpEl.value = 'contains';
+            if (ruleSeverityEl) ruleSeverityEl.value = 'warning';
+            if (ruleCooldownEl) ruleCooldownEl.value = '24';
+            if (ruleEnabledEl) ruleEnabledEl.checked = true;
+            if (ruleSaveBtn) ruleSaveBtn.innerHTML = '<i class="fas fa-save"></i> {{ translate("Salvar regra") }}';
+            if (ruleCancelBtn) ruleCancelBtn.style.display = 'none';
+        }
+
+        function startEditRule(r) {
+            editingRuleId = r.id || '';
+            if (ruleNameEl) ruleNameEl.value = r.name || '';
+            if (ruleValueEl) ruleValueEl.value = r.value || '';
+            if (ruleFieldEl) ruleFieldEl.value = r.field || 'hostname';
+            if (ruleOpEl) ruleOpEl.value = r.op || 'contains';
+            if (ruleSeverityEl) ruleSeverityEl.value = r.severity || 'warning';
+            if (ruleCooldownEl) ruleCooldownEl.value = r.cooldown_h || 24;
+            if (ruleEnabledEl) ruleEnabledEl.checked = r.enabled !== false;
+            if (ruleSaveBtn) ruleSaveBtn.innerHTML = '<i class="fas fa-save"></i> {{ translate("Salvar regra") }}';
+            if (ruleCancelBtn) ruleCancelBtn.style.display = '';
+            if (ruleNameEl) ruleNameEl.focus();
+        }
+
+        async function loadRules() {
+            try {
+                const r = await fetch('/notifications/api/rules').then(x => x.json());
+                RULE_META.items = Array.isArray(r.items) ? r.items : [];
+                RULE_META.fields = r.fields || {};
+                RULE_META.ops = r.ops || {};
+                fillRuleSelects();
+                renderRules();
+            } catch (e) {  }
+        }
+
+        if (ruleSaveBtn) {
+            ruleSaveBtn.addEventListener('click', async () => {
+                if (ruleSaveBtn.disabled) return;
+                const name = (ruleNameEl || {}).value || '';
+                const value = (ruleValueEl || {}).value || '';
+                if (!name.trim() || !value.trim()) {
+                    showToast('{{ translate("Informe nome da regra e valor da condição.") }}', 'danger');
+                    return;
+                }
+                ruleSaveBtn.disabled = true;
+                const originalHtml = ruleSaveBtn.innerHTML;
+                ruleSaveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> {{ translate("Salvando...") }}';
+                try {
+                    const body = {
+                        name: name.trim(),
+                        field: ruleFieldEl ? ruleFieldEl.value : 'hostname',
+                        op: ruleOpEl ? ruleOpEl.value : 'contains',
+                        value: value.trim(),
+                        severity: ruleSeverityEl ? ruleSeverityEl.value : 'warning',
+                        cooldown_h: parseInt((ruleCooldownEl || {}).value || '24', 10),
+                        enabled: ruleEnabledEl ? ruleEnabledEl.checked : true
+                    };
+                    if (editingRuleId) body.id = editingRuleId;
+                    const r = await fetch('/notifications/api/rules', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(body)
+                    }).then(x => x.json());
+                    if (r.ok) {
+                        showToast('{{ translate("Regra salva com sucesso.") }}', 'success');
+                        resetRuleForm();
+                        loadRules();
+                    } else {
+                        const M = {
+                            missing_name: '{{ translate("Informe o nome da regra.") }}',
+                            missing_value: '{{ translate("Informe o valor da condição.") }}',
+                            bad_port: '{{ translate("Para portas, use apenas o número (ex.: 3389).") }}',
+                            too_many_rules: '{{ translate("Limite de 20 regras atingido — exclua uma antes de criar outra.") }}',
+                            not_found: '{{ translate("Regra não encontrada — recarregue a página.") }}'
+                        };
+                        showToast(M[r.error] || ('{{ translate("Erro ao salvar: ") }}' + (r.error || '')), 'danger');
+                    }
+                } catch (e) {
+                    showToast('{{ translate("Erro de comunicação com o servidor.") }}', 'danger');
+                } finally {
+                    ruleSaveBtn.disabled = false;
+                    ruleSaveBtn.innerHTML = originalHtml;
+                }
+            });
+        }
+        if (ruleCancelBtn) {
+            ruleCancelBtn.addEventListener('click', resetRuleForm);
+        }
+
+        fillRuleSelects();
+
+        document.getElementById('generate-pdf-btn')
+            .addEventListener('click', () => {
+                const include = document.getElementById('include-details').checked ? '1' : '0';
+
+                window.location.href = `/export_pdf?include_details=${include}`;
+            });
+    });
+
+    function mfaEscapeHtml(s) {
+        return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[c]));
+    }
+
+    function mfaSetBtnLoading(btn, loading, loadingText) {
+        if (!btn) return;
+        if (loading) {
+            btn.dataset.originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + loadingText;
+        } else {
+            btn.disabled = false;
+            if (btn.dataset.originalHtml) btn.innerHTML = btn.dataset.originalHtml;
+        }
+    }
+
+    function mfaLoadingBody() {
+        return '<div class="mfa-loading"><i class="fas fa-circle-notch fa-spin"></i></div>';
+    }
+
+    function mfaShowError(msg) {
+        const el = document.getElementById('mfa-error');
+        if (!el) return;
+        el.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + mfaEscapeHtml(msg);
+        el.style.display = 'block';
+    }
+
+    function mfaRenderEnabled() {
+        const body = document.getElementById('mfa-modal-body');
+        body.innerHTML = `
+            <div class="mfa-state mfa-state--enabled">
+                <div class="mfa-state-icon mfa-state-icon--ok">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h4 class="mfa-state-title">
+                    {{ translate('MFA está') }} <span class="mfa-badge mfa-badge--on">{{ translate('habilitada') }}</span>
+                </h4>
+                <p class="mfa-hint">
+                    {{ translate('Sua conta está protegida por um segundo fator. O código do app autenticador será solicitado no login.') }}
+                </p>
+                <button class="btn mfa-btn-danger" id="disable-mfa-btn">
+                    <i class="fas fa-unlock"></i> {{ translate('Desabilitar MFA') }}
+                </button>
+                <div id="mfa-error" class="mfa-error" style="display:none;"></div>
+            </div>`;
+        document.getElementById('disable-mfa-btn').addEventListener('click', disableMfa);
+    }
+
+    function mfaRenderIdle() {
+        const body = document.getElementById('mfa-modal-body');
+        body.innerHTML = `
+            <div class="mfa-state">
+                <div class="mfa-state-icon">
+                    <i class="fas fa-mobile-alt"></i>
+                </div>
+                <h4 class="mfa-state-title">
+                    {{ translate('MFA está') }} <span class="mfa-badge mfa-badge--off">{{ translate('desabilitada') }}</span>
+                </h4>
+                <p class="mfa-hint">
+                    {{ translate('Ative um segundo fator TOTP para proteger seu acesso — funciona com Google Authenticator, Microsoft Authenticator, Authy e similares.') }}
+                </p>
+                <button class="btn btn-primary mfa-btn" id="enable-mfa-btn">
+                    <i class="fas fa-shield-alt"></i> {{ translate('Habilitar MFA') }}
+                </button>
+                <div id="mfa-error" class="mfa-error" style="display:none;"></div>
+            </div>`;
+        document.getElementById('enable-mfa-btn').addEventListener('click', enableMfa);
+    }
+
+    function mfaRenderSetup(data) {
+        const body = document.getElementById('mfa-modal-body');
+        const secret = mfaEscapeHtml(data.secret || '');
+        body.innerHTML = `
+            <div class="mfa-setup">
+                <div class="mfa-steps">
+                    <div class="mfa-step is-current">
+                        <span class="mfa-step-n">1</span>
+                        <span>{{ translate('Escaneie o QR Code') }}</span>
+                    </div>
+                    <div class="mfa-step-line"></div>
+                    <div class="mfa-step">
+                        <span class="mfa-step-n">2</span>
+                        <span>{{ translate('Confirme o código') }}</span>
+                    </div>
+                </div>
+
+                <div class="mfa-qr-card">
+                    <img src="${data.qr_code}" alt="QR Code" width="224" height="224" draggable="false">
+                </div>
+                <p class="mfa-hint">
+                    {{ translate('Abra o app autenticador no celular e aponte a câmera para o QR Code acima.') }}
+                </p>
+
+                <div class="mfa-secret-box">
+                    <div class="mfa-secret-head">
+                        {{ translate('Não consegue escanear? Insira esta chave manualmente:') }}
+                    </div>
+                    <div class="mfa-secret-row">
+                        <code id="mfa-secret">${secret}</code>
+                        <button type="button" class="mfa-copy-btn" id="mfa-copy-btn" title="{{ translate('Copiar') }}">
+                            <i class="fas fa-copy"></i> <span>{{ translate('Copiar') }}</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mfa-verify">
+                    <input type="text" id="mfa-code" class="mfa-otp"
+                           placeholder="••••••" maxlength="6"
+                           inputmode="numeric" autocomplete="one-time-code"
+                           aria-label="{{ translate('Código de 6 dígitos') }}" />
+                    <div id="mfa-error" class="mfa-error" style="display:none;"></div>
+                    <button class="btn btn-primary mfa-btn" id="mfa-verify-btn">
+                        <i class="fas fa-check-circle"></i> {{ translate('Verificar e ativar') }}
+                    </button>
+                </div>
+            </div>`;
+
+        document.getElementById('mfa-copy-btn').addEventListener('click', () => {
+            const raw = document.getElementById('mfa-secret').textContent.trim();
+            const btn = document.getElementById('mfa-copy-btn');
+            const done = () => {
+                btn.classList.add('copied');
+                btn.innerHTML = '<i class="fas fa-check"></i> <span>{{ translate("Copiado!") }}</span>';
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    btn.innerHTML = '<i class="fas fa-copy"></i> <span>{{ translate("Copiar") }}</span>';
+                }, 2000);
+            };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(raw).then(done).catch(() => mfaCopyFallback(raw, done));
+            } else {
+                mfaCopyFallback(raw, done);
+            }
+        });
+
+        const codeInput = document.getElementById('mfa-code');
+        codeInput.addEventListener('input', () => {
+            codeInput.value = codeInput.value.replace(/\D/g, '').slice(0, 6);
+        });
+        codeInput.addEventListener('keydown', e => {
+            if (e.key === 'Enter') document.getElementById('mfa-verify-btn').click();
+        });
+        document.getElementById('mfa-verify-btn').addEventListener('click', verifyMfaSetup);
+        setTimeout(() => codeInput.focus(), 150);
+    }
+
+    function mfaCopyFallback(text, done) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); } catch (e) {  }
+        document.body.removeChild(ta);
+        done();
+    }
+
+    function mfaRenderSuccess(msg) {
+        const body = document.getElementById('mfa-modal-body');
+        body.innerHTML = `
+            <div class="mfa-state mfa-state--success">
+                <div class="mfa-state-icon mfa-state-icon--ok">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h4 class="mfa-state-title">${mfaEscapeHtml(msg)}</h4>
+                <p class="mfa-hint">{{ translate('Recarregando...') }}</p>
+            </div>`;
+    }
+
+    function fetchMfaStatus() {
+        const body = document.getElementById('mfa-modal-body');
+        body.innerHTML = mfaLoadingBody();
+        fetch('/mfa_status')
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) {
+                    mfaRenderIdle();
+                    mfaShowError(data.error);
+                    return;
+                }
+                if (data.enabled) {
+                    mfaRenderEnabled();
+                } else {
+                    mfaRenderIdle();
+                }
+            })
+            .catch(() => {
+                mfaRenderIdle();
+                mfaShowError('{{ translate("Erro de comunicação com o servidor.") }}');
+            });
+    }
+
+    function enableMfa() {
+        const btn = document.getElementById('enable-mfa-btn');
+        mfaSetBtnLoading(btn, true, '{{ translate("Gerando QR Code...") }}');
+        const errEl = document.getElementById('mfa-error');
+        if (errEl) errEl.style.display = 'none';
+
+        fetch('/toggle_mfa', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'enable' })
+        })
+        .then(r => r.json().then(d => ({ ok: r.ok, d })))
+        .then(({ ok, d }) => {
+            if (ok && d.success) {
+                mfaRenderSetup(d);
+            } else {
+                mfaSetBtnLoading(btn, false);
+                mfaShowError(d.error || '{{ translate("desconhecido") }}');
+            }
+        })
+        .catch(() => {
+            mfaSetBtnLoading(btn, false);
+            mfaShowError('{{ translate("Erro de comunicação com o servidor.") }}');
+        });
+    }
+
+    function disableMfa() {
+        if (!confirm('{{ translate("Desabilitar MFA?") }}')) return;
+        const btn = document.getElementById('disable-mfa-btn');
+        mfaSetBtnLoading(btn, true, '{{ translate("Desabilitando...") }}');
+
+        fetch('/toggle_mfa', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'disable' })
+        })
+        .then(r => r.json().then(d => ({ ok: r.ok, d })))
+        .then(({ ok, d }) => {
+            if (ok && d.success) {
+                showToast('{{ translate("MFA desativado com sucesso!") }}', 'success');
+                fetchMfaStatusChip();
+                mfaRenderIdle();
+            } else {
+                mfaSetBtnLoading(btn, false);
+                mfaShowError(d.error || '{{ translate("desconhecido") }}');
+            }
+        })
+        .catch(() => {
+            mfaSetBtnLoading(btn, false);
+            mfaShowError('{{ translate("Erro de comunicação com o servidor.") }}');
+        });
+    }
+
+    function verifyMfaSetup() {
+        const codeInput = document.getElementById('mfa-code');
+        const code = (codeInput.value || '').trim();
+        const btn = document.getElementById('mfa-verify-btn');
+
+        if (!/^\d{6}$/.test(code)) {
+            mfaShowError('{{ translate("Digite o código de 6 dígitos do app.") }}');
+            codeInput.classList.add('shake');
+            setTimeout(() => codeInput.classList.remove('shake'), 400);
+            return;
+        }
+
+        mfaSetBtnLoading(btn, true, '{{ translate("Verificando...") }}');
+        codeInput.disabled = true;
+
+        fetch('/verify_mfa_setup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: code })
+        })
+        .then(r => r.json().then(d => ({ ok: r.ok, d })))
+        .then(({ ok, d }) => {
+            if (ok && d.success) {
+                showToast('{{ translate("MFA ativado com sucesso!") }}', 'success');
+                fetchMfaStatusChip();
+                mfaRenderSuccess('{{ translate("MFA ativado com sucesso!") }}');
+                setTimeout(() => location.reload(), 1400);
+            } else {
+                mfaSetBtnLoading(btn, false);
+                codeInput.disabled = false;
+                codeInput.select();
+                mfaShowError(d.error || '{{ translate("código inválido") }}');
+                codeInput.classList.add('shake');
+                setTimeout(() => codeInput.classList.remove('shake'), 400);
+            }
+        })
+        .catch(() => {
+            mfaSetBtnLoading(btn, false);
+            codeInput.disabled = false;
+            mfaShowError('{{ translate("Erro de comunicação com o servidor.") }}');
+        });
+    }
+
+</script>
+
+{% endblock %}

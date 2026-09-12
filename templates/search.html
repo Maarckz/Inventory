@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}{{ translate('Pesquisa de Máquinas') }} · Inventory{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/search.css') }}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/search.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="search-container">
+    <div class="search-header">
+        <form method="GET" action="{{ url_for('search') }}" class="search-form">
+            <div class="search-input">
+                <i class="fas fa-search"></i>
+                <input
+                    type="text"
+                    name="query"
+                    placeholder="{{ translate('Pesquisar por hostname, SO ou processador...') }}"
+                    value="{{ request.args.get('query', '') }}"
+                >
+            </div>
+            <button type="submit" class="btn btn-primary">
+                {{ translate('Pesquisar') }}
+            </button>
+        </form>
+    </div>
+    <div class="results-count">
+        {{ results|length }} {{ translate('resultado(s) encontrado(s)') }}
+    </div>
+</div>
+
+    {% if results %}
+    <div class="table-responsive">
+        <table class="machine-table">
+            <thead>
+                <tr>
+                    <th data-sort="hostname">{{ translate('Hostname') }} <i class="sort-icon"></i></th>
+                    <th data-sort="ip">{{ translate('IP Address') }} <i class="sort-icon"></i></th>
+                    <th data-sort="os">{{ translate('Sistema Operacional') }} <i class="sort-icon"></i></th>
+                    <th data-sort="kernel">{{ translate('Kernel') }} <i class="sort-icon"></i></th>
+                    <th data-sort="arch">{{ translate('Arch') }} <i class="sort-icon"></i></th>
+                    <th data-sort="cpu">{{ translate('CPU') }} <i class="sort-icon"></i></th>
+                    <th data-sort="cores">{{ translate('Núcleos') }} <i class="sort-icon"></i></th>
+                    <th data-sort="ram">{{ translate('Memória (GB)') }} <i class="sort-icon"></i></th>
+                    <th data-sort="status">{{ translate('Status') }} <i class="sort-icon"></i></th>
+                    <th data-sort="lastseen">{{ translate('Última Atividade') }} <i class="sort-icon"></i></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for machine in results %}
+                <tr class="machine-row" data-href="{{ url_for('machine_details', hostname=machine.hostname) }}">
+                    <td>
+                        <div class="os-info">
+                            <strong>{{ machine.hostname.upper() }}</strong>
+                            <small>ID: {{ machine.id }}</small>
+                        </div>
+                    </td>
+                    <td>{{ machine.ip_address }}</td>
+                    <td>
+                        <div class="os-info">
+                            <strong>{{ machine.os_name }}</strong>
+                            <small>{{ machine.os_version }}</small>
+                        </div>
+                    </td>
+                    <td>{{ machine.os_kernel }}</td>
+                    <td>{{ machine.os_architecture }}</td>
+                    <td>{{ machine.cpu_name }}</td>
+                    <td>{{ machine.cpu_cores }}</td>
+                    <td>{{ machine.ram_total }}</td>
+                    <td>
+                        <span class="status status-{{ 'ativo' if machine.device_status == 'Ativo' else 'inativo' }}">
+                            {{ machine.device_status }}
+                        </span>
+                    </td>
+                    <td>{{ machine.last_seen | formatar_data }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="search-footer"></div>
+    {% else %}
+    <div class="no-results">
+        <i class="fas fa-search"></i>
+        <p>{{ translate('Nenhum resultado encontrado') }}</p>
+        {% if request.args.get('query') %}
+        <p>{{ translate('Tente ajustar sua pesquisa') }}</p>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,571 @@
+{% extends "base.html" %}
+
+{% block title %}NetScope · Inventory{% endblock %}
+
+{% block body_class %}ns-page{% endblock %}
+
+{% block extra_css %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='netscope/netscope.css') }}">
+{% endblock %}
+
+{% block content %}
+<div id="ns-root">
+    <div class="ns-app">
+
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-resize-handle" id="sb-resize-handle"></div>
+
+            <div class="stats-bar" id="stats-bar">
+                <div class="stat-item"><div class="stat-num on" id="stat-online">0</div><div class="stat-label">{{ translate('Online') }}</div></div>
+                <div class="stat-item"><div class="stat-num off" id="stat-offline">0</div><div class="stat-label">{{ translate('Offline') }}</div></div>
+                <div class="stat-item"><div class="stat-num new" id="stat-new">0</div><div class="stat-label">{{ translate('Novos') }}</div></div>
+
+                <div class="stat-item stat-conflict" id="stat-conflict-item" role="button" tabindex="0"
+                     title="{{ translate('Clique para ver os conflitos de IP') }}">
+                    <div class="stat-num" id="stat-conflicts">0</div><div class="stat-label">{{ translate('Conflitos') }}</div>
+                </div>
+
+                <div class="stat-item stat-dup" id="stat-dup-item" role="button" tabindex="0"
+                     title="{{ translate('Clique para ver os duplicados — a exclusão é manual, na Tabela de Ativos') }}">
+                    <div class="stat-num" id="stat-duplicates">0</div><div class="stat-label">{{ translate('Duplicados') }}</div>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="wazuh-box">
+                    <div class="wazuh-box-title"><i class="fas fa-shield-halved"></i> {{ translate('Agente Wazuh (via Inventory)') }}</div>
+                    <div class="wazuh-stat-line"><span>{{ translate('Com agente') }}</span><b id="wz-yes" style="color:var(--success)">0</b></div>
+                    <div class="wazuh-stat-line"><span>{{ translate('Sem agente') }}</span><b id="wz-no" style="color:var(--danger)">0</b></div>
+                    <div class="wazuh-stat-line"><span>{{ translate('Agentes no Wazuh') }}</span><b id="wz-total">0</b></div>
+                    <div class="btn-group" style="margin-top:.25rem">
+                        <button class="btn btn-sm btn-primary" id="btn-wazuh-sync" style="flex:1" title="{{ translate('Importar agora os hosts do Inventory (dados Wazuh)') }}">
+                            <i class="fas fa-sync-alt"></i> {{ translate('Sincronizar') }}
+                        </button>
+                        <button class="btn btn-sm btn-outline" id="btn-wazuh-agents" style="flex:1" title="{{ translate('Ver todos os hosts do Wazuh') }}">
+                            <i class="fas fa-list"></i> {{ translate('Agentes') }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <label class="section-label">{{ translate('Ativos') }}</label>
+                <div class="search-input">
+                    <i class="fas fa-search"></i>
+                    <input id="inp-search" placeholder="{{ translate('IP, nome, MAC, usuário...') }}">
+                    <kbd>^K</kbd>
+                </div>
+
+                <select class="filter-select" id="filter-select" aria-label="{{ translate('Filtrar dispositivos') }}">
+                    <option value="all">{{ translate('Todos') }}</option>
+                    <option value="online">{{ translate('Online') }}</option>
+                    <option value="offline">{{ translate('Offline') }}</option>
+                    <option value="new">{{ translate('Novos') }}</option>
+                    <option value="undoc">{{ translate('Sem Dono') }}</option>
+                    <option value="agent" title="{{ translate('Dispositivos com agente Wazuh instalado') }}">{{ translate('C/ Agente') }}</option>
+                    <option value="noagent" title="{{ translate('Dispositivos SEM agente Wazuh — instale o agente!') }}">{{ translate('Sem Agente') }}</option>
+                    <option value="dup" title="{{ translate('Ativos duplicados — ficam no NetScope; exclusão manual na Tabela de Ativos') }}">{{ translate('Duplicados') }}</option>
+                </select>
+            </div>
+
+            <div class="sidebar-body">
+                <div id="device-list"></div>
+                <div id="empty-msg" class="hidden" style="text-align:center;padding:2rem;color:var(--gray)">
+                    <i class="fas fa-network-wired" style="font-size:1.8rem;opacity:.25;margin-bottom:.4rem;display:block"></i>
+                    <span style="font-size:.75rem">{{ translate('Nenhum dispositivo') }}</span>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <label class="section-label">{{ translate('Redes') }}</label>
+                <div id="subnet-list"></div>
+                <div class="subnet-add">
+                    <div class="subnet-inputs">
+                        <input id="inp-subnet" placeholder="172.16.0" autocomplete="off" title="{{ translate('Sub-rede (ex: 172.16.0)') }}">
+                        <input id="inp-gateway" placeholder="GW .1" autocomplete="off">
+                    </div>
+                    <button class="btn btn-sm btn-primary" id="btn-subnet-add" style="width:100%"><i class="fas fa-plus"></i> {{ translate('Rede') }}</button>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="btn-group">
+                    <button class="btn btn-primary" id="btn-scan" title="{{ translate('Escanear redes configuradas') }}">
+                        <i class="fas fa-wifi"></i> {{ translate('Scan') }}
+                    </button>
+                    <button class="btn btn-outline" id="btn-infer" title="{{ translate('Inferir conexões automaticamente') }}">
+                        <i class="fas fa-sitemap"></i> {{ translate('Inferir') }}
+                    </button>
+                </div>
+                <div class="btn-group" style="margin-top:3px">
+                    <button class="btn btn-outline" id="btn-link" title="{{ translate('Ctrl+Clique em dois nós para associar') }}">
+                        <i class="fas fa-link"></i> {{ translate('Ctrl+Link') }}
+                    </button>
+                    <button class="btn btn-outline" id="btn-new">
+                        <i class="fas fa-plus-circle"></i> {{ translate('Novo') }}
+                    </button>
+                </div>
+
+            </div>
+
+            <div class="sidebar-section">
+                <label class="section-label">{{ translate('Documentação') }}</label>
+                <div class="btn-group">
+                    <button class="btn btn-outline" id="btn-assets" title="{{ translate('Tabela de ativos') }}">
+                        <i class="fas fa-table"></i> {{ translate('Ativos') }}
+                    </button>
+                    <button class="btn btn-outline" id="btn-switches" title="{{ translate('Portas de switch') }}">
+                        <i class="fas fa-ethernet"></i> {{ translate('Switches') }}
+                    </button>
+                </div>
+                <div class="btn-group" style="margin-top:3px">
+
+                    <button class="btn btn-outline" id="btn-snapshots" style="flex:1" title="{{ translate('Salvar e gerenciar snapshots da topologia') }}">
+                        <i class="fas fa-camera"></i> {{ translate('Snapshots') }}
+                    </button>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+
+                <div class="spacer"></div>
+                <button class="btn btn-sm btn-outline" id="btn-export-csv" title="{{ translate('Exportar CSV de ativos') }}">
+                    <i class="fas fa-file-csv"></i>
+                </button>
+                <button class="btn btn-sm btn-outline" id="btn-export-png" title="{{ translate('Exportar PNG da topologia') }}">
+                    <i class="fas fa-image"></i>
+                </button>
+                <button class="btn btn-sm btn-outline" id="btn-trash" title="{{ translate('Lixeira') }}">
+                    <i class="fas fa-trash"></i>
+                </button>
+                <button class="btn btn-sm btn-outline" id="btn-json" title="{{ translate('Exportar JSON') }}">
+                    <i class="fas fa-code"></i>
+                </button>
+            </div>
+        </aside>
+
+        <main class="canvas" id="canvas">
+            <div class="topbar" id="topbar">
+
+                <button id="btn-toggle-sb" class="tb-toggle" aria-label="{{ translate('Barra lateral') }}">
+                    <i class="fas fa-chevron-left" id="toggle-sb-icon"></i>
+                </button>
+                <div id="subnet-info"></div>
+                <div class="topbar-controls">
+                    <div class="layout-switcher" id="layout-switcher">
+                        <button data-layout="tree" class="active" title="{{ translate('Tree radial') }}"><i class="fas fa-sitemap"></i></button>
+                        <button data-layout="hierarchy" title="{{ translate('Hierárquico vertical') }}"><i class="fas fa-stream"></i></button>
+                        <button data-layout="grid" title="{{ translate('Grade') }}"><i class="fas fa-th"></i></button>
+                    </div>
+                    <div class="topbar-sep"></div>
+                    <button id="z-in" title="{{ translate('Zoom +') }}"><i class="fas fa-search-plus"></i></button>
+                    <button id="z-out" title="{{ translate('Zoom -') }}"><i class="fas fa-search-minus"></i></button>
+                    <button id="z-fit" title="{{ translate('Fit') }}"><i class="fas fa-expand"></i></button>
+                </div>
+            </div>
+
+            <div class="link-banner hidden" id="link-banner">
+                <span id="link-text">{{ translate('Selecione o PAI') }}</span>
+                <button class="btn btn-sm" id="link-cancel">Esc</button>
+            </div>
+
+            <div class="snapshot-banner hidden" id="snapshot-banner">
+                <i class="fas fa-history"></i>
+                <span id="snapshot-text">{{ translate('Visualizando snapshot') }}</span>
+                <button class="btn btn-sm" id="snapshot-exit">{{ translate('Voltar ao atual') }}</button>
+            </div>
+
+            <svg id="graph"></svg>
+
+            <div class="agent-legend" id="agent-legend" style="position:absolute;bottom:.6rem;left:.6rem;right:auto;z-index:15;background:var(--white);border:1px solid var(--light-gray);border-radius:6px;padding:.4rem .6rem;box-shadow:var(--box-shadow);font-size:.62rem;color:var(--gray);pointer-events:none">
+                <span style="color:var(--success)"><i class="fas fa-shield-halved"></i> {{ translate('verde = com agente Wazuh') }}</span>
+                &nbsp;&nbsp;
+                <span style="color:var(--danger)"><i class="fas fa-shield-halved"></i> {{ translate('vermelho = sem agente') }}</span>
+            </div>
+
+            <div class="node-popover hidden" id="popover">
+                <div class="popover-header">
+                    <div class="popover-title">
+                        <span class="status-dot" id="pop-dot"></span>
+                        <strong id="pop-name"></strong>
+                    </div>
+                    <button class="close-btn" id="pop-close"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="popover-body" id="pop-body"></div>
+                <div class="popover-actions" id="pop-actions"></div>
+            </div>
+
+            <div class="ns-toast-container" id="toasts"></div>
+
+            <div class="ctx-menu hidden" id="ctx-menu">
+                <div class="ctx-header">
+                    <span class="status-dot on" id="ctx-dot" style="margin-top:2px"></span>
+                    <div>
+                        <div class="ctx-name" id="ctx-name"></div>
+                        <div class="ctx-sub" id="ctx-ip"></div>
+                    </div>
+                </div>
+                <div id="ctx-items"></div>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal" id="modal-edit">
+        <div class="modal-content modal-wide">
+            <button class="close" data-modal="modal-edit"><i class="fas fa-times"></i></button>
+            <div class="modal-header">
+                <i class="fas fa-pen"></i>
+                <h2>{{ translate('Editar Dispositivo') }}</h2>
+            </div>
+            <div class="modal-body">
+
+                <input type="hidden" id="ed-id">
+                <div class="form-section-title"><i class="fas fa-info-circle"></i> {{ translate('Identificação') }}</div>
+                <div class="form-row"><div class="form-group"><label>{{ translate('IP') }}</label><input id="ed-ip" autocomplete="off"></div><div class="form-group"><label>{{ translate('MAC') }} <small style="color:var(--secondary)">({{ translate('manual') }})</small></label><input id="ed-mac-vis" autocomplete="off" placeholder="aa:bb:cc:dd:ee:ff" title="{{ translate('Deixe vazio para manter sem MAC — nenhum MAC é gerado automaticamente') }}"></div></div>
+                <div class="form-row"><div class="form-group"><label>{{ translate('Fabricante') }}</label><input id="ed-vendor" placeholder="{{ translate('Ex: Dell, HP, Cisco') }}" autocomplete="off"></div><div class="form-group"><label>{{ translate('Sub-rede') }}</label><input id="ed-subnet" disabled></div></div>
+                <div class="form-row">
+                    <div class="form-group"><label>{{ translate('Tipo') }}</label><select id="ed-type">
+
+                        <option value="router">{{ translate('Router') }}</option>
+                        <option value="switch">{{ translate('Switch') }}</option>
+                        <option value="ap">{{ translate('Access Point') }}</option>
+                        <option value="firewall">{{ translate('Firewall') }}</option>
+                        <option value="loadbalancer">{{ translate('Load Balancer') }}</option>
+                        <option value="server">{{ translate('Servidor (Server)') }}</option>
+                        <option value="hypervisor">{{ translate('Hypervisor') }}</option>
+                        <option value="vm">{{ translate('Máquina Virtual (VM)') }}</option>
+                        <option value="storage">{{ translate('Storage (SAN / NAS)') }}</option>
+                        <option value="desktop">{{ translate('Desktop') }}</option>
+                        <option value="laptop">{{ translate('Laptop / Notebook') }}</option>
+                        <option value="tablet">{{ translate('Tablet') }}</option>
+                        <option value="phone">{{ translate('Smartphone (Phone)') }}</option>
+                        <option value="voip">{{ translate('Telefone IP (VoIP)') }}</option>
+                        <option value="printer">{{ translate('Impressora / Multifuncional (Printer)') }}</option>
+                        <option value="iot">{{ translate('Dispositivos IoT') }}</option>
+                    </select></div>
+                    <div class="form-group"><label>DNS</label><input id="ed-dns" disabled></div>
+                </div>
+                <div class="form-group"><label>{{ translate('Hostname / Nome') }}</label><input id="ed-name" autocomplete="off"></div>
+                <div class="form-group"><label>{{ translate('Pai conectado') }}</label><select id="ed-parent"><option value="">{{ translate('Nenhum') }}</option></select></div>
+
+                <div class="form-section-title"><i class="fas fa-shield-halved"></i> {{ translate('Agente Wazuh (somente leitura)') }}</div>
+                <div class="form-row">
+                    <div class="form-group"><label>{{ translate('Agente instalado') }}</label><input id="ed-agent-status" disabled placeholder="—"></div>
+                    <div class="form-group"><label>{{ translate('ID / Status Wazuh') }}</label><input id="ed-agent-info" disabled placeholder="—"></div>
+                </div>
+
+                <label style="display:flex;align-items:center;gap:8px;margin:2px 0 10px;cursor:pointer">
+                    <input type="checkbox" id="ed-agent-exempt" style="width:auto">
+                    <span>{{ translate('Sem possibilidade de agente (não conta como sem agente)') }}</span>
+                </label>
+
+                <div class="form-section-title"><i class="fas fa-user"></i> {{ translate('Documentação de Ativo') }}</div>
+                <div class="form-row">
+                    <div class="form-group"><label>{{ translate('Usuário') }}</label><input id="ed-user" placeholder="{{ translate('Ex: João Silva') }}" autocomplete="off"></div>
+                    <div class="form-group"><label>{{ translate('Departamento') }}</label><input id="ed-department" placeholder="{{ translate('Ex: TI') }}" autocomplete="off"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>{{ translate('Localização') }}</label><input id="ed-location" placeholder="{{ translate('Ex: Sala 101') }}" autocomplete="off"></div>
+                    <div class="form-group"><label>Asset Tag</label><input id="ed-asset-tag" placeholder="{{ translate('Ex: AST-00123') }}" autocomplete="off"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>{{ translate('Modelo') }}</label><input id="ed-model" placeholder="{{ translate('Ex: Dell OptiPlex 7090') }}" autocomplete="off"></div>
+                    <div class="form-group"><label>{{ translate('N° Serial') }}</label><input id="ed-serial" placeholder="{{ translate('Ex: SN7XYZ123') }}" autocomplete="off"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>{{ translate('Sistema Operacional') }}</label><input id="ed-os" placeholder="{{ translate('Ex: Ubuntu 22.04') }}" autocomplete="off"></div>
+                    <div class="form-group"><label>{{ translate('N° de Lacre') }}</label><input id="ed-seal" placeholder="{{ translate('Ex: LAC-2024-001') }}" autocomplete="off"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>VLAN</label><input id="ed-vlan" placeholder="{{ translate('Ex: 10') }}" autocomplete="off"></div>
+                </div>
+
+                <div class="form-section-title"><i class="fas fa-ethernet"></i> {{ translate('Porta do Switch') }}</div>
+                <div class="form-row">
+                    <div class="form-group"><label>{{ translate('Switch conectado') }}</label><select id="ed-switch"><option value="">{{ translate('Nenhum') }}</option></select></div>
+                    <div class="form-group"><label>{{ translate('Porta') }}</label><input id="ed-switch-port" type="number" min="1" placeholder="{{ translate('Ex: 24') }}"></div>
+                </div>
+
+                <div class="form-section-title"><i class="fas fa-sticky-note"></i> {{ translate('Notas') }}</div>
+                <div class="form-group"><textarea id="ed-notes" rows="2" placeholder="{{ translate('Observações sobre o ativo...') }}"></textarea></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" id="ed-btn-del"><i class="fas fa-trash"></i> {{ translate('Excluir') }}</button>
+                <div>
+                    <button class="btn btn-outline" id="ed-btn-unlink"><i class="fas fa-unlink"></i> {{ translate('Desvincular') }}</button>
+                    <button class="btn btn-primary" id="ed-btn-save"><i class="fas fa-check"></i> {{ translate('Salvar') }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="modal-add">
+        <div class="modal-content" style="max-width:420px">
+            <button class="close" data-modal="modal-add"><i class="fas fa-times"></i></button>
+            <div class="modal-header">
+                <i class="fas fa-plus-circle"></i>
+                <h2>{{ translate('Novo Dispositivo') }}</h2>
+            </div>
+            <div class="modal-body">
+
+                <div class="form-row"><div class="form-group"><label>{{ translate('IP') }} *</label><input id="add-ip" placeholder="172.16.0.10" autocomplete="off"></div><div class="form-group"><label>{{ translate('MAC') }} <small style="color:var(--secondary)">({{ translate('opcional') }})</small></label><input id="add-mac" placeholder="{{ translate('vazio = sem MAC') }}" autocomplete="off" title="{{ translate('Nenhum MAC é gerado automaticamente — preencha apenas se souber o MAC real') }}"></div></div>
+                <div class="form-group"><label>{{ translate('Hostname') }}</label><input id="add-name" autocomplete="off"></div>
+                <div class="form-row">
+                    <div class="form-group"><label>{{ translate('Tipo') }}</label><select id="add-type">
+
+                        <option value="router">{{ translate('Router') }}</option>
+                        <option value="switch">{{ translate('Switch') }}</option>
+                        <option value="ap">{{ translate('Access Point') }}</option>
+                        <option value="firewall">{{ translate('Firewall') }}</option>
+                        <option value="loadbalancer">{{ translate('Load Balancer') }}</option>
+                        <option value="server">{{ translate('Servidor (Server)') }}</option>
+                        <option value="hypervisor">{{ translate('Hypervisor') }}</option>
+                        <option value="vm">{{ translate('Máquina Virtual (VM)') }}</option>
+                        <option value="storage">{{ translate('Storage (SAN / NAS)') }}</option>
+                        <option value="desktop">{{ translate('Desktop') }}</option>
+                        <option value="laptop">{{ translate('Laptop / Notebook') }}</option>
+                        <option value="tablet">{{ translate('Tablet') }}</option>
+                        <option value="phone">{{ translate('Smartphone (Phone)') }}</option>
+                        <option value="voip">{{ translate('Telefone IP (VoIP)') }}</option>
+                        <option value="printer">{{ translate('Impressora / Multifuncional (Printer)') }}</option>
+                        <option value="iot">{{ translate('Dispositivos IoT') }}</option>
+                    </select></div>
+                    <div class="form-group"><label>{{ translate('Sub-rede') }}</label><input id="add-subnet" placeholder="auto" autocomplete="off"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>{{ translate('Usuário') }}</label><input id="add-user" placeholder="{{ translate('Dono do ativo') }}" autocomplete="off"></div>
+                    <div class="form-group"><label>{{ translate('Departamento') }}</label><input id="add-department" placeholder="{{ translate('TI, RH...') }}" autocomplete="off"></div>
+                </div>
+                <div class="form-group"><label>{{ translate('Notas') }}</label><textarea id="add-notes" rows="2"></textarea></div>
+            </div>
+            <div class="modal-footer">
+                <div></div>
+                <div>
+                    <button class="btn btn-outline" id="add-btn-cancel">{{ translate('Cancelar') }}</button>
+                    <button class="btn btn-primary" id="add-btn-save"><i class="fas fa-plus"></i> {{ translate('Criar') }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="modal-switches">
+        <div class="modal-content modal-wide">
+            <button class="close" data-modal="modal-switches"><i class="fas fa-times"></i></button>
+            <div class="modal-header">
+                <i class="fas fa-ethernet"></i>
+                <h2>{{ translate('Portas de Switch') }}</h2>
+            </div>
+            <div class="modal-body">
+                <div id="switch-tabs" class="switch-tabs"></div>
+                <div id="switch-port-table"></div>
+                <div id="switch-empty" class="hidden" style="text-align:center;padding:2rem;color:var(--gray)">
+                    <i class="fas fa-ethernet" style="font-size:1.8rem;opacity:.25;display:block;margin-bottom:.4rem"></i>
+                    {{ translate('Nenhum switch cadastrado. Crie um dispositivo do tipo "Switch".') }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="modal-snapshots">
+        <div class="modal-content modal-wide">
+            <button class="close" data-modal="modal-snapshots"><i class="fas fa-times"></i></button>
+            <div class="modal-header">
+                <i class="fas fa-history"></i>
+                <h2>{{ translate('Histórico de Topologia') }}</h2>
+            </div>
+            <div class="modal-body">
+                <div class="snapshot-create-box">
+                    <input id="snap-label" placeholder="{{ translate('Rótulo do snapshot (ex: Antes da migração)') }}" autocomplete="off">
+                    <input id="snap-notes" placeholder="{{ translate('Notas (opcional)') }}" autocomplete="off">
+                    <button class="btn btn-primary" id="snap-create-btn"><i class="fas fa-camera"></i> {{ translate('Criar Snapshot') }}</button>
+                </div>
+                <div id="snapshot-list"></div>
+                <div id="snapshot-empty" class="hidden" style="text-align:center;padding:2rem;color:var(--gray)">
+                    <i class="fas fa-history" style="font-size:1.8rem;opacity:.25;display:block;margin-bottom:.4rem"></i>
+                    {{ translate('Nenhum snapshot salvo ainda.') }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="modal-assets">
+        <div class="modal-content modal-xwide">
+            <button class="close" data-modal="modal-assets"><i class="fas fa-times"></i></button>
+            <div class="modal-header">
+                <i class="fas fa-table"></i>
+                <h2>{{ translate('Tabela de Ativos') }}</h2>
+                <div class="modal-header-actions">
+                    <button class="btn btn-sm btn-outline" id="assets-export-csv"><i class="fas fa-file-csv"></i> CSV</button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="asset-search">
+                    <input id="asset-search" placeholder="{{ translate('Filtrar por IP, hostname, usuário, MAC...') }}">
+                </div>
+
+                <div id="asset-bulkbar" class="asset-bulkbar" style="display:none;">
+                    <span id="asset-bulk-count">0</span>
+                    <button class="btn btn-sm btn-danger" id="asset-bulk-delete">
+                        <i class="fas fa-trash-can"></i> {{ translate('Excluir selecionados') }}
+                    </button>
+                    <span class="asset-bulk-hint">{{ translate('Vai para a lixeira — restaurável') }}</span>
+                </div>
+                <div class="asset-table-wrap">
+                    <table class="asset-table" id="asset-table">
+                        <thead>
+
+                            <tr>
+                                <th class="sel-col"><input type="checkbox" id="asset-sel-all" title="{{ translate('Selecionar todos') }}"></th>
+                                <th class="sortable" data-key="hostname">{{ translate('Hostname') }}</th><th class="sortable" data-key="ip">{{ translate('IP') }}</th><th class="sortable" data-key="mac">{{ translate('MAC') }}</th><th class="sortable" data-key="type">{{ translate('Tipo') }}</th>
+                                <th class="sortable" data-key="vendor">{{ translate('Fabricante') }}</th><th class="sortable" data-key="model">{{ translate('Modelo') }}</th>
+                                <th class="sortable" data-key="user">{{ translate('Usuário') }}</th><th class="sortable" data-key="department">{{ translate('Depto') }}</th><th class="sortable" data-key="location">{{ translate('Local') }}</th>
+                                <th class="sortable" data-key="switch">{{ translate('Switch') }}</th><th class="sortable" data-key="port">{{ translate('Porta') }}</th><th class="sortable" data-key="asset_tag">Asset Tag</th><th class="sortable" data-key="seal_number">{{ translate('Lacre') }}</th>
+                                <th class="sortable" data-key="agent">{{ translate('Agente Wazuh') }}</th><th class="sortable" data-key="status">{{ translate('Status') }}</th><th>{{ translate('Ações') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody id="asset-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="modal-agents">
+        <div class="modal-content modal-xwide">
+            <button class="close" data-modal="modal-agents"><i class="fas fa-times"></i></button>
+            <div class="modal-header">
+                <i class="fas fa-shield-halved"></i>
+                <h2>{{ translate('Agentes Wazuh (Inventory)') }}</h2>
+                <div class="modal-header-actions">
+                    <button class="btn btn-sm btn-primary" id="agents-sync-btn" style="margin: 0 2rem 0 0"><i class="fas fa-sync-alt"></i> {{ translate('Sincronizar NetScope') }}</button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="asset-search">
+                    <input id="agents-search" placeholder="{{ translate('Filtrar por hostname, IP, grupo...') }}">
+                </div>
+                <div class="asset-table-wrap">
+                    <table class="agent-table" id="agent-table">
+                        <thead>
+                            <tr>
+                                <th>{{ translate('Hostname') }}</th><th>ID</th><th>{{ translate('IP') }}</th><th>{{ translate('MAC') }}</th>
+                                <th>{{ translate('Status Agente') }}</th><th>{{ translate('Grupos') }}</th><th>{{ translate('No NetScope') }}</th><th>{{ translate('Último KeepAlive') }}</th>
+                                <th class="agents-col-actions">{{ translate('Ações') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody id="agent-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="modal-trash">
+        <div class="modal-content" style="max-width:500px">
+            <button class="close" data-modal="modal-trash"><i class="fas fa-times"></i></button>
+            <div class="modal-header">
+                <i class="fas fa-trash"></i>
+                <h2>{{ translate('Lixeira') }}</h2>
+            </div>
+            <div class="modal-body">
+                <div id="trash-list"></div>
+                <div id="trash-empty" class="hidden" style="text-align:center;padding:2rem;color:var(--gray)">
+                    <i class="fas fa-trash" style="font-size:1.8rem;opacity:.25;display:block;margin-bottom:.4rem"></i>{{ translate('Vazia') }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="modal-json">
+        <div class="modal-content" style="max-width:640px">
+            <button class="close" data-modal="modal-json"><i class="fas fa-times"></i></button>
+            <div class="modal-header">
+                <i class="fas fa-code"></i>
+                <h2>JSON Export</h2>
+            </div>
+            <div class="modal-body"><pre id="json-out"></pre></div>
+        </div>
+    </div>
+
+    <div class="modal" id="modal-cidr">
+        <div class="modal-content" style="max-width:440px">
+            <button class="close" data-modal="modal-cidr"><i class="fas fa-times"></i></button>
+            <div class="modal-header">
+                <i class="fas fa-network-wired"></i>
+                <h2 id="cidr-modal-title">{{ translate('Configurar Rede de Varredura (CIDR)') }}</h2>
+            </div>
+            <div class="modal-body">
+
+                <div class="cidr-hint">
+                    <i class="fas fa-triangle-exclamation"></i>
+                    <div>
+                        <strong>{{ translate('Nenhuma rede configurada ainda.') }}</strong>
+                        {{ translate('Insira o CIDR da sua rede para que o NetScope possa escanear e mapear seus dispositivos.') }}
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>{{ translate('CIDR da rede (ex: 192.168.1.0/24)') }} *</label>
+                    <input id="cidr-input" placeholder="192.168.1.0/24" autocomplete="off" spellcheck="false">
+                </div>
+                <div class="form-group">
+                    <label>{{ translate('Gateway (padrão: .1 — deixe vazio p/ automático)') }}</label>
+                    <input id="cidr-gateway" placeholder="192.168.1.1" autocomplete="off" spellcheck="false">
+                </div>
+
+                <div id="cidr-feedback" class="cidr-feedback"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="cidr-btn-skip">{{ translate('Agora não') }}</button>
+                <button class="btn btn-primary" id="cidr-btn-add"><i class="fas fa-plus"></i> {{ translate('Adicionar Rede') }}</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="modal-portscan">
+        <div class="modal-content" style="max-width:780px">
+            <button class="close" data-modal="modal-portscan"><i class="fas fa-times"></i></button>
+            <div class="modal-header">
+                <i class="fas fa-plug-circle-exclamation"></i>
+                <h2>{{ translate('Varredura de Portas') }} <span id="ps-title" class="ps-title-dev"></span></h2>
+            </div>
+            <div class="modal-body">
+                <div id="ps-progress-box" class="ps-progress-box">
+                    <div class="ps-phase" id="ps-phase"></div>
+                    <div class="ps-bar"><div class="ps-fill" id="ps-fill"></div></div>
+                    <div class="ps-meta" id="ps-meta"></div>
+                </div>
+                <div id="ps-summary" class="ps-summary hidden"></div>
+                <div id="ps-results" class="ps-results hidden"></div>
+            </div>
+            <div class="modal-footer">
+                <div class="ps-foot-note" id="ps-foot-note"></div>
+                <div>
+                    <button class="btn btn-outline" id="ps-rescan"><i class="fas fa-redo"></i> {{ translate('Reescanear') }}</button>
+                    <button class="btn btn-primary" data-modal="modal-portscan">{{ translate('Fechar') }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="modal-conflicts">
+        <div class="modal-content" style="max-width:470px">
+            <button class="close" data-modal="modal-conflicts"><i class="fas fa-times"></i></button>
+            <div class="modal-header">
+                <i class="fas fa-triangle-exclamation" style="color:var(--warning)"></i>
+                <h2>{{ translate('Dispositivos com o mesmo IP') }}</h2>
+            </div>
+            <div class="modal-body">
+                <div id="conflict-list" class="conflict-list"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+
+<script src="{{ url_for('static', filename='js/vendor/d3.v7.min.js') }}"></script>
+<script>window.NS_T = {{ ns_i18n|tojson }};</script>
+<script src="{{ url_for('static', filename='netscope/graph.js') }}"></script>
+{% endblock %}

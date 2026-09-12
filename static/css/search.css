@@ -1,0 +1,215 @@
+:root {
+    --white: #ffffff;
+    --border-radius: 12px;
+    --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --smooth-slide: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    --light-gray: #e5e7eb;
+    --dark: #1f2937;
+    --dark-gray: #6b7280;
+    --gray: #9ca3af;
+}
+
+.results-count {
+    margin-left: auto;
+    padding-left: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--gray);
+    white-space: nowrap;
+}
+
+.table-responsive {
+    overflow-x: auto;
+    margin-bottom: 1.5rem;
+    background: var(--white);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transform: translateY(20px);
+    animation: fadeInUp 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+    scrollbar-width: none;
+}
+
+.table-responsive::-webkit-scrollbar {
+    display: none;
+}
+
+.machine-table {
+    width: 100%;
+    border-collapse: collapse;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.3s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+.machine-table th {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    position: relative;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    padding: 0.2rem;
+}
+
+.machine-table th:hover {
+    background-color: #f0f0f0;
+}
+
+.machine-table th::after {
+    content: '↕';
+    opacity: 0.5;
+    display: inline-block;
+    font-size: 10px;
+}
+
+.machine-table th.asc::after {
+    content: '↑';
+    opacity: 1;
+}
+
+.machine-table th.desc::after {
+    content: '↓';
+    opacity: 1;
+}
+
+.machine-table td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--light-gray);
+    vertical-align: middle;
+}
+
+.machine-table tr:last-child td {
+    border-bottom: none;
+}
+
+.machine-table tr:hover {
+    background: rgba(99, 102, 241, 0.05);
+}
+
+.os-info {
+    line-height: 1.4;
+}
+
+.os-info strong {
+    display: block;
+    font-weight: 600;
+}
+
+.os-info small {
+    font-size: 0.75rem;
+    color: var(--gray);
+}
+
+.no-results {
+    text-align: center;
+    padding: 3rem;
+    color: var(--gray);
+}
+
+.no-results i {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: var(--light-gray);
+}
+
+.no-results p {
+    margin-bottom: 0.5rem;
+}
+
+@keyframes fadeIn {
+    to {
+        opacity: 1;
+    }
+}
+
+.fade-in {
+    opacity: 0;
+    animation: fadeIn 0.6s ease-out forwards;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.search-container {
+    margin: 0 auto 1rem;
+    background: var(--white);
+    padding: 0.8rem 1rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    opacity: 0;
+    animation: fadeInUp 0.5s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+.search-container.open {
+    max-height: 200px;
+    opacity: 1;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.search-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem;
+    margin-bottom: 0.4rem;
+}
+
+.search-form {
+    display: flex;
+    gap: 0.5rem;
+    flex-grow: 1;
+    width: 100%;
+}
+
+.search-input {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
+}
+
+.search-input i {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gray);
+    transition: color 0.2s ease;
+}
+
+.search-input input {
+    width: 100%;
+    border: 1px solid var(--light-gray);
+    border-radius: 8px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.search-input input:hover {
+    border-color: #6366F1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.search-input:hover i {
+    color: #6366F1;
+}
+
+.search-input input:focus {
+    outline: none;
+    border-color: #6366F1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.search-footer {
+    display: flex;
+    justify-content: flex-end;
+}

@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="pt-BR" {% if session.get('language', 'pt') == 'ar' %}dir="rtl"{% endif %}>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory · Inventário de TI</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/all.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/premium.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/premium-pages.css') }}">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+
+    <script>
+    (function() {
+        try {
+            var t = localStorage.getItem('theme');
+            if (t === null || t === undefined) {
+                t = 'light';
+            }
+            if (t === 'dark') {
+                document.documentElement.classList.add('dark-mode');
+            } else {
+                document.documentElement.classList.remove('dark-mode');
+            }
+        } catch (e) {  }
+    })();
+    </script>
+    <script src="{{ url_for('static', filename='js/theme.js') }}" defer></script>
+    {% block extra_css %}{% endblock %}
+
+</head>
+<body class="{% block body_class %}{% endblock %}">
+
+    <div id="splash-screen" role="status" aria-live="polite">
+        <div class="splash-inner">
+            <div class="splash-logo">
+                <span class="splash-ring r1"></span>
+                <span class="splash-ring r2"></span>
+                <span class="splash-ring r3"></span>
+                <img src="{{ url_for('static', filename='mlogo.svg') }}" alt="">
+            </div>
+            <div class="splash-title">Inventory</div>
+            <div class="splash-text">{{ translate('Carregando…') }}</div>
+            <div class="splash-bar"><span></span></div>
+        </div>
+    </div>
+    <noscript><style>#splash-screen{display:none !important;}</style></noscript>
+    <style>
+
+    #splash-screen {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #dfe9f9;
+
+        transition: opacity 0.4s ease, visibility 0.4s ease;
+    }
+    html.dark-mode #splash-screen { background: #0f172a; }
+    #splash-screen.splash-hide {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+    }
+    .splash-inner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 14px;
+        user-select: none;
+    }
+    .splash-logo { position: relative; width: 96px; height: 96px; }
+    .splash-logo img {
+        position: absolute;
+        inset: 0;
+        margin: auto;
+        width: 64px;
+        height: 64px;
+
+        animation: splash-pulse 1.6s ease-in-out infinite;
+    }
+
+    .splash-ring {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        border: 2px solid #6366F1;
+        opacity: 0;
+        animation: splash-ring 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+    .splash-ring.r2 { animation-delay: 0.6s; }
+    .splash-ring.r3 { animation-delay: 1.2s; }
+    @keyframes splash-ring {
+        0%   { transform: scale(0.45); opacity: 0.9; }
+        70%  { opacity: 0; }
+        100% { transform: scale(1.55); opacity: 0; }
+    }
+    @keyframes splash-pulse {
+        0%, 100% { transform: scale(1); }
+        50%      { transform: scale(1.05); }
+    }
+    .splash-title {
+        font-family: 'Inter', 'Segoe UI', sans-serif;
+        font-size: 1.35rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        color: #1e293b;
+        margin-top: 6px;
+    }
+    html.dark-mode .splash-title { color: #f8fafc; }
+    .splash-text {
+        font-family: 'Inter', 'Segoe UI', sans-serif;
+        font-size: 0.85rem;
+        color: #64748b;
+    }
+    html.dark-mode .splash-text { color: #94a3b8; }
+
+    .splash-bar {
+        position: relative;
+        width: 200px;
+        height: 4px;
+        border-radius: 999px;
+        background: rgba(99, 102, 241, 0.18);
+        overflow: hidden;
+        margin-top: 6px;
+    }
+    .splash-bar span {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: transparent;
+    }
+    .splash-bar span::before,
+    .splash-bar span::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        background-color: #6366F1;
+        border-radius: 999px;
+        will-change: left, right;
+    }
+
+    .splash-bar span::before {
+        animation: splash-bar-primary 2.1s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
+    }
+
+    .splash-bar span::after {
+        animation: splash-bar-secondary 2.1s cubic-bezier(0.165, 0.84, 0.44, 1) infinite;
+        animation-delay: 1.15s;
+    }
+    @keyframes splash-bar-primary {
+        0%   { left: -35%; right: 100%; }
+        60%  { left: 100%;  right: -90%; }
+        100% { left: 100%;  right: -90%; }
+    }
+    @keyframes splash-bar-secondary {
+        0%   { left: -200%; right: 100%; }
+        60%  { left: 107%;  right: -8%; }
+        100% { left: 107%;  right: -8%; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        #splash-screen .splash-ring,
+        #splash-screen .splash-logo img,
+        #splash-screen .splash-bar span,
+        #splash-screen .splash-bar span::before,
+        #splash-screen .splash-bar span::after { animation: none !important; }
+        #splash-screen .splash-ring { opacity: 0; }
+        #splash-screen .splash-bar span::before { left: 0; right: 40%; }
+        #splash-screen .splash-bar span::after { content: none; }
+    }
+    </style>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="header-content">
+                <a href="{{ url_for('dashboard') }}" aria-label="Inventory — início">
+
+                    <img src="{{ url_for('static', filename='mlogo.svg') }}" alt="Logo" class="app-logo">
+                </a>
+                <nav class="app-nav">
+                    <a href="{{ url_for('dashboard') }}" class="nav-link {{ 'active' if request.endpoint == 'dashboard' }}">
+                        <i class="fas fa-chart-pie"></i> {{ translate('Dashboard') }}
+                    </a>
+                    <a href="{{ url_for('painel') }}" class="nav-link {{ 'active' if request.endpoint == 'painel' }}">
+                        <i class="fas fa-laptop"></i> {{ translate('Painel') }}
+                    </a>
+                    <a href="{{ url_for('netscope.page') }}" class="nav-link {{ 'active' if request.endpoint == 'netscope.page' }}" title="NetScope — Topologia e Documentação de Ativos">
+                        <i class="fas fa-network-wired"></i> {{ translate('NetScope') }}
+                    </a>
+                    <a href="{{ url_for('search') }}" class="nav-link {{ 'active' if request.endpoint == 'search' }}">
+                        <i class="fas fa-search"></i> {{ translate('Pesquisa') }}
+                    </a>
+                    <a href="{{ url_for('settings') }}" class="nav-link {{ 'active' if request.endpoint == 'settings' }}">
+                        <i class="fas fa-cog"></i> {{ translate('Configurações') }}
+                    </a>
+
+                <div class="language-selector">
+                    <select onchange="window.location.href='/set_language/' + this.value">
+                        <option value="pt" {% if session.get('language', 'pt') == 'pt' %}selected{% endif %}>
+                            🇧🇷 Português
+                        </option>
+                        <option value="en" {% if session.get('language', 'pt') == 'en' %}selected{% endif %}>
+                            🇺🇸 English
+                        </option>
+                        <option value="es" {% if session.get('language', 'pt') == 'es' %}selected{% endif %}>
+                            🇪🇸 Español
+                        </option>
+                        <option value="hi" {% if session.get('language', 'pt') == 'hi' %}selected{% endif %}>
+                            🇮🇳 हिन्दी
+                        </option>
+
+                        <option value="ru" {% if session.get('language', 'pt') == 'ru' %}selected{% endif %}>
+                            🇷🇺 Русский
+                        </option>
+                        <option value="zh" {% if session.get('language', 'pt') == 'zh' %}selected{% endif %}>
+                            🇨🇳 中文
+                        </option>
+                        <option value="ar" {% if session.get('language', 'pt') == 'ar' %}selected{% endif %}>
+                            🇸🇦 العربية
+                        </option>
+                        <option value="fr" {% if session.get('language', 'pt') == 'fr' %}selected{% endif %}>
+                            🇫🇷 Français
+                        </option>
+                    </select>
+                </div>
+
+                <div class="theme-toggle">
+                    <button id="theme-toggle-btn" class="theme-toggle-btn" aria-label="Alternar tema">
+                        <i class="fas fa-sun"></i>
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </div>
+                {% if 'username' in session %}
+
+                    <div class="user-chip" title="{{ session.get('username') }} · {{ session.get('role') }}">
+                        <span class="user-avatar">{{ session.get('username', '?')|upper|first }}</span>
+                        <span class="user-meta">
+                            <span class="user-name">{{ session.get('username') }}</span>
+                            <span class="user-role">{{ session.get('role', 'user') }}</span>
+                        </span>
+                    </div>
+                    <a href="{{ url_for('logout') }}" class="nav-link">
+                        <i class="fas fa-sign-out-alt"></i> {{ translate('Sair') }}
+                    </a>
+                {% endif %}
+                </nav>
+
+            </div>
+        </header>
+
+        <main class="app-main">
+            <div class="container">
+                <div class="toast-container">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">
+
+                                {% if category == 'success' %}
+                                    <i class="fas fa-circle-check alert-icon"></i>
+                                {% elif category in ('danger', 'error') %}
+                                    <i class="fas fa-circle-xmark alert-icon"></i>
+                                {% elif category == 'warning' %}
+                                    <i class="fas fa-triangle-exclamation alert-icon"></i>
+                                {% else %}
+                                    <i class="fas fa-circle-info alert-icon"></i>
+                                {% endif %}
+                                <span>{{ message }}</span>
+                                <button class="alert-close">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                </div>
+
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    {% if 'username' in session %}
+    <button id="ai-fab" type="button" aria-label="{{ translate('Central de notificações e Assistente IA') }}"
+            title="{{ translate('Central de notificações e Assistente IA') }}">
+        <i class="fas fa-robot"></i>
+        <span id="ai-fab-badge" class="ai-fab-badge" style="display:none;">0</span>
+    </button>
+    <div id="ai-chat" role="dialog" aria-modal="false"
+         aria-label="{{ translate('Central de notificações e Assistente IA') }}">
+        <div class="ai-head">
+            <span class="ai-head-icon"><i class="fas fa-robot"></i></span>
+            <div class="ai-head-titles">
+                <span class="ai-head-title">{{ translate('Central') }}</span>
+                <span class="ai-head-sub">{{ translate('Notificações e Assistente IA') }}</span>
+            </div>
+            <button id="ai-close" type="button" class="ai-close"
+                    aria-label="{{ translate('Fechar') }}">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="ai-tabs">
+            <button type="button" class="ai-tab active" id="ai-tab-notif" data-tab="notif">
+                <i class="fas fa-bell"></i> {{ translate('Notificações') }}
+                <span class="ai-tab-badge" id="ai-tab-notif-badge" style="display:none;">0</span>
+            </button>
+            <button type="button" class="ai-tab" id="ai-tab-chat" data-tab="chat">
+                <i class="fas fa-robot"></i> {{ translate('Assistente IA') }}
+            </button>
+        </div>
+
+        <div id="ai-notif-view" class="ai-notif-view">
+            <div class="ai-notif-actions">
+                <button type="button" class="ai-notif-btn" id="ai-notif-check" title="{{ translate('Verificar agora') }}">
+                    <i class="fas fa-rotate"></i> {{ translate('Verificar agora') }}
+                </button>
+                <button type="button" class="ai-notif-btn" id="ai-notif-readall">
+                    <i class="fas fa-check-double"></i> {{ translate('Marcar todas como lidas') }}
+                </button>
+
+                {% if session.role == 'admin' %}
+                <button type="button" class="ai-notif-btn ai-notif-btn-danger" id="ai-notif-clearread"
+                        title="{{ translate('Excluir as notificações lidas') }}">
+                    <i class="fas fa-trash-can"></i> {{ translate('Excluir lidas') }}
+                </button>
+                {% endif %}
+            </div>
+            <div id="ai-notif-list" class="ai-notif-list"></div>
+        </div>
+
+        <div id="ai-chat-view" class="ai-chat-view" style="display:none;">
+            <button type="button" id="ai-history-clear" class="ai-history-clear"
+                    title="{{ translate('Nova conversa') }}">
+                <i class="fas fa-eraser"></i> {{ translate('Nova conversa') }}
+            </button>
+            <div id="ai-messages" class="ai-messages"></div>
+            <div class="ai-chips">
+                <button type="button" class="ai-chip" data-q="{{ translate('Resumo do parque') }}">{{ translate('Resumo do parque') }}</button>
+                <button type="button" class="ai-chip" data-q="{{ translate('Conflitos de IP') }}">{{ translate('Conflitos de IP') }}</button>
+                <button type="button" class="ai-chip" data-q="{{ translate('O que mudou recentemente?') }}">{{ translate('O que mudou recentemente?') }}</button>
+            </div>
+            <form id="ai-form" class="ai-form">
+                <input id="ai-input" type="text" autocomplete="off"
+                       placeholder="{{ translate('Pergunte sobre máquinas, agentes, conflitos…') }}">
+                <button id="ai-send" type="submit" aria-label="{{ translate('Enviar') }}">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>window.AI_T = {
+        hello:      {{ translate('Olá! Eu leio os dados do Inventory — máquinas, agentes, dispositivos, switches e mudanças na rede. O que você quer saber?')|tojson }},
+        no_key:     {{ translate('A chave da API do assistente ainda não foi configurada. Configure no .env (GROQ_API_KEY) ou em Configurações → Assistente IA.')|tojson }},
+        bad_key:    {{ translate('A chave da API foi recusada pelo provedor. Verifique a chave no .env ou em Configurações → Assistente IA.')|tojson }},
+        rate_limit: {{ translate('Limite de requisições do provedor atingido. Aguarde um momento e tente novamente.')|tojson }},
+        bad_model:  {{ translate('O modelo configurado não foi encontrado no provedor. Verifique o nome do modelo em Configurações → Assistente IA.')|tojson }},
+        fail:       {{ translate('Não foi possível falar com o modelo agora. Tente novamente.')|tojson }},
+        no_notifs:  {{ translate('Nenhuma notificação — tudo em ordem!')|tojson }},
+        empty_ok:   {{ translate('Sem alertas não lidos.')|tojson }},
+        checked:    {{ translate('Verificação concluída: {n} novo(s) alerta(s).')|tojson }},
+        now:        {{ translate('agora')|tojson }},
+        unread_all: {{ translate('Todas marcadas como lidas.')|tojson }},
+
+        admin:      {{ 'true' if session.role == 'admin' else 'false' }},
+        del_item:   {{ translate('Excluir notificação')|tojson }},
+        del_ok:     {{ translate('Notificação excluída.')|tojson }},
+        del_read:   {{ translate('Excluir as notificações lidas?')|tojson }},
+        del_read_ok:{{ translate('Notificações lidas excluídas.')|tojson }},
+        del_fail:   {{ translate('Falha ao excluir.')|tojson }},
+
+        new_chat:        {{ translate('Nova conversa')|tojson }},
+        new_chat_confirm:{{ translate('Apagar toda a conversa com o assistente?')|tojson }},
+        new_chat_ok:     {{ translate('Conversa apagada.')|tojson }}
+    };</script>
+    {% endif %}
+
+    <script>window.__GW_ALIASES = {{ gw_aliases|tojson }};</script>
+    <script src="{{ url_for('static', filename='js/base.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+    {% block modals %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,44 @@
+from flask import session
+from io import BytesIO
+import qrcode
+import base64
+import pyotp
+import time
+import os
+
+MFA_ISSUER = "Inventory"
+SESSION_SALT = os.getenv('SESSION_SALT', 'default_salt_value')
+
+def generate_mfa_secret():
+    return pyotp.random_base32()
+
+def generate_mfa_qr_code(secret, username):
+    totp_uri = pyotp.totp.TOTP(secret).provisioning_uri(
+        name=username,
+        issuer_name=MFA_ISSUER
+    )
+
+    img = qrcode.make(totp_uri)
+    buffered = BytesIO()
+    img.save(buffered, format="PNG")
+    img_str = base64.b64encode(buffered.getvalue()).decode()
+    return f"data:image/png;base64,{img_str}"
+
+def verify_mfa_code(secret, code):
+    totp = pyotp.TOTP(secret)
+    return totp.verify(code, valid_window=1)
+
+def get_secure_mfa_session():
+    return session.get('mfa_data')
+
+def set_secure_mfa_session(username, secret):
+
+    session['mfa_data'] = {
+        'username': username,
+        'secret': secret,
+        'expire': time.time() + 300
+    }
+
+def clear_mfa_session():
+
+    session.pop('mfa_data', None)

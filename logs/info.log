@@ -1,0 +1,50 @@
+2026-09-11 18:58:37,288 - INFO - [NetScope] Ponte Wazuh concluída: 0 hosts, 0 com agente casados, 0 criados, 0 sem agente, 0 duplicatas mescladas.
+2026-09-11 18:58:37,290 - INFO - [NetScope] Thread de auto-scan no ar (config decide).
+2026-09-11 18:58:37,291 - INFO - [NetScope] Monitor ARP no ar (novos hosts via ARP entre scans).
+2026-09-11 18:58:37,292 - INFO - [NetScope] Módulo NetScope inicializado (dados no PostgreSQL do Inventory).
+2026-09-11 18:58:37,320 - INFO - [Notificações] linha de base do registro de estado gravada (0 evento(s) conhecido(s)) — eventos já visíveis NÃO serão recriados.
+2026-09-11 18:58:37,321 - INFO - [Notificações] avaliação inicial: 0 novo(s) alerta(s), regras: {}
+2026-09-11 19:05:25,768 - INFO - [Dashboard] Carregados 0 hosts do banco de dados para o cache.
+2026-09-11 19:05:26,811 - ERROR - Erro 404 - IP: 192.168.0.13, Usuário: admin, Endpoint: None
+2026-09-11 19:05:36,076 - INFO - Sincronização manual disparada pelo administrador (ações: sync Wazuh + Ping Sweep + ARP Discovery).
+2026-09-11 19:05:36,130 - INFO - [Coletor] Iniciando ciclo de sincronização robusta...
+2026-09-11 19:05:36,558 - INFO - [Coletor] Autenticação bem-sucedida.
+2026-09-11 19:05:36,907 - INFO - [Coletor] API retornou 12 agentes (paginado, 500/página).
+2026-09-11 19:05:45,120 - WARNING - [Coletor] Falha na requisição (Tentativa 1): ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')). Retentando em 1.02s...
+2026-09-11 19:06:06,347 - INFO - [Coletor] Ciclo finalizado. 12 sincronizados. 0 movidos para legado.
+2026-09-11 19:06:06,347 - INFO - [Coletor] Cache do Dashboard invalidado (memória + Redis) para atualização imediata.
+2026-09-11 19:06:06,488 - INFO - [NetScope] Ponte Wazuh concluída: 12 hosts, 0 com agente casados, 12 criados, 0 sem agente, 0 duplicatas mescladas.
+2026-09-11 19:06:09,551 - INFO - [Dashboard] Carregados 12 hosts do banco de dados para o cache.
+2026-09-11 19:06:43,502 - INFO - [NetScope] Ponte Wazuh concluída: 12 hosts, 12 com agente casados, 0 criados, 11 sem agente, 0 duplicatas mescladas.
+2026-09-11 19:06:43,503 - INFO - [NetScope] Ponte Wazuh automática pós-scan: 12 hosts, 12 casados, 0 criados, 0 duplicatas mescladas.
+2026-09-11 19:06:43,874 - INFO - [Notificações] pós-scan: 31 novo(s) alerta(s) — {'new_device': 23, 'agent_coverage': 1, 'undocumented': 1, 'agent_offline': 6}
+2026-09-11 19:09:13,849 - ERROR - Erro 404 - IP: 192.168.0.13, Usuário: admin, Endpoint: None
+2026-09-11 19:26:54,563 - INFO - [NetScope] Ponte Wazuh concluída: 0 hosts, 0 com agente casados, 0 criados, 0 sem agente, 0 duplicatas mescladas.
+2026-09-11 19:26:54,565 - INFO - [NetScope] Thread de auto-scan no ar (config decide).
+2026-09-11 19:26:54,568 - INFO - [NetScope] Monitor ARP no ar (novos hosts via ARP entre scans).
+2026-09-11 19:26:54,569 - INFO - [NetScope] Módulo NetScope inicializado (dados no PostgreSQL do Inventory).
+2026-09-11 19:26:54,583 - INFO - [Notificações] linha de base do registro de estado gravada (0 evento(s) conhecido(s)) — eventos já visíveis NÃO serão recriados.
+2026-09-11 19:26:54,583 - INFO - [Notificações] avaliação inicial: 0 novo(s) alerta(s), regras: {}
+2026-09-11 19:27:11,116 - INFO - [Dashboard] Carregados 0 hosts do banco de dados para o cache.
+2026-09-11 19:27:12,242 - ERROR - Erro 404 - IP: 192.168.0.13, Usuário: admin, Endpoint: None
+2026-09-11 19:27:48,376 - INFO - [Discovery] Painel de Sincronização salvou: ping sweep (True a cada 60 min)  · ARP (True a cada 45 min) — loops reagendados a partir de agora.
+2026-09-11 19:27:50,551 - INFO - [Coletor] Iniciando ciclo de sincronização robusta...
+2026-09-11 19:27:50,551 - INFO - Sincronização manual disparada pelo administrador (ações: sync Wazuh + Ping Sweep + ARP Discovery).
+2026-09-11 19:27:50,962 - INFO - [Coletor] Autenticação bem-sucedida.
+2026-09-11 19:27:51,285 - INFO - [Coletor] API retornou 12 agentes (paginado, 500/página).
+2026-09-11 19:28:01,541 - INFO - [Dashboard] Carregados 0 hosts do banco de dados para o cache.
+2026-09-11 19:28:14,840 - INFO - [Coletor] Ciclo finalizado. 12 sincronizados. 0 movidos para legado.
+2026-09-11 19:28:14,840 - INFO - [Coletor] Cache do Dashboard invalidado (memória + Redis) para atualização imediata.
+2026-09-11 19:28:14,972 - INFO - [NetScope] Ponte Wazuh concluída: 12 hosts, 0 com agente casados, 12 criados, 0 sem agente, 0 duplicatas mescladas.
+2026-09-11 19:28:24,320 - INFO - [NetScope] Ponte Wazuh concluída: 12 hosts, 12 com agente casados, 0 criados, 11 sem agente, 0 duplicatas mescladas.
+2026-09-11 19:28:24,321 - INFO - [NetScope] Ponte Wazuh automática pós-scan: 12 hosts, 12 casados, 0 criados, 0 duplicatas mescladas.
+2026-09-11 19:28:24,826 - INFO - [Notificações] pós-scan: 31 novo(s) alerta(s) — {'new_device': 23, 'agent_coverage': 1, 'undocumented': 1, 'agent_offline': 6}
+2026-09-11 19:28:24,865 - INFO - [NetScope] DNS refresh: 38 nome(s) de host atualizado(s) pela re-resolução periódica.
+2026-09-11 19:30:29,762 - INFO - [Dashboard] Carregados 12 hosts do banco de dados para o cache.
+2026-09-11 19:35:13,770 - ERROR - Erro 404 - IP: 192.168.0.13, Usuário: admin, Endpoint: None
+2026-09-11 19:35:28,570 - ERROR - Erro 404 - IP: 192.168.0.13, Usuário: admin, Endpoint: None
+2026-09-11 19:36:37,461 - ERROR - Erro 404 - IP: 192.168.0.13, Usuário: admin, Endpoint: None
+2026-09-11 20:27:57,713 - INFO - [NetScope] Ponte Wazuh concluída: 12 hosts, 12 com agente casados, 0 criados, 11 sem agente, 0 duplicatas mescladas.
+2026-09-11 20:27:57,714 - INFO - [NetScope] Ponte Wazuh automática pós-scan: 12 hosts, 12 casados, 0 criados, 0 duplicatas mescladas.
+2026-09-11 20:56:01,001 - ERROR - Erro 404 - IP: 192.168.0.13, Usuário: admin, Endpoint: None
+2026-09-11 21:05:11,274 - ERROR - Erro 404 - IP: 192.168.0.13, Usuário: admin, Endpoint: None

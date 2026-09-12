@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="pt-BR" {% if session.get('language', 'pt') == 'ar' %}dir="rtl"{% endif %}>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login · Inventory</title>
+
+    <script>
+    (function() {
+        try {
+            var t = localStorage.getItem('theme');
+            if (t === null || t === undefined) {
+                t = 'light';
+            }
+            document.documentElement.classList.toggle('dark-mode', t === 'dark');
+        } catch (e) {  }
+    })();
+    </script>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/all.min.css') }}">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+
+    <style>
+        :root {
+
+            --primary: #6366F1;
+            --primary-dark: #4f46e5;
+            --danger: #EF4444;
+            --light: #F8FAFC;
+            --dark: #1E293B;
+            --gray: #94A3B8;
+
+            --bg-body: #F1F5F9;
+            --bg-card: #FFFFFF;
+            --text-main: #1E293B;
+            --text-label: #1E293B;
+            --border-input: #e2e8f0;
+            --bg-input: #fff;
+        }
+
+        html.dark-mode {
+            color-scheme: dark;
+            --bg-body: #0f172a;
+            --bg-card: #1e293b;
+            --text-main: #f1f5f9;
+            --text-label: #cbd5e1;
+            --border-input: #334155;
+            --bg-input: #334155;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            transition: background-color 0.3s, color 0.3s;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background: url("{{ url_for('static', filename='img/animated-login-bg.svg') }}") center / cover no-repeat;
+            opacity: .55;
+        }
+
+        html.dark-mode body::before {
+            background-image: url("{{ url_for('static', filename='img/animated-login-bg-dark.svg') }}");
+            opacity: .32;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 400px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .login-card {
+            background: var(--bg-card);
+
+            padding: 0rem 2.5rem 2.5rem 2.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            animation: fadeInUp 0.5s ease-out;
+            transition: background-color 0.3s;
+        }
+
+          .login-logo {
+
+            color: var(--primary);
+        }
+
+        .login-logo i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .login-logo h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            animation: fadeIn 0.5s ease-out 0.4s backwards;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-label);
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border-input);
+            background-color: var(--bg-input);
+            color: var(--text-main);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            animation: fadeIn 0.5s ease-out 0.6s backwards;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .toast-wrap {
+            position: fixed;
+            top: 18px;
+            right: 18px;
+            z-index: 60;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .toast-wrap .toast {
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 11px;
+            min-width: 300px;
+            max-width: min(420px, calc(100vw - 36px));
+            padding: 13px 15px 15px 14px;
+            border-radius: 10px;
+            font-size: .9rem;
+            font-weight: 500;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 6px 18px rgba(15, 23, 42, .10), 0 2px 6px rgba(15, 23, 42, .06);
+            animation: toastIn .4s cubic-bezier(.16, 1, .3, 1) forwards;
+        }
+
+        .toast-wrap .toast .alert-icon { font-size: 1.12rem; flex-shrink: 0; }
+        .toast-wrap .toast span { flex: 1; }
+
+        .toast-wrap .toast .alert-close {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: .95rem;
+            padding: 4px;
+            margin: 0;
+            color: inherit;
+            opacity: .55;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+        }
+
+        .toast-wrap .toast .alert-close:hover { opacity: 1; }
+
+        .toast-wrap .toast::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            height: 3px;
+            width: 100%;
+            background: currentColor;
+            opacity: .5;
+            animation: toastTimer 5s linear forwards;
+        }
+
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(110%); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes toastTimer { from { width: 100%; } to { width: 0; } }
+
+        .toast-success { background: #e2f9ec; color: #178a4d; }
+        .toast-danger, .toast-error { background: #ffe9ed; color: #e3153a; }
+        .toast-warning { background: #ffedd0; color: #a86e00; }
+        .toast-info { background: #e6f6ff; color: #0f9ae0; }
+
+        html.dark-mode .toast-success { background: #0b2e1d; color: #7fe8b2; }
+        html.dark-mode .toast-danger, html.dark-mode .toast-error { background: #3b1218; color: #ff8a97; }
+        html.dark-mode .toast-warning { background: #3a2506; color: #ffc97a; }
+        html.dark-mode .toast-info { background: #0c2a3f; color: #7fd0ff; }
+
+        .login-card > *:nth-child(1) { animation-delay: 0s; }
+        .login-card > *:nth-child(2) { animation-delay: 0.1s; }
+        .login-card > *:nth-child(3) { animation-delay: 0.2s; }
+        .login-card > *:nth-child(4) { animation-delay: 0.3s; }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .theme-toggle-login {
+
+            background: var(--bg-card);
+            border: 1px solid var(--border-input);
+            color: var(--text-main);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 2;
+        }
+
+        .login-actions {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 5;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .lang-wrap { position: relative; }
+
+        .lang-menu {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            min-width: 170px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-input);
+            border-radius: 12px;
+            box-shadow: 0 10px 26px -8px rgba(15, 23, 42, .28);
+            padding: 6px;
+            display: none;
+            overflow: hidden;
+        }
+
+        .lang-wrap.open .lang-menu { display: block; animation: fadeIn 0.18s ease-out; }
+
+        .lang-menu a {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 9px 11px;
+            border-radius: 8px;
+            font-size: .9rem;
+            font-weight: 500;
+            color: var(--text-main);
+            text-decoration: none;
+        }
+
+        .lang-menu a:hover { background: color-mix(in srgb, var(--primary) 10%, transparent); }
+        .lang-menu a.active { background: color-mix(in srgb, var(--primary) 14%, transparent); color: var(--primary); }
+        .lang-menu a .flag { font-size: 1.05rem; line-height: 1; }
+        .lang-menu a .fa-check { margin-left: auto; font-size: .78rem; opacity: 0; }
+        .lang-menu a.active .fa-check { opacity: 1; }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+
+            body::before { display: none; }
+        }
+    </style>
+
+    <style>
+        body {
+            background:
+                radial-gradient(900px 500px at 12% -8%, rgba(99, 102, 241, .16), transparent 60%),
+                radial-gradient(800px 460px at 108% 112%, rgba(79, 70, 229, .14), transparent 60%),
+                radial-gradient(520px 320px at 85% 6%, rgba(16, 185, 129, .07), transparent 65%),
+                var(--bg-body);
+        }
+
+        html.dark-mode body {
+            background:
+                radial-gradient(900px 500px at 12% -8%, rgba(99, 102, 241, .22), transparent 60%),
+                radial-gradient(800px 460px at 108% 112%, rgba(79, 70, 229, .18), transparent 60%),
+                radial-gradient(520px 320px at 85% 6%, rgba(16, 185, 129, .08), transparent 65%),
+                #0b1120;
+        }
+
+        .login-card {
+            background: color-mix(in srgb, var(--bg-card) 86%, transparent);
+            -webkit-backdrop-filter: blur(18px) saturate(160%);
+            backdrop-filter: blur(18px) saturate(160%);
+            border: 1px solid rgba(148, 163, 184, .22);
+            border-radius: 20px;
+            box-shadow:
+                0 1px 2px rgba(15, 23, 42, .05),
+                0 18px 44px -14px rgba(15, 23, 42, .25),
+                0 0 0 1px rgba(255, 255, 255, .35) inset;
+        }
+
+        html.dark-mode .login-card {
+            border-color: rgba(148, 163, 184, .14);
+            box-shadow:
+                0 1px 2px rgba(2, 6, 23, .6),
+                0 22px 54px -16px rgba(2, 6, 23, .8);
+        }
+
+        .login-card > .login-logo {
+            display: flex;
+            justify-content: center;
+        }
+
+        .login-logo img {
+
+            max-width: 310px;
+            height: auto;
+            filter: drop-shadow(0 6px 18px rgba(99, 102, 241, .22));
+        }
+
+        .form-group input {
+            border: 1.5px solid var(--border-input);
+            border-radius: 11px;
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, .16);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
+            border-radius: 11px;
+            letter-spacing: .01em;
+            box-shadow:
+                0 1px 2px rgba(79, 70, 229, .35),
+                0 6px 18px -6px rgba(99, 102, 241, .55);
+        }
+
+        .btn:hover {
+            background: linear-gradient(135deg, #575AEF 0%, #4338CA 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 10px 26px -8px rgba(99, 102, 241, .6);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(79, 70, 229, .4);
+        }
+
+        #boot-intro {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: #0b1120;
+            place-items: center;
+            opacity: 1;
+            transition: opacity .6s ease;
+            overflow: hidden;
+        }
+        #boot-intro.bi-out { opacity: 0; pointer-events: none; }
+        #boot-intro.bi-fast { transition-duration: .28s; }
+        .bi-stage {
+            position: relative;
+            width: min(88vw, 560px);
+            aspect-ratio: 550 / 400;
+            display: grid;
+            place-items: center;
+        }
+
+        .bi-ring {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            border-radius: 50%;
+            border: 1px solid rgba(99, 102, 241, .14);
+            border-top-color: rgba(165, 180, 252, .85);
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            transition: opacity .8s ease, transform .65s ease;
+            will-change: transform, opacity;
+        }
+        #boot-intro.bi-play .bi-ring { opacity: 1; }
+        #boot-intro.bi-out .bi-ring {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(1.45);
+        }
+        .bi-r1 { width: min(48vw, 310px); height: min(48vw, 310px); animation: bi-spin 9s linear infinite; }
+        .bi-r2 { width: min(66vw, 430px); height: min(66vw, 430px); animation: bi-spin 14s linear infinite reverse; border-top-color: rgba(129, 140, 248, .55); }
+        .bi-r3 { width: min(86vw, 560px); height: min(86vw, 560px); animation: bi-spin 22s linear infinite; border-top-color: rgba(99, 102, 241, .40); }
+        @keyframes bi-spin {
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .bi-particles { position: absolute; inset: 0; pointer-events: none; }
+        .bi-p {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: var(--s, 4px);
+            height: var(--s, 4px);
+            margin: calc(var(--s, 4px) / -2);
+            border-radius: 50%;
+            background: #a5b4fc;
+            box-shadow: 0 0 8px 1px rgba(129, 140, 248, .8);
+            opacity: 0;
+            will-change: transform, opacity;
+        }
+        #boot-intro.bi-play .bi-p {
+            animation: bi-suck var(--t, 1.7s) cubic-bezier(.55, 0, .85, .45) var(--dl, 0s) forwards;
+        }
+        @keyframes bi-suck {
+            0%   { transform: translate(var(--sx, 0px), var(--sy, 0px)) scale(1); opacity: 0; }
+            18%  { opacity: .95; }
+            100% { transform: translate(0, 0) scale(.25); opacity: 0; }
+        }
+
+        .bi-logo-wrap {
+            position: relative;
+            width: 92%;
+            overflow: hidden;
+            border-radius: 12px;
+            transition: filter .5s ease;
+        }
+        .bi-logo { display: block; width: 100%; height: auto; }
+        .bi-logo path {
+            fill: transparent;
+            stroke: #818cf8;
+            stroke-width: 2;
+            stroke-linejoin: round;
+            stroke-linecap: round;
+            stroke-dasharray: 1;
+            stroke-dashoffset: 1;
+            transition: fill .55s ease .1s;
+        }
+        #boot-intro.bi-play .bi-logo path {
+            animation: bi-draw 1.05s ease var(--bd, 1s) forwards;
+        }
+        @keyframes bi-draw { to { stroke-dashoffset: 0; } }
+        #boot-intro.bi-lit .bi-logo path { fill: #6366f1; }
+        #boot-intro.bi-lit .bi-logo-wrap { filter: drop-shadow(0 0 22px rgba(99, 102, 241, .5)); }
+        .bi-glint-band {
+            opacity: 0;
+            will-change: transform, opacity;
+        }
+        #boot-intro.bi-lit .bi-glint-band {
+            animation: bi-glint 1.1s ease .1s both;
+        }
+        @keyframes bi-glint {
+            0% { opacity: 0; transform: translateX(0); }
+            15% { opacity: 1; }
+            85% { opacity: 1; }
+            100% { opacity: 0; transform: translateX(950px); }
+        }
+
+        body.intro-replay .login-card { animation: fadeInUp .5s ease-out; }
+        body.intro-replay .form-group { animation: fadeIn .5s ease-out .4s backwards; }
+        body.intro-replay .btn { animation: fadeIn .5s ease-out .6s backwards; }
+    </style>
+</head>
+<body>
+
+    <div id="toast-wrap" class="toast-wrap" aria-live="polite"></div>
+
+    <div class="login-actions">
+        <div class="lang-wrap" id="lang-wrap">
+            <button id="lang-toggle" class="theme-toggle-login" aria-label="{{ translate('Alternar idioma') }}" aria-haspopup="true" aria-expanded="false">
+                <i class="fas fa-globe"></i>
+            </button>
+            <div class="lang-menu" id="lang-menu" role="menu">
+                <a href="/set_language/pt" role="menuitem" class="{% if session.get('language', 'pt') == 'pt' %}active{% endif %}"><span class="flag">🇧🇷</span> Português <i class="fas fa-check"></i></a>
+                <a href="/set_language/en" role="menuitem" class="{% if session.get('language', 'pt') == 'en' %}active{% endif %}"><span class="flag">🇺🇸</span> English <i class="fas fa-check"></i></a>
+                <a href="/set_language/es" role="menuitem" class="{% if session.get('language', 'pt') == 'es' %}active{% endif %}"><span class="flag">🇪🇸</span> Español <i class="fas fa-check"></i></a>
+                <a href="/set_language/hi" role="menuitem" class="{% if session.get('language', 'pt') == 'hi' %}active{% endif %}"><span class="flag">🇮🇳</span> हिन्दी <i class="fas fa-check"></i></a>
+
+                <a href="/set_language/ru" role="menuitem" class="{% if session.get('language', 'pt') == 'ru' %}active{% endif %}"><span class="flag">🇷🇺</span> Русский <i class="fas fa-check"></i></a>
+                <a href="/set_language/zh" role="menuitem" class="{% if session.get('language', 'pt') == 'zh' %}active{% endif %}"><span class="flag">🇨🇳</span> 中文 <i class="fas fa-check"></i></a>
+                <a href="/set_language/ar" role="menuitem" class="{% if session.get('language', 'pt') == 'ar' %}active{% endif %}"><span class="flag">🇸🇦</span> العربية <i class="fas fa-check"></i></a>
+                <a href="/set_language/fr" role="menuitem" class="{% if session.get('language', 'pt') == 'fr' %}active{% endif %}"><span class="flag">🇫🇷</span> Français <i class="fas fa-check"></i></a>
+            </div>
+        </div>
+        <button id="theme-toggle" class="theme-toggle-login" aria-label="Alternar Tema">
+            <i class="fas fa-moon"></i>
+        </button>
+    </div>
+
+    <div id="boot-intro" aria-hidden="true">
+        <div class="bi-stage">
+            <div class="bi-ring bi-r3"></div>
+            <div class="bi-ring bi-r2"></div>
+            <div class="bi-ring bi-r1"></div>
+            <div class="bi-particles" id="bi-particles"></div>
+            <div class="bi-logo-wrap">
+                <svg class="bi-logo" viewBox="0 35 550 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Inventory">
+                    <g fill-rule="nonzero">
+                        <path pathLength="1" style="--bd:1.05s" d="M67.85379,354.99858h11.3138c0.03259,0 0.05903,-0.02645 0.05903,-0.05903v-56.59026c0,-0.03259 -0.02645,-0.05903 -0.05903,-0.05903h-11.3138c-0.03259,0 -0.05903,0.02645 -0.05903,0.05903v56.59026c0,0.03259 0.02645,0.05903 0.05903,0.05903z"/>
+                        <path pathLength="1" style="--bd:1.14s" d="M86.46016,355h11.3105c0.03259,0 0.05903,-0.02645 0.05903,-0.05903v-38.09205l23.5792,38.12322c0.01039,0.01747 0.02975,0.02786 0.05006,0.02786h13.30341c0.03259,0 0.05903,-0.02645 0.05903,-0.05903v-56.59026c0,-0.03259 -0.02645,-0.05903 -0.05903,-0.05903h-11.31522c-0.03259,0 -0.05903,0.02645 -0.05903,0.05903v38.09205l-23.574,-38.12322c-0.01039,-0.01747 -0.02975,-0.02786 -0.05006,-0.02786h-13.30388c-0.03259,0 -0.05903,0.02645 -0.05903,0.05903v56.59026c0,0.03259 0.02645,0.05903 0.05903,0.05903z"/>
+                        <path pathLength="1" style="--bd:1.23s" d="M166.63592,298.31308c-0.01086,-0.01511 -0.02881,-0.02456 -0.0477,-0.02456h-24.53835c-0.01889,0 -0.03684,0.00945 -0.0477,0.02456c-0.01086,0.01511 -0.01417,0.03447 -0.0085,0.05242l12.26917,38.12983c0.00803,0.02456 0.0307,0.04109 0.0562,0.04109c0.0255,0 0.04864,-0.01653 0.0562,-0.04109l12.26917,-38.12983c0.00567,-0.01795 0.00236,-0.03731 -0.0085,-0.05242zM226.77328,309.72511c0.03259,0 0.05903,-0.02645 0.05903,-0.05903v-11.31805c0,-0.03259 -0.02645,-0.05903 -0.05903,-0.05903h-48.30314c-0.00378,0 -0.00661,0.00331 -0.00992,0.00425c-0.00992,0.00189 -0.01889,0.00425 -0.02645,0.01086c-0.00425,0.00331 -0.00614,0.00756 -0.00945,0.01228c-0.00331,0.00472 -0.0085,0.00756 -0.01039,0.01322l-18.21014,56.59026c-0.00567,0.01795 -0.00236,0.03731 0.0085,0.05242c0.01086,0.01511 0.02881,0.02456 0.0477,0.02456h18.20919c0.00047,0 0.00047,0.00047 0.00094,0.00047h48.30314c0.03259,0 0.05903,-0.02645 0.05903,-0.05903v-11.31805c0,-0.03259 -0.02645,-0.05903 -0.05903,-0.05903h-36.92606v-11.19999h25.61225c0.03259,0 0.05903,-0.02645 0.05903,-0.05903v-11.31805c0,-0.03259 -0.02645,-0.05903 -0.05903,-0.05903h-25.61225v-11.19999z"/>
+                        <path pathLength="1" style="--bd:1.32s" d="M234.05675,355h11.3105c0.03259,0 0.05903,-0.02645 0.05903,-0.05903v-38.09205l23.5792,38.12322c0.01039,0.01747 0.02975,0.02786 0.05006,0.02786h13.30341c0.03259,0 0.05903,-0.02645 0.05903,-0.05903v-56.59026c0,-0.03259 -0.02645,-0.05903 -0.05903,-0.05903h-11.31522c-0.03259,0 -0.05903,0.02645 -0.05903,0.05903v38.09205l-23.574,-38.12322c-0.01039,-0.01747 -0.02975,-0.02786 -0.05006,-0.02786h-13.30388c-0.03259,0 -0.05903,0.02645 -0.05903,0.05903v56.59026c0,0.03259 0.02645,0.05903 0.05903,0.05903z"/>
+                        <path pathLength="1" style="--bd:1.41s" d="M289.64657,309.72637h18.43304v45.21318c0,0.03259 0.02645,0.05903 0.05903,0.05903h11.31805c0.03259,0 0.05903,-0.02645 0.05903,-0.05903v-45.21318h18.43351c0.03259,0 0.05903,-0.02645 0.05903,-0.05903v-11.31805c0,-0.03259 -0.02645,-0.05903 -0.05903,-0.05903h-48.30267c-0.03259,0 -0.05903,0.02645 -0.05903,0.05903v11.31805c0,0.03259 0.02597,0.05903 0.05903,0.05903z"/>
+                        <path pathLength="1" style="--bd:1.50s" d="M356.49005,343.61968c9.37644,0 16.97755,-7.60111 16.97755,-16.97755c0,-9.37644 -7.60111,-16.97755 -16.97755,-16.97755c-9.37644,0 -16.97755,7.60111 -16.97755,16.97755c0,9.37644 7.60111,16.97755 16.97755,16.97755zM423.23898,338.89997c6.20259,-4.11617 9.90507,-11.01061 9.90507,-18.45712c0,-12.21675 -9.93907,-22.15582 -22.15582,-22.15582h-26.20541c-0.03259,0 -0.05903,0.02645 -0.05903,0.05903v28.29608c0,15.5707 -12.6654,28.23846 -28.23374,28.23846c-0.03259,0 -0.05903,0.02645 -0.05903,0.05903c0,0.03259 0.02645,0.05903 0.05903,0.05903h28.29277c0.00283,0 0.00472,-0.00283 0.00803,-0.00331h11.30719c0.03259,0 0.05903,-0.02645 0.05903,-0.05903v-12.33765h14.83115c0.36458,0 0.72822,-0.00992 1.08241,-0.02739l7.66564,12.39574c0.01086,0.01747 0.02975,0.02834 0.05006,0.02834h13.29869c0.02125,0 0.04109,-0.01133 0.05148,-0.03022c0.01039,-0.01842 0.00992,-0.04156 -0.00142,-0.0595zM417.16909,329.20269c-1.80496,1.28406 -3.94238,1.96269 -6.18087,1.96269h-14.83115v-21.44508h14.83115c5.91263,0 10.72254,4.81038 10.72254,10.72254c0,3.47721 -1.69776,6.75182 -4.54167,8.75985z"/>
+                        <path pathLength="1" style="--bd:1.59s" d="M482.19619,298.31906c-0.01086,-0.017 -0.02975,-0.02739 -0.04959,-0.02739h-12.45808c-0.02314,0 -0.04392,0.01322 -0.05336,0.03448l-11.63919,25.18628l-11.64013,-25.18628c-0.00992,-0.02078 -0.03022,-0.03448 -0.05336,-0.03448h-12.45855c-0.02031,0 -0.03872,0.01039 -0.04959,0.02739c-0.01039,0.017 -0.01228,0.03825 -0.00378,0.05667l17.91734,38.79099l0.57096,1.23495v16.5393c0,0.03259 0.02645,0.05903 0.05903,0.05903h11.31333c0.03259,0 0.05903,-0.02645 0.05903,-0.05903v-16.53647l0.57237,-1.23825c0.00047,-0.00142 -0.00047,-0.00378 0,-0.0052l17.91687,-38.78579c0.00897,-0.01795 0.00708,-0.0392 -0.00331,-0.0562z"/>
+                    </g>
+                    <g fill-rule="evenodd">
+                        <path pathLength="1" style="--bd:0.55s" d="M329.29096,223.58193c0,12.01127 -9.76917,21.78044 -21.78044,21.78044h-65.02103c-12.01127,0 -21.78044,-9.76917 -21.78044,-21.78044v-65.02103c0,-12.01127 9.76917,-21.78044 21.78044,-21.78044h18.89774v-21.78044h-18.89774c-24.02255,0 -43.56089,19.53834 -43.56089,43.56089v64.86088c0,24.02255 19.53834,43.56089 43.56089,43.56089h64.86088c24.02255,0 43.56089,-19.53834 43.56089,-43.56089v-18.73759h-21.62029zM340.18118,115h-54.61126v21.78044h28.34661l-60.21652,60.21652c-4.32406,4.16391 -4.32406,11.21052 0,15.37443c2.08195,2.08195 4.96466,3.20301 7.68721,3.20301c2.72256,0 5.60526,-1.12105 7.68721,-3.20301l60.21652,-60.21652v28.34661h21.78044v-54.61126c0,-6.08571 -4.80451,-10.89022 -10.89022,-10.89022z"/>
+                    </g>
+                    <defs>
+                        <linearGradient id="bi-glint-grad" x1="0" y1="0" x2="1" y2="0">
+                            <stop offset="0" stop-color="#ffffff" stop-opacity="0"/>
+                            <stop offset="0.28" stop-color="#ffffff" stop-opacity="0.9"/>
+                            <stop offset="0.5" stop-color="#ffffff" stop-opacity="1"/>
+                            <stop offset="0.72" stop-color="#ffffff" stop-opacity="0.9"/>
+                            <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+                        </linearGradient>
+                        <clipPath id="bi-glint-clip">
+                            <path d="M67.85379,354.99858h11.3138c0.03259,0 0.05903,-0.02645 0.05903,-0.05903v-56.59026c0,-0.03259 -0.02645,-0.05903 -0.05903,-0.05903h-11.3138c-0.03259,0 -0.05903,0.02645 -0.05903,0.05903v56.59026c0,0.03259 0.02645,0.05903 0.05903,0.05903z"/>
+                            <path d="M86.46016,355h11.3105c0.03259,0 0.05903,-0.02645 0.05903,-0.05903v-38.09205l23.5792,38.12322c0.01039,0.01747 0.02975,0.02786 0.05006,0.02786h13.30341c0.03259,0 0.05903,-0.02645 0.05903,-0.05903v-56.59026c0,-0.03259 -0.02645,-0.05903 -0.05903,-0.05903h-11.31522c-0.03259,0 -0.05903,0.02645 -0.05903,0.05903v38.09205l-23.574,-38.12322c-0.01039,-0.01747 -0.02975,-0.02786 -0.05006,-0.02786h-13.30388c-0.03259,0 -0.05903,0.02645 -0.05903,0.05903v56.59026c0,0.03259 0.02645,0.05903 0.05903,0.05903z"/>
+                            <path d="M166.63592,298.31308c-0.01086,-0.01511 -0.02881,-0.02456 -0.0477,-0.02456h-24.53835c-0.01889,0 -0.03684,0.00945 -0.0477,0.02456c-0.01086,0.01511 -0.01417,0.03447 -0.0085,0.05242l12.26917,38.12983c0.00803,0.02456 0.0307,0.04109 0.0562,0.04109c0.0255,0 0.04864,-0.01653 0.0562,-0.04109l12.26917,-38.12983c0.00567,-0.01795 0.00236,-0.03731 -0.0085,-0.05242zM226.77328,309.72511c0.03259,0 0.05903,-0.02645 0.05903,-0.05903v-11.31805c0,-0.03259 -0.02645,-0.05903 -0.05903,-0.05903h-48.30314c-0.00378,0 -0.00661,0.00331 -0.00992,0.00425c-0.00992,0.00189 -0.01889,0.00425 -0.02645,0.01086c-0.00425,0.00331 -0.00614,0.00756 -0.00945,0.01228c-0.00331,0.00472 -0.0085,0.00756 -0.01039,0.01322l-18.21014,56.59026c-0.00567,0.01795 -0.00236,0.03731 0.0085,0.05242c0.01086,0.01511 0.02881,0.02456 0.0477,0.02456h18.20919c0.00047,0 0.00047,0.00047 0.00094,0.00047h48.30314c0.03259,0 0.05903,-0.02645 0.05903,-0.05903v-11.31805c0,-0.03259 -0.02645,-0.05903 -0.05903,-0.05903h-36.92606v-11.19999h25.61225c0.03259,0 0.05903,-0.02645 0.05903,-0.05903v-11.31805c0,-0.03259 -0.02645,-0.05903 -0.05903,-0.05903h-25.61225v-11.19999z"/>
+                            <path d="M234.05675,355h11.3105c0.03259,0 0.05903,-0.02645 0.05903,-0.05903v-38.09205l23.5792,38.12322c0.01039,0.01747 0.02975,0.02786 0.05006,0.02786h13.30341c0.03259,0 0.05903,-0.02645 0.05903,-0.05903v-56.59026c0,-0.03259 -0.02645,-0.05903 -0.05903,-0.05903h-11.31522c-0.03259,0 -0.05903,0.02645 -0.05903,0.05903v38.09205l-23.574,-38.12322c-0.01039,-0.01747 -0.02975,-0.02786 -0.05006,-0.02786h-13.30388c-0.03259,0 -0.05903,0.02645 -0.05903,0.05903v56.59026c0,0.03259 0.02645,0.05903 0.05903,0.05903z"/>
+                            <path d="M289.64657,309.72637h18.43304v45.21318c0,0.03259 0.02645,0.05903 0.05903,0.05903h11.31805c0.03259,0 0.05903,-0.02645 0.05903,-0.05903v-45.21318h18.43351c0.03259,0 0.05903,-0.02645 0.05903,-0.05903v-11.31805c0,-0.03259 -0.02645,-0.05903 -0.05903,-0.05903h-48.30267c-0.03259,0 -0.05903,0.02645 -0.05903,0.05903v11.31805c0,0.03259 0.02597,0.05903 0.05903,0.05903z"/>
+                            <path d="M356.49005,343.61968c9.37644,0 16.97755,-7.60111 16.97755,-16.97755c0,-9.37644 -7.60111,-16.97755 -16.97755,-16.97755c-9.37644,0 -16.97755,7.60111 -16.97755,16.97755c0,9.37644 7.60111,16.97755 16.97755,16.97755zM423.23898,338.89997c6.20259,-4.11617 9.90507,-11.01061 9.90507,-18.45712c0,-12.21675 -9.93907,-22.15582 -22.15582,-22.15582h-26.20541c-0.03259,0 -0.05903,0.02645 -0.05903,0.05903v28.29608c0,15.5707 -12.6654,28.23846 -28.23374,28.23846c-0.03259,0 -0.05903,0.02645 -0.05903,0.05903c0,0.03259 0.02645,0.05903 0.05903,0.05903h28.29277c0.00283,0 0.00472,-0.00283 0.00803,-0.00331h11.30719c0.03259,0 0.05903,-0.02645 0.05903,-0.05903v-12.33765h14.83115c0.36458,0 0.72822,-0.00992 1.08241,-0.02739l7.66564,12.39574c0.01086,0.01747 0.02975,0.02834 0.05006,0.02834h13.29869c0.02125,0 0.04109,-0.01133 0.05148,-0.03022c0.01039,-0.01842 0.00992,-0.04156 -0.00142,-0.0595zM417.16909,329.20269c-1.80496,1.28406 -3.94238,1.96269 -6.18087,1.96269h-14.83115v-21.44508h14.83115c5.91263,0 10.72254,4.81038 10.72254,10.72254c0,3.47721 -1.69776,6.75182 -4.54167,8.75985z"/>
+                            <path d="M482.19619,298.31906c-0.01086,-0.017 -0.02975,-0.02739 -0.04959,-0.02739h-12.45808c-0.02314,0 -0.04392,0.01322 -0.05336,0.03448l-11.63919,25.18628l-11.64013,-25.18628c-0.00992,-0.02078 -0.03022,-0.03448 -0.05336,-0.03448h-12.45855c-0.02031,0 -0.03872,0.01039 -0.04959,0.02739c-0.01039,0.017 -0.01228,0.03825 -0.00378,0.05667l17.91734,38.79099l0.57096,1.23495v16.5393c0,0.03259 0.02645,0.05903 0.05903,0.05903h11.31333c0.03259,0 0.05903,-0.02645 0.05903,-0.05903v-16.53647l0.57237,-1.23825c0.00047,-0.00142 -0.00047,-0.00378 0,-0.0052l17.91687,-38.78579c0.00897,-0.01795 0.00708,-0.0392 -0.00331,-0.0562z"/>
+                            <path clip-rule="evenodd" d="M329.29096,223.58193c0,12.01127 -9.76917,21.78044 -21.78044,21.78044h-65.02103c-12.01127,0 -21.78044,-9.76917 -21.78044,-21.78044v-65.02103c0,-12.01127 9.76917,-21.78044 21.78044,-21.78044h18.89774v-21.78044h-18.89774c-24.02255,0 -43.56089,19.53834 -43.56089,43.56089v64.86088c0,24.02255 19.53834,43.56089 43.56089,43.56089h64.86088c24.02255,0 43.56089,-19.53834 43.56089,-43.56089v-18.73759h-21.62029zM340.18118,115h-54.61126v21.78044h28.34661l-60.21652,60.21652c-4.32406,4.16391 -4.32406,11.21052 0,15.37443c2.08195,2.08195 4.96466,3.20301 7.68721,3.20301c2.72256,0 5.60526,-1.12105 7.68721,-3.20301l60.21652,-60.21652v28.34661h21.78044v-54.61126c0,-6.08571 -4.80451,-10.89022 -10.89022,-10.89022z"/>
+                        </clipPath>
+                    </defs>
+                    <g clip-path="url(#bi-glint-clip)">
+                        <g class="bi-glint-band">
+                            <rect x="-190" y="0" width="170" height="500" fill="url(#bi-glint-grad)" transform="skewX(-14)"/>
+                        </g>
+                    </g>
+                </svg>
+            </div>
+        </div>
+    </div>
+    <script>
+
+    (function () {
+        var ov = document.getElementById('boot-intro');
+        if (!ov) return;
+        var BOOT_ID = {{ boot_id|tojson }};
+        var seen = null;
+        try { seen = localStorage.getItem('boot_seen'); } catch (e) {}
+        var reduced = !!(window.matchMedia &&
+            window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+        if (reduced || seen === BOOT_ID) return;
+
+        try { localStorage.setItem('boot_seen', BOOT_ID); } catch (e) {}
+
+        ov.style.display = 'grid';
+
+        var wrap = document.getElementById('bi-particles');
+        if (wrap) {
+            for (var i = 0; i < 26; i++) {
+                var p = document.createElement('span');
+                p.className = 'bi-p';
+                var ang = Math.random() * Math.PI * 2;
+                var rad = 170 + Math.random() * 260;
+                p.style.setProperty('--sx', (Math.cos(ang) * rad).toFixed(0) + 'px');
+                p.style.setProperty('--sy', (Math.sin(ang) * rad).toFixed(0) + 'px');
+                p.style.setProperty('--t', (1.3 + Math.random() * 1.1).toFixed(2) + 's');
+                p.style.setProperty('--dl', (0.45 + Math.random() * 1.15).toFixed(2) + 's');
+                p.style.setProperty('--s', (2.5 + Math.random() * 3).toFixed(1) + 'px');
+                wrap.appendChild(p);
+            }
+        }
+
+        var done = false;
+        function end(fast) {
+            if (done) return;
+            done = true;
+            if (!fast) {
+
+                document.body.classList.add('intro-replay');
+            }
+            ov.classList.add('bi-out');
+            if (fast) ov.classList.add('bi-fast');
+            window.removeEventListener('keydown', onKey, true);
+            setTimeout(function () {
+                if (ov.parentNode) ov.parentNode.removeChild(ov);
+            }, fast ? 320 : 660);
+        }
+        function onKey(e) {
+            var k = e.key || '';
+            if (k === 'Tab' || k === 'Shift' || k === 'Control' || k === 'Alt' ||
+                k === 'Meta' || k === 'CapsLock' || /^F\d{1,2}$/.test(k)) return;
+            end(true);
+        }
+        ov.addEventListener('pointerdown', function () { end(true); }, true);
+        window.addEventListener('keydown', onKey, true);
+
+        requestAnimationFrame(function () {
+            requestAnimationFrame(function () { ov.classList.add('bi-play'); });
+        });
+        setTimeout(function () { ov.classList.add('bi-lit'); }, 2700);
+        setTimeout(function () { end(false); }, 3950);
+
+        setTimeout(function () {
+            if (ov.parentNode) ov.parentNode.removeChild(ov);
+        }, 5300);
+    })();
+    </script>
+
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-logo">
+
+                <img src="{{ url_for('static', filename='logo.svg') }}" alt="Logo" style="margin:0; padding:0;">
+            </div>
+
+            {% set _flashes = get_flashed_messages(with_categories=true) %}
+            {% set _sess_expired = request.args.get('expired') == '1' %}
+            {% if _flashes or _sess_expired %}
+            <script>
+                window.LOGIN_FLASHES = [
+                {%- for category, message in _flashes %}
+                    { category: {{ category|tojson }}, message: {{ translate(message)|tojson }} },
+                {%- endfor %}
+                {%- if _sess_expired %}
+                    { category: 'warning', message: {{ translate('Sua sessão expirou. Faça login novamente.')|tojson }} },
+                {%- endif %}
+                ];
+            </script>
+            {% endif %}
+            <form method="POST" action="{{ url_for('login') }}">
+                <div class="form-group">
+                    <label>{{ translate('Usuário') }}</label>
+                    <input type="text" name="username" required>
+                </div>
+
+                <div class="form-group">
+                    <label>{{ translate('Senha') }}</label>
+                    <input type="password" name="password" required>
+                </div>
+
+                <button type="submit" class="btn">
+                    {{ translate('Entrar') }}
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+
+        const toggleBtn = document.getElementById('theme-toggle');
+        const icon = toggleBtn.querySelector('i');
+        const root = document.documentElement;
+
+        function updateIcon(dark) {
+
+            icon.classList.toggle('fa-sun', dark);
+            icon.classList.toggle('fa-moon', !dark);
+        }
+        updateIcon(root.classList.contains('dark-mode'));
+
+        toggleBtn.addEventListener('click', () => {
+            const dark = !root.classList.contains('dark-mode');
+            root.classList.toggle('dark-mode', dark);
+            localStorage.setItem('theme', dark ? 'dark' : 'light');
+            updateIcon(dark);
+        });
+
+        const langWrap = document.getElementById('lang-wrap');
+        const langToggle = document.getElementById('lang-toggle');
+        if (langWrap && langToggle) {
+            langToggle.addEventListener('click', e => {
+                e.stopPropagation();
+                const open = langWrap.classList.toggle('open');
+                langToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            });
+            document.addEventListener('click', e => {
+                if (!langWrap.contains(e.target)) {
+                    langWrap.classList.remove('open');
+                    langToggle.setAttribute('aria-expanded', 'false');
+                }
+            });
+        }
+
+        const _LICON = { success: 'fa-circle-check', danger: 'fa-circle-xmark', error: 'fa-circle-xmark', warning: 'fa-triangle-exclamation', info: 'fa-circle-info' };
+        const _toastWrap = document.getElementById('toast-wrap');
+        function loginToast(message, category) {
+            const cat = ['success', 'danger', 'error', 'warning', 'info'].includes(category) ? category : 'info';
+            const el = document.createElement('div');
+            el.className = 'toast toast-' + cat;
+            const ic = document.createElement('i');
+            ic.className = 'fas ' + (_LICON[cat] || 'fa-circle-info') + ' alert-icon';
+            const span = document.createElement('span');
+            span.textContent = message;
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'alert-close';
+            btn.innerHTML = '<i class="fas fa-times"></i>';
+            el.appendChild(ic);
+            el.appendChild(span);
+            el.appendChild(btn);
+            _toastWrap.appendChild(el);
+            const hide = () => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateX(100px)';
+                el.style.transition = 'opacity .3s, transform .3s';
+                setTimeout(() => el.remove(), 300);
+            };
+            btn.addEventListener('click', hide);
+            setTimeout(() => { if (el.parentElement) hide(); }, 5000);
+        }
+        (window.LOGIN_FLASHES || []).forEach(f => loginToast(f.message, f.category));
+    </script>
+</body>
+</html>

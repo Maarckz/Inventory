@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}{{ translate('Painel de Máquinas') }} · Inventory{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/painel.css') }}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/painel.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+
+<div class="panel-header">
+    <a href="#" id="show-search" class="btn btn-primary fade-in">
+        <i class="fas fa-search"></i> {{ translate('Pesquisar Máquinas') }}
+    </a>
+</div>
+
+<div class="search-container" id="search-container">
+    <div class="search-header">
+        <form method="GET" action="{{ url_for('search') }}" class="search-form">
+            <div class="search-input">
+                <i class="fas fa-search"></i>
+                <input type="text" name="query" placeholder="{{ translate('Pesquisar por hostname, SO ou processador...') }}"
+                    value="{{ request.args.get('query', '') }}">
+            </div>
+            <button type="submit" class="btn btn-primary">
+                {{ translate('Pesquisar') }}
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="machines-grid">
+    {% for machine in machines %}
+    <div class="machine-card">
+        <div class="machine-header">
+            <a href="{{ url_for('machine_details', hostname=machine.hostname) }}" class="hostname-btn">
+                {{ machine.hostname.upper() }} ({{ machine.id }})
+            </a>
+            <span class="status status-{{ 'ativo' if machine.device_status == translate('Ativo') else 'inativo' }}">
+                {{ translate(machine.device_status) }}
+            </span>
+
+        </div>
+
+        <div class="machine-info">
+            <div class="info-item">
+                <span class="info-label">{{ translate('Sistema Operacional') }}</span>
+                <span class="info-value">{{ machine.os_name }} {{ machine.os_version }}</span>
+            </div>
+
+            <div class="info-item">
+                <span class="info-label">{{ translate('Processador') }}</span>
+                <span class="info-value">{{ machine.cpu_name }}</span>
+            </div>
+
+            <div class="info-item">
+                <span class="info-label">{{ translate('Memória RAM') }}</span>
+                <span class="info-value">{{ machine.ram_total }} GB</span>
+            </div>
+
+            <div class="info-item">
+                <span class="info-label">{{ translate('Última Atividade') }}</span>
+                <span class="info-value">{{ machine.last_seen | formatar_data }}</span>
+            </div>
+        </div>
+
+        <div class="machine-actions">
+            <a href="{{ url_for('machine_details', hostname=machine.hostname) }}" class="btn btn-sm btn-primary">
+                <i class="fas fa-eye"></i> {{ translate('Detalhes') }}
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,42 @@
+services:
+  db:
+    image: postgres:16
+    container_name: inventory_postgres
+    restart: always
+    entrypoint:
+      - bash
+      - -c
+      - |
+        if [ ! -f /var/lib/postgresql/data/PG_VERSION ]; then
+          find /var/lib/postgresql/data -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+        fi
+        exec docker-entrypoint.sh postgres
+    environment:
+      POSTGRES_USER: ${DB_USER:-inventorydb}
+      POSTGRES_PASSWORD: ${DB_PASS:-senhadoinventorydb}
+      POSTGRES_DB: ${DB_NAME:-inventory_db}
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-inventorydb} -d ${DB_NAME:-inventory_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+
+  cache:
+    image: redis:7-alpine
+    container_name: inventory_redis
+    restart: always
+    command: ["redis-server", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru"]
+    ports:
+      - "127.0.0.1:6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+

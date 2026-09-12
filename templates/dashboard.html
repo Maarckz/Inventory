@@ -1,0 +1,805 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard · Inventory{% endblock %}
+
+{% block extra_js %}
+
+<script src="{{ url_for('static', filename='js/vendor/echarts.min.js') }}"></script>
+<script>
+
+    window.DASH_T = {
+
+        machines:         {{ translate('Máquinas')|tojson }},
+        devices:          {{ translate('Dispositivos')|tojson }},
+        quantity:         {{ translate('Quantidade')|tojson }},
+        occurrences:      {{ translate('Ocorrências')|tojson }},
+
+        withAgent:        {{ translate('Com agente')|tojson }},
+        withoutAgent:     {{ translate('Sem agente')|tojson }},
+        withAgentWazuh:   {{ translate('Com agente Wazuh')|tojson }},
+        withoutAgentWazuh:{{ translate('Sem agente Wazuh')|tojson }},
+        protectedDevices: {{ translate('dispositivos protegidos')|tojson }},
+
+        coverage:         {{ translate('Cobertura')|tojson }},
+
+        agentsActive:     {{ translate('Agentes Ativos')|tojson }},
+        agentsDisconnected: {{ translate('Agentes Desconectados')|tojson }},
+        agentsNever:      {{ translate('Nunca Conectaram')|tojson }},
+
+        kaToday:          {{ translate('Hoje')|tojson }},
+        kaWeek:           {{ translate('1-7 dias')|tojson }},
+        kaMonth:          {{ translate('8-30 dias')|tojson }},
+        kaOld:            {{ translate('Mais de 30 dias')|tojson }},
+        daysKeepalive:    {{ translate('dias desde o último keepalive')|tojson }},
+
+        agents:           {{ translate('Agentes')|tojson }},
+        cumulative:       {{ translate('% acumulado')|tojson }},
+
+        ramInUse:         {{ translate('em uso')|tojson }},
+        ramOf:            {{ translate('de')|tojson }},
+
+        installedOn:      {{ translate('instalado em')|tojson }},
+        machinesF:        {{ translate('máquinas')|tojson }},
+
+        activeMachines:   {{ translate('Agentes Wazuh Online')|tojson }},
+        inactiveMachines: {{ translate('Agentes Wazuh Offline')|tojson }},
+
+        noData:           {{ translate('Sem dados')|tojson }},
+        notIdentified:    {{ translate('Não identificado')|tojson }},
+
+        loading:          {{ translate('Carregando…')|tojson }},
+
+        types: {
+            desktop:     {{ translate('Desktop')|tojson }},
+            router:      {{ translate('Router')|tojson }},
+            switch:      {{ translate('Switch')|tojson }},
+            ap:          {{ translate('Access Point')|tojson }},
+            firewall:    {{ translate('Firewall')|tojson }},
+            loadbalancer:{{ translate('Load Balancer')|tojson }},
+            server:      {{ translate('Servidor (Server)')|tojson }},
+            hypervisor:  {{ translate('Hypervisor')|tojson }},
+            vm:          {{ translate('Máquina Virtual (VM)')|tojson }},
+            storage:     {{ translate('Storage (SAN / NAS)')|tojson }},
+            laptop:      {{ translate('Laptop / Notebook')|tojson }},
+            tablet:      {{ translate('Tablet')|tojson }},
+            phone:       {{ translate('Smartphone (Phone)')|tojson }},
+            voip:        {{ translate('Telefone IP (VoIP)')|tojson }},
+            printer:     {{ translate('Impressora / Multifuncional (Printer)')|tojson }},
+            iot:         {{ translate('Dispositivos IoT')|tojson }},
+            rpi:         {{ translate('Raspberry Pi')|tojson }},
+            smarttv:     {{ translate('Smart TV')|tojson }},
+            camera:      {{ translate('Camera')|tojson }},
+            nas:         {{ translate('NAS')|tojson }}
+        }
+    };
+</script>
+<script src="{{ url_for('static', filename='js/dashboard-echarts.js') }}"></script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+
+* {
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    -ms-user-select: none !important;
+}
+
+#ai-messages, #ai-messages *,
+#ai-chat-view input, #ai-chat-view textarea,
+input, textarea, select {
+    user-select: text !important;
+    -webkit-user-select: text !important;
+    -ms-user-select: text !important;
+}
+
+    :root {
+        --primary: #6366F1;
+        --primary-light: #818cf8;
+        --secondary: #64748b;
+        --dark: #1e293b;
+        --light: #f8fafc;
+        --success: #10b981;
+        --danger: #ef4444;
+        --warning: #f59e0b;
+        --info: #0ea5e9;
+        --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --border: #e2e8f0;
+    }
+
+    .echart {
+        width: 100%;
+        height: 100%;
+        min-height: 240px;
+    }
+
+    .dashboard-container {
+        padding: 0.5rem;
+        max-width: 1800px;
+        margin: 0 auto;
+        width: 100%;
+    }
+
+    .kpi-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .kpi-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.25rem;
+        box-shadow: var(--card-shadow);
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+    }
+
+    .kpi-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 20px -6px rgba(79, 70, 229, 0.25), 0 4px 8px -4px rgba(79, 70, 229, 0.12);
+    }
+
+    .kpi-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .kpi-title {
+        font-size: 1rem;
+        font-weight: 500;
+        color: var(--secondary);
+    }
+
+    .kpi-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+
+    }
+
+    .kpi-icon.blue {
+        background: var(--primary);
+    }
+
+    .kpi-icon.green {
+        background: var(--success);
+    }
+
+    .kpi-icon.orange {
+        background: var(--warning);
+    }
+
+    .kpi-icon.red {
+        background: var(--danger);
+    }
+
+    .kpi-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+        color: var(--dark);
+    }
+
+    .kpi-subtitle {
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: var(--secondary);
+        margin-bottom: 0.35rem;
+    }
+
+    .kpi-subtitle .sub-green { color: var(--success); font-weight: 600; }
+
+    .kpi-subtitle .sub-red { color: var(--danger); font-weight: 600; }
+
+    .kpi-exempt-line {
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: var(--secondary);
+        margin: -0.15rem 0 0.35rem;
+    }
+
+    .kpi-exempt-line i {
+        color: var(--gray);
+        opacity: .8;
+        font-size: 0.72rem;
+        margin-right: 0.25rem;
+    }
+
+    .kpi-exempt-line span { font-weight: 600; }
+
+    .kpi-footer {
+        margin-top: auto;
+        padding-top: 0.5rem;
+        font-size: 0.75rem;
+        color: var(--primary);
+        opacity: 0.85;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        transition: opacity 0.25s ease;
+    }
+
+    .kpi-card:hover .kpi-footer { opacity: 1; }
+
+    .kpi-footer i { font-size: 0.65rem; }
+
+    .charts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .chart-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: var(--card-shadow);
+        display: flex;
+        flex-direction: column;
+        height: 380px;
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .chart-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 20px -6px rgba(79, 70, 229, 0.25), 0 4px 8px -4px rgba(79, 70, 229, 0.12);
+    }
+
+    .chart-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .chart-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--dark);
+    }
+
+    .chart-subtitle {
+        font-size: 0.75rem;
+        font-weight: 400;
+        color: var(--secondary);
+        margin-top: 0.15rem;
+        max-width: 480px;
+    }
+
+    .chart-container {
+        flex: 1;
+        position: relative;
+    }
+
+    .detailed-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+
+    .drag-grip {
+        margin-left: .6rem;
+        color: var(--gray);
+        opacity: 0;
+        cursor: grab;
+        font-size: .85rem;
+        padding: 0 .15rem;
+        transition: opacity .15s ease;
+        pointer-events: auto;
+    }
+    .chart-card:hover .drag-grip,
+    .detailed-card:hover .drag-grip { opacity: .65; }
+    .drag-grip:hover { opacity: 1 !important; color: var(--primary); }
+    .drag-grip:active { cursor: grabbing; }
+
+    .kpi-card {
+        cursor: grab;
+    }
+    .kpi-card:active { cursor: grabbing; }
+
+    .dashboard-dragging {
+        opacity: .45;
+        transform: scale(.98) !important;
+        box-shadow: 0 0 0 2px var(--primary) !important;
+    }
+
+    .detailed-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: var(--card-shadow);
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .detailed-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 20px -6px rgba(79, 70, 229, 0.25), 0 4px 8px -4px rgba(79, 70, 229, 0.12);
+    }
+
+    .detailed-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .detailed-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--dark);
+    }
+
+    .view-all {
+        font-size: 0.875rem;
+        color: var(--primary);
+        text-decoration: none;
+        position: relative;
+        transition: color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .view-all::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: -2px;
+        width: 0%;
+        height: 2px;
+        background: var(--primary);
+        transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .view-all:hover {
+        color: var(--dark);
+    }
+
+    .view-all:hover::after {
+        width: 100%;
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .data-table th {
+        text-align: left;
+        padding: 0.75rem;
+        font-weight: 600;
+        color: var(--secondary);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .data-table td {
+        padding: 0.75rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .data-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .badge.blue {
+        background: #dbeafe;
+        color: var(--primary);
+    }
+
+    .badge.green {
+        background: #dcfce7;
+        color: var(--success);
+    }
+
+    .badge.orange {
+        background: #ffedd5;
+        color: var(--warning);
+    }
+
+    .badge.red {
+        background: #fee2e2;
+        color: var(--danger);
+    }
+
+    .kpi-card,
+    .chart-card,
+    .detailed-card {
+        opacity: 0;
+    }
+
+    @keyframes dashIn {
+        0% {
+            opacity: 0;
+            transform: translateY(22px) scale(0.985);
+        }
+
+        100% {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    .enter-anim {
+        animation: dashIn 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) var(--enter-delay, 0ms) both;
+    }
+
+    .entered {
+        opacity: 1;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .kpi-card,
+        .chart-card,
+        .detailed-card {
+            opacity: 1;
+        }
+
+        .enter-anim {
+            animation: none;
+        }
+    }
+
+    @media (max-width: 1024px) {
+        .charts-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .detailed-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .kpi-cards {
+            grid-template-columns: 1fr;
+        }
+
+        .chart-card {
+            height: 320px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<script>window.SPLASH_WAIT_DATA = true;</script>
+<div class="dashboard-container">
+
+    <div class="kpi-cards">
+
+        <div class="kpi-card" data-card="kpi-machines" onclick="window.location.href='/netscope'">
+            <div class="kpi-header">
+                <div class="kpi-title">{{ translate('Total de Máquinas') }}</div>
+                <div class="kpi-icon blue"><i class="fas fa-laptop"></i></div>
+            </div>
+
+            <div class="kpi-value" id="kpi-total">{{ ns_total }}</div>
+            <div class="kpi-subtitle" id="kpi-total-sub">
+                <span class="sub-green" id="kpi-with-agent">{{ ns_with_agent }}</span> {{ translate('com agente') }}
+                &nbsp;·&nbsp;
+                <span class="sub-red" id="kpi-without-agent">{{ ns_without_agent }}</span> {{ translate('sem agente') }}
+            </div>
+
+            <div class="kpi-exempt-line" id="kpi-exempt-wrap" style="display:{{ 'block' if ns_agent_exempt else 'none' }}">
+                <i class="fas fa-shield-halved" title="{{ translate('Sem possibilidade de agente — não conta como sem agente') }}"></i>
+                <span id="kpi-agent-exempt" title="{{ translate('Sem possibilidade de agente — não conta como sem agente') }}">{{ ns_agent_exempt }}</span> {{ translate('não suportados') }}
+            </div>
+
+        </div>
+
+        <div class="kpi-card" data-card="kpi-agents-online" onclick="window.location.href='/search?query=agent_info:status:active'">
+            <div class="kpi-header">
+                <div class="kpi-title">{{ translate('Agentes Wazuh Online') }}</div>
+                <div class="kpi-icon green"><i class="fas fa-check-circle"></i></div>
+            </div>
+            <div class="kpi-value" id="kpi-online">{{ active_count }}</div>
+        </div>
+        <div class="kpi-card" data-card="kpi-agents-offline" onclick="window.location.href='/search?query=agent_info:status:disconnected'">
+            <div class="kpi-header">
+                <div class="kpi-title">{{ translate('Agentes Wazuh Offline') }}</div>
+                <div class="kpi-icon orange"><i class="fas fa-times-circle"></i></div>
+            </div>
+            <div class="kpi-value" id="kpi-offline">{{ inactive_count }}</div>
+        </div>
+
+        <div class="kpi-card" data-card="kpi-with-agent" onclick="window.location.href='/search'">
+            <div class="kpi-header">
+                <div class="kpi-title">{{ translate('Com Agente Wazuh') }}</div>
+                <div class="kpi-icon green"><i class="fas fa-shield-halved"></i></div>
+            </div>
+            <div class="kpi-value" id="kpi-agent">{{ ns_with_agent }}</div>
+            <div class="kpi-footer"><i class="fas fa-arrow-right"></i> {{ translate('Ver na Pesquisa') }}</div>
+        </div>
+
+        <div class="kpi-card" data-card="kpi-without-agent" onclick="window.location.href='/netscope?filter=noagent'">
+            <div class="kpi-header">
+                <div class="kpi-title">{{ translate('Sem Agente Wazuh') }}</div>
+                <div class="kpi-icon red"><i class="fas fa-shield-halved"></i></div>
+            </div>
+            <div class="kpi-value" id="kpi-noagent">{{ ns_without_agent }}</div>
+            <div class="kpi-footer"><i class="fas fa-arrow-right"></i> {{ translate('Ver no NetScope') }}</div>
+        </div>
+    </div>
+
+    <div class="charts-grid">
+
+        <div class="chart-card" data-card="dc-chartCoverage">
+            <div class="chart-header">
+                <h3 class="chart-title">{{ translate('Cobertura de Agentes Wazuh') }}</h3><i class="fas fa-grip-vertical drag-grip" title="{{ translate('Arraste para reorganizar') }}"></i>
+            </div>
+
+            <div class="chart-container"><div class="echart" id="chartCoverage"></div></div>
+        </div>
+        <div class="chart-card" data-card="dc-agentStatus">
+            <div class="chart-header">
+                <h3 class="chart-title">{{ translate('Status dos Agentes Wazuh') }}</h3><i class="fas fa-grip-vertical drag-grip" title="{{ translate('Arraste para reorganizar') }}"></i>
+            </div>
+            <div class="chart-container"><div class="echart" id="agentStatus"></div></div>
+        </div>
+        <div class="chart-card" data-card="dc-roseTypes">
+            <div class="chart-header">
+                <h3 class="chart-title">{{ translate('Tipos de Dispositivos') }}</h3><i class="fas fa-grip-vertical drag-grip" title="{{ translate('Arraste para reorganizar') }}"></i>
+            </div>
+            <div class="chart-container"><div class="echart" id="roseTypes"></div></div>
+        </div>
+    </div>
+
+    <div class="charts-grid">
+        <div class="chart-card" data-card="dc-chartOs">
+            <div class="chart-header">
+                <h3 class="chart-title">{{ translate('Sistemas Operacionais') }}</h3><i class="fas fa-grip-vertical drag-grip" title="{{ translate('Arraste para reorganizar') }}"></i>
+            </div>
+            <div class="chart-container"><div class="echart" id="chartOs"></div></div>
+        </div>
+        <div class="chart-card" data-card="dc-chartCpu">
+            <div class="chart-header">
+                <h3 class="chart-title">{{ translate('Processadores') }}</h3><i class="fas fa-grip-vertical drag-grip" title="{{ translate('Arraste para reorganizar') }}"></i>
+            </div>
+            <div class="chart-container"><div class="echart" id="chartCpu"></div></div>
+        </div>
+        <div class="chart-card" data-card="dc-chartRam">
+            <div class="chart-header">
+                <h3 class="chart-title">{{ translate('Memória RAM') }}</h3><i class="fas fa-grip-vertical drag-grip" title="{{ translate('Arraste para reorganizar') }}"></i>
+            </div>
+            <div class="chart-container"><div class="echart" id="chartRam"></div></div>
+        </div>
+    </div>
+
+    <div class="charts-grid">
+        <div class="chart-card" data-card="dc-chartPorts">
+            <div class="chart-header">
+                <h3 class="chart-title">{{ translate('Portas de Rede Mais Comuns') }}</h3><i class="fas fa-grip-vertical drag-grip" title="{{ translate('Arraste para reorganizar') }}"></i>
+            </div>
+            <div class="chart-container"><div class="echart" id="chartPorts"></div></div>
+        </div>
+        <div class="chart-card" data-card="dc-chartProcess">
+            <div class="chart-header">
+                <h3 class="chart-title">{{ translate('Processos Mais Comuns') }}</h3><i class="fas fa-grip-vertical drag-grip" title="{{ translate('Arraste para reorganizar') }}"></i>
+            </div>
+            <div class="chart-container"><div class="echart" id="chartProcess"></div></div>
+        </div>
+        <div class="chart-card" data-card="dc-chartGroups">
+            <div class="chart-header">
+                <h3 class="chart-title">{{ translate('Distribuição por Grupos') }}</h3><i class="fas fa-grip-vertical drag-grip" title="{{ translate('Arraste para reorganizar') }}"></i>
+            </div>
+            <div class="chart-container"><div class="echart" id="chartGroups"></div></div>
+        </div>
+    </div>
+
+    <div class="charts-grid">
+        <div class="chart-card" data-card="dc-chartKeepalive">
+            <div class="chart-header">
+                <h3 class="chart-title">{{ translate('Atualização dos Agentes') }}</h3><i class="fas fa-grip-vertical drag-grip" title="{{ translate('Arraste para reorganizar') }}"></i>
+            </div>
+            <div class="chart-container"><div class="echart" id="chartKeepalive"></div></div>
+        </div>
+        <div class="chart-card" data-card="dc-chartRamUsage">
+            <div class="chart-header">
+                <h3 class="chart-title">{{ translate('Uso de RAM por Máquina') }}</h3><i class="fas fa-grip-vertical drag-grip" title="{{ translate('Arraste para reorganizar') }}"></i>
+
+            </div>
+            <div class="chart-container"><div class="echart" id="chartRamUsage"></div></div>
+        </div>
+        <div class="chart-card" data-card="dc-chartSoftware">
+            <div class="chart-header">
+                <h3 class="chart-title">{{ translate('Pacotes Mais Instalados') }}</h3><i class="fas fa-grip-vertical drag-grip" title="{{ translate('Arraste para reorganizar') }}"></i>
+            </div>
+            <div class="chart-container"><div class="echart" id="chartSoftware"></div></div>
+        </div>
+    </div>
+
+    <div class="detailed-grid">
+        <div class="detailed-card" data-card="dc-recent">
+            <div class="detailed-header">
+                <h3 class="detailed-title">{{ translate('Máquinas Recentemente Sincronizadas') }}</h3>
+                <a href="{{ url_for('search') }}" class="view-all">{{ translate('Ver todas') }}</a>
+                <i class="fas fa-grip-vertical drag-grip" title="{{ translate('Arraste para reorganizar') }}"></i>
+            </div>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>{{ translate('Nome') }}</th>
+                        <th>{{ translate('Agent ID') }}</th>
+                        <th>IP</th>
+                        <th>{{ translate('Sistema') }}</th>
+                        <th>{{ translate('Status') }}</th>
+                    </tr>
+                </thead>
+                <tbody id="recent-machines"></tbody>
+            </table>
+        </div>
+        <div class="detailed-card" data-card="dc-timeline">
+            <div class="detailed-header">
+
+                <h3 class="detailed-title">{{ translate('Evolução Temporal - Agentes Wazuh Online e Offline') }}</h3>
+                <i class="fas fa-grip-vertical drag-grip" title="{{ translate('Arraste para reorganizar') }}"></i>
+            </div>
+            <div class="chart-container" style="height: 300px;"><div class="echart" id="chartTimeline"></div></div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    (function() {
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        if (savedTheme === 'dark') {
+            document.documentElement.classList.add('dark-mode');
+        }
+    })();
+
+    (function dashboardDnD() {
+        var KEY = 'inventory_dashboard_layout_v1';
+        var CARD_SEL = '.kpi-card, .chart-card, .detailed-card';
+
+        var DB_LAYOUT = {{ db_layout|tojson if db_layout is not none else 'null' }};
+        var containers = Array.prototype.slice.call(
+            document.querySelectorAll('.kpi-cards, .charts-grid, .detailed-grid'));
+        if (!containers.length) return;
+
+        function cards(c) {
+            return Array.prototype.filter.call(c.children, function (ch) {
+                return ch.classList &&
+                    (ch.classList.contains('kpi-card') ||
+                     ch.classList.contains('chart-card') ||
+                     ch.classList.contains('detailed-card'));
+            });
+        }
+
+        containers.forEach(function (c) {
+            cards(c).forEach(function (card) {
+                card.setAttribute('draggable', 'true');
+                var grip = card.querySelector('.drag-grip');
+                if (grip) {
+                    card.setAttribute('draggable', 'false');
+                    grip.addEventListener('mousedown', function () {
+                        card.setAttribute('draggable', 'true');
+                    });
+                    grip.addEventListener('mouseup', function () {
+                        card.setAttribute('draggable', 'false');
+                    });
+                }
+            });
+        });
+
+        function currentLayout() {
+            return {
+                v: 1,
+                containers: containers.map(function (c) {
+                    return cards(c).map(function (ch) {
+                        return ch.getAttribute('data-card') || '';
+                    });
+                })
+            };
+        }
+
+        function saveLayout() {
+            var data = currentLayout();
+            try {
+                localStorage.setItem(KEY, JSON.stringify(data));
+            } catch (e) {  }
+
+            try {
+                fetch('/settings/dashboard_layout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ layout: data })
+                }).catch(function () {  });
+            } catch (e) {  }
+        }
+
+        function applyLayout(saved) {
+            if (!saved || !Array.isArray(saved.containers)) return false;
+            saved.containers.forEach(function (ids, ci) {
+                var c = containers[ci];
+                if (!c || !Array.isArray(ids)) return;
+                ids.forEach(function (id) {
+                    if (!id) return;
+                    var node = document.querySelector('[data-card="' + id + '"]');
+                    if (node) c.appendChild(node);
+                });
+            });
+
+            containers.forEach(function (c) {
+                var rest = cards(c);
+                rest.forEach(function (ch) { c.appendChild(ch); });
+            });
+            return true;
+        }
+
+        function restoreLayout() {
+
+            if (DB_LAYOUT && applyLayout(DB_LAYOUT)) return;
+            var saved = null;
+            try { saved = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { return; }
+            applyLayout(saved);
+        }
+
+        restoreLayout();
+
+        var dragEl = null;
+        document.addEventListener('dragstart', function (e) {
+            var card = e.target.closest ? e.target.closest(CARD_SEL) : null;
+            if (!card || containers.indexOf(card.parentElement) < 0) return;
+            dragEl = card;
+            card.classList.add('dashboard-dragging');
+            try {
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', card.getAttribute('data-card') || '');
+            } catch (err) {  }
+        });
+
+        document.addEventListener('dragend', function () {
+            if (!dragEl) return;
+            dragEl.classList.remove('dashboard-dragging');
+            dragEl.setAttribute('draggable',
+                dragEl.querySelector('.drag-grip') ? 'false' : 'true');
+            dragEl = null;
+            saveLayout();
+
+            window.dispatchEvent(new Event('resize'));
+        });
+
+        containers.forEach(function (c) {
+            c.addEventListener('dragover', function (e) {
+                if (!dragEl) return;
+                e.preventDefault();
+                try { e.dataTransfer.dropEffect = 'move'; } catch (err) {  }
+                var best = null, bestD = Infinity;
+                cards(c).forEach(function (ch) {
+                    if (ch === dragEl) return;
+                    var r = ch.getBoundingClientRect();
+                    var dx = (r.left + r.width / 2) - e.clientX;
+                    var dy = (r.top + r.height / 2) - e.clientY;
+                    var d = dx * dx + dy * dy;
+                    if (d < bestD) { bestD = d; best = ch; }
+                });
+                if (!best) { c.appendChild(dragEl); return; }
+                if (best === dragEl) return;
+                var br = best.getBoundingClientRect();
+                var before = (e.clientY < br.top + br.height / 2) ||
+                    (Math.abs(e.clientY - (br.top + br.height / 2)) < br.height / 4 &&
+                     e.clientX < br.left + br.width / 2);
+                c.insertBefore(dragEl, before ? best : best.nextSibling);
+            });
+        });
+    })();
+</script>
+
+{% endblock %}

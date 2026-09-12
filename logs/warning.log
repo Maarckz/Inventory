@@ -1,0 +1,9 @@
+2026-09-11 19:05:26,811 - ERROR - Erro 404 - IP: 192.168.0.13, Usuário: admin, Endpoint: None
+2026-09-11 19:05:45,120 - WARNING - [Coletor] Falha na requisição (Tentativa 1): ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')). Retentando em 1.02s...
+2026-09-11 19:09:13,849 - ERROR - Erro 404 - IP: 192.168.0.13, Usuário: admin, Endpoint: None
+2026-09-11 19:27:12,242 - ERROR - Erro 404 - IP: 192.168.0.13, Usuário: admin, Endpoint: None
+2026-09-11 19:35:13,770 - ERROR - Erro 404 - IP: 192.168.0.13, Usuário: admin, Endpoint: None
+2026-09-11 19:35:28,570 - ERROR - Erro 404 - IP: 192.168.0.13, Usuário: admin, Endpoint: None
+2026-09-11 19:36:37,461 - ERROR - Erro 404 - IP: 192.168.0.13, Usuário: admin, Endpoint: None
+2026-09-11 20:56:01,001 - ERROR - Erro 404 - IP: 192.168.0.13, Usuário: admin, Endpoint: None
+2026-09-11 21:05:11,274 - ERROR - Erro 404 - IP: 192.168.0.13, Usuário: admin, Endpoint: None
