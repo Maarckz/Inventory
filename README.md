@@ -12,7 +12,7 @@ O objetivo principal do INVENTORY é eliminar a "cegueira" sobre os ativos de TI
 A principal vantagem reside na **utilização dos agentes nativos do Wazuh**, eliminando a necessidade de instalar _softwares_ adicionais nos _endpoints_ e, consequentemente, **reduzindo a superfície de ataque** e o _overhead_ operacional. Para os ativos que não podem receber agente (impressoras, switches, câmeras, IoT), o **NetScope** cobre a lacuna com descoberta de rede própria e ficha de documentação por dispositivo.
 
 <video width="600" controls>
-  <source src="https://www.linkedin.com/posts/marcus-dealmeida_ol%C3%A1-rede-s%C3%B3-pra-avisar-que-tem-algumas-atualiza%C3%A7%C3%B5es-activity-7377797080897011712-tYeP?utm_source=share&utm_medium=member_android&rcm=ACoAADXtQm8BWDhoje3QTZaTuswm_dJjvSClhaY" type="video/mp4">
+  <source src="https://github.com/Maarckz/Inventory/raw/refs/heads/main/Images/INVENTORY.mp4" type="video/mp4">
   Seu navegador não suporta vídeo.
 </video>
 
