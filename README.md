@@ -16,7 +16,7 @@ A principal vantagem reside na **utilização dos agentes nativos do Wazuh**, el
   Seu navegador não suporta vídeo.
 </video>
 
-[![Assistir ao vídeo](https://img.shields.io/badge/Assistir-Vídeo-blue)](https://github.com/Maarckz/Inventory/raw/refs/heads/main/Images/INVENTORY.mp4)
+<video src="https://github.com/Maarckz/Inventory/raw/main/Images/INVENTORY.mp4" controls width="100%"></video>
 
 ### 1.1. Objetivos da Solução
 
