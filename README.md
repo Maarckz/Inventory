@@ -3,7 +3,9 @@
 O **INVENTORY** é uma solução para a gestão centralizada do inventário de máquinas corporativas, desenvolvida para ambientes que exigem alta visibilidade, rastreabilidade e segurança. O sistema transforma os dados de telemetria brutos coletados pela sua plataforma **Wazuh** (via _SysCollector_) em uma **Interface Web Segura e Moderna**, complementada pelo **NetScope** um mapa de topologia que documenta também os ativos que não têm agente.
 
 <div align="left">
-  <a href="https://github.com/maarckz/Inventory" target="_blank"><img height="260" width="960" src="https://github.com/Maarckz/Inventory/blob/main/Images/I1_Inventory.gif?raw=true"/>
+  <a href="https://github.com/maarckz/Inventory" target="_blank">
+    <img height="260" width="960" src="https://github.com/Maarckz/Inventory/blob/main/Images/I1_Inventory.gif?raw=true"/>
+  </a>
 </div>
 
 O objetivo principal do INVENTORY é eliminar a "cegueira" sobre os ativos de TI, fornecendo às equipes de segurança, operações e _compliance_ uma fonte única e confiável de informação sobre o estado, _hardware_, _software_ e segurança de cada dispositivo.
