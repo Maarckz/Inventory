@@ -1,8 +1,3 @@
-
-
-https://github.com/user-attachments/assets/615c6e5c-acf0-4863-b636-b48631b17d3b
-
-
 ## 1. Apresentação
 
 O **INVENTORY** é uma solução para a gestão centralizada do inventário de máquinas corporativas, desenvolvida para ambientes que exigem alta visibilidade, rastreabilidade e segurança. O sistema transforma os dados de telemetria brutos coletados pela sua plataforma **Wazuh** (via _SysCollector_) em uma **Interface Web Segura e Moderna**, complementada pelo **NetScope** um mapa de topologia que documenta também os ativos que não têm agente.
@@ -15,11 +10,7 @@ O objetivo principal do INVENTORY é eliminar a "cegueira" sobre os ativos de TI
 
 A principal vantagem reside na **utilização dos agentes nativos do Wazuh**, eliminando a necessidade de instalar _softwares_ adicionais nos _endpoints_ e, consequentemente, **reduzindo a superfície de ataque** e o _overhead_ operacional. Para os ativos que não podem receber agente (impressoras, switches, câmeras, IoT), o **NetScope** cobre a lacuna com descoberta de rede própria e ficha de documentação por dispositivo.
 
-<video width="600" controls>
-  <source src="https://github.com/user-attachments/assets/615c6e5c-acf0-4863-b636-b48631b17d3b" type="video/mp4">
-  Seu navegador não suporta vídeo.
-</video>
-
+https://github.com/user-attachments/assets/615c6e5c-acf0-4863-b636-b48631b17d3b
 
 ### 1.1. Objetivos da Solução
 
