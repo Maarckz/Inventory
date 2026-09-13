@@ -329,16 +329,12 @@ O NetScope verifica continuamente dois tipos de conflito e sinaliza em três lug
 - **Conflito de IP:** dispositivos ativos anunciando o **mesmo endereço IP** — chip **Conflitos** na sidebar (âmbar quando existe), selo no cartão da lista, badge âmbar "!" no nó do mapa e linha no popover. Clicar num conflito localiza o dispositivo.
 - **Conflito de MAC:** o **mesmo endereço MAC em 2+ IPs ao mesmo tempo** (típico de VM/imagem clonada) — detectado combinando o **ARP ao vivo do kernel** (excluindo as MACs das interfaces locais, pois IP alias não é conflito), os **hosts do sync Wazuh** e os dispositivos do NetScope. Os conflitos alimentam as regras de notificação correspondentes (seção 5.6).
 
-<div align="left">
-  <a href="https://github.com/maarckz/Inventory" target="_blank"><img src="https://github.com/Maarckz/Inventory/blob/main/Images/NETSCOPE_CONFLITOS.png?raw=true"/>
-</div>
-
 ### 5.5. Assistente IA (FAB)
 
 O **Assistente IA** é o chatbot embutido no botão flutuante (FAB, canto inferior direito), que responde perguntas sobre o ambiente **lendo os dados reais do banco a cada mensagem** — Wazuh, NetScope, switches, conflitos de IP/MAC, portscans recentes e a comparação entre snapshots.
 
 <div align="left">
-  <a href="https://github.com/maarckz/Inventory" target="_blank"><img src="https://github.com/Maarckz/Inventory/blob/main/Images/IA_CHAT.png?raw=true"/>
+  <a href="https://github.com/maarckz/Inventory" target="_blank"><img src="https://github.com/Maarckz/Inventory/blob/main/Images/X2_ASSISTANT.png?raw=true"/>
 </div>
 
 - **O que ele enxerga:** inventário sincronizado do Wazuh **por host** (hostname, IP, SO+versão, grupos, CPU, RAM, portas em escuta, processos e pacotes — com tetos de segurança), dispositivos documentados do NetScope, portas de switch, conflitos, duplicados, snapshots e varreduras de portas recentes **com a lista real de portas**.
@@ -394,9 +390,6 @@ O relatório PDF é **um único documento com o máximo de dados do sistema**, s
 > [!NOTE]
 > Devido a uma restrição de segurança da própria API do Wazuh, a sincronização pode ser lenta de acordo com a quantidade de hosts a serem sincronizados.
 
-<div align="left">
-  <a href="https://github.com/maarckz/Inventory" target="_blank"><img src="https://raw.githubusercontent.com/Maarckz/Inventory/refs/heads/main/Images/X5_SYNC.png"/>
-</div>
 
 ### 5.8. Sincronização Automática e Manual
 
@@ -410,29 +403,13 @@ A área de configuração permite definir a **ingestão dos dados em períodos e
   <a href="https://github.com/maarckz/Inventory" target="_blank"><img src="https://raw.githubusercontent.com/Maarckz/Inventory/refs/heads/main/Images/X5_SYNC.png"/>
 </div>
 
-### 5.9. Idiomas, Tema e Intro do Login
-
-- **8 idiomas:** Português (BR), Inglês, Espanhol, Hindi, **Russo, Mandarim (中文), Árabe (interface RTL) e Francês** — no seletor do topo (presente também no login). As notificações, toasts e a busca traduzem no idioma da sessão; o relatório PDF dos idiomas novos sai em inglês (limitação de fontes do gerador).
-- **Tema claro/escuro:** toggle no topo, respeitando a preferência do sistema e persistindo por usuário. Todos os componentes (mapa, modais, toasts, chat, tabelas) têm variante própria para o escuro.
-- **Intro do login (boot intro):** ao abrir o sistema, uma animação de abertura apresenta a identidade visual — com brilho que percorre **dentro dos glifos da logo**. Ela toca **1× por navegador a cada nova versão** (nada de replay a cada login), é **pulável** (clique ou qualquer tecla), respeita o "reduzir animação" do sistema (`prefers-reduced-motion`) e tem fail-safe: mesmo sem JavaScript o overlay some e o login fica acessível.
-- **Login com fundo animado:** o fundo da tela de login é um SVG animado servido **offline**, com variante própria para o tema escuro — e o "Credenciais inválidas" aparece como toast no padrão do sistema, traduzido no idioma selecionado.
-
-<div align="left">
-  <a href="https://github.com/maarckz/Inventory" target="_blank"><img src="https://github.com/Maarckz/Inventory/blob/main/Images/TEMA_ESCURO.png?raw=true"/>
-</div>
-
-<div align="left">
-  <a href="https://github.com/maarckz/Inventory" target="_blank"><img src="https://github.com/Maarckz/Inventory/blob/main/Images/LOGIN_INTRO.png?raw=true"/>
-</div>
-
----
 
 ## 6. Onde Configurar o Quê
 
 Toda a configuração operacional mora na página **Configurações** (menu do topo). A página admin tem **8 cards** — a tabela abaixo diz o que cada um faz e a qual seção deste README corresponde:
 
 <div align="left">
-  <a href="https://github.com/maarckz/Inventory" target="_blank"><img src="https://github.com/Maarckz/Inventory/blob/main/Images/CONFIG_WHERE.png?raw=true"/>
+  <a href="https://github.com/maarckz/Inventory" target="_blank"><img src="https://github.com/Maarckz/Inventory/blob/main/Images/I7_CONFIG.png?raw=true"/>
 </div>
 
 | # | Card | Botão | O que configura | Onde no README |
@@ -487,11 +464,11 @@ Suporte a **MFA baseada em TOTP**, compatível com aplicativos como o _Google Au
 Área de contas de usuários para descentralizar as atividades dos analistas: é possível criar **usuários comuns (observadores)** ou **administradores**, com troca de senha obrigatória no primeiro acesso quando desejado. A auditoria das ações dos usuários fica no `audit.log`.
 
 <div align="left">
-  <a href="https://github.com/maarckz/Inventory" target="_blank"><img src="https://github.com/Maarckz/Inventory/blob/main/Images/X3_CONTAS.png?raw=true"/>
+  <a href="https://github.com/maarckz/Inventory" target="_blank"><img src="https://github.com/Maarckz/Inventory/blob/main/Images/X8_CONTAS.png?raw=true"/>
 </div>
 
 <div align="left">
-  <a href="https://github.com/maarckz/Inventory" target="_blank"><img src="https://github.com/Maarckz/Inventory/blob/main/Images/X4_SENHA.png?raw=true"/>
+  <a href="https://github.com/maarckz/Inventory" target="_blank"><img src="https://github.com/Maarckz/Inventory/blob/main/Images/X7_SENHAS.png?raw=true"/>
 </div>
 
 ### 7.4. Controle de Acesso à Rede
