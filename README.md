@@ -161,25 +161,6 @@ A Aplicação Web é a camada de processamento, gerenciamento, visualização e 
 
 A organização lógica separa a aplicação (núcleo `core/`, rotas `routes/`, serviços `services/`, utilitários `utils/`), os dados persistentes (`data/`), os logs (`logs/`) e os certificados (`ssl/`). Essa separação facilita a manutenção, o backup seletivo e o deployment.
 
-### 4.1. Estrutura Simplificada
-
-| Diretório/Arquivo | Função |
-| --- | --- |
-| `app.py` | Aplicação principal Flask (ponto de entrada). |
-| `models.py` | Definição dos modelos/tabelas do banco (SQLAlchemy). |
-| `core/` | Configuração, app factory, segurança, gateway de API, i18n, bootstrap e logging. |
-| `routes/` | Controladores web (auth, dashboard, machines, netscope, settings, admin, assistant, notifications, errors). |
-| `services/` | Regras de negócio (coleta, estatísticas, NetScope e submódulos, assistente IA, notificações). |
-| `utils/` | Utilitários (idiomas, MFA, exportação PDF, manipulação de máquinas). |
-| `docker-compose.yml` | Orquestração dos containers PostgreSQL (+ Redis). |
-| `install.sh` | Instalação automática completa (seção 8.1). |
-| `.env` / `.env.example` | Variáveis de ambiente (anotadas na seção 8.2). |
-| `data/` | Volume do banco (`data/postgres`), dados locais de suporte e máquinas legadas. |
-| `logs/` | Logs de operação, auditoria e sessões de usuário. |
-| `ssl/` | Certificados TLS/SSL para conexões HTTPS. |
-
-### 4.2. Estrutura Completa
-
 ```text
 INVENTORY/                        # Diretório raiz do projeto
 ├── app.py                        # Ponto de entrada principal da aplicação Flask
