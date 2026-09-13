@@ -299,6 +299,7 @@ O NetScope apresenta o **mapa visual da rede** com zoom, arraste, menu de contex
 O fluxo operacional típico do NetScope, do zero ao mapa documentado:
 
 1. **Configurar as redes monitoradas** — botão **`+ Rede`** na barra lateral: informe o CIDR (ex.: `192.168.0.0/24`) e o gateway. As redes configuradas aparecem na sidebar e ficam **clicáveis para edição** (o modal reabre preenchido; o × é quem remove).
+
 <div align="left">
   <a href="https://raw.githubusercontent.com/Maarckz/Inventory/refs/heads/main/Images/X6_NETSCOPE2.png"/>
 </div>
@@ -313,36 +314,7 @@ O fluxo operacional típico do NetScope, do zero ao mapa documentado:
 
 
 
-<div align="left">
-  <a href="https://github.com/maarckz/Inventory" target="_blank"><img src="https://github.com/Maarckz/Inventory/blob/main/Images/NETSCOPE_PORTSCAN.png?raw=true"/>
-</div>
-
-<div align="left">
-  <a href="https://github.com/maarckz/Inventory" target="_blank"><img src="https://github.com/Maarckz/Inventory/blob/main/Images/NETSCOPE_SNAPSHOTS.png?raw=true"/>
-</div>
-
-#### 5.4.2. Controles da barra lateral
-
-| Controle | Função |
-| --- | --- |
-| **Sincronizar / Ver hosts** | Importa os hosts do Wazuh para o mapa / lista todos os hosts da API. |
-| **`+ Rede`** | Adiciona um CIDR à descoberta (clicar numa rede existente reabre em modo edição). |
-| **Escanear** | _Ping sweep_ + ARP nas redes configuradas. |
-| **Inferir conexões** | Sugere vínculos de topologia por sub-rede/gateway (linhas tracejadas = inferidas; sólidas = documentadas). |
-| **Atualizar lista / Associar / `+ Novo`** | Recarrega / associa dois nós com Ctrl+Clique / cadastra dispositivo manual. |
-| **Tabela de Ativos** | Grade com todas as colunas **ordenáveis** (clique no cabeçalho; IP por octetos), **caixas de seleção** para exclusão em grupo e export CSV. |
-| **Portas de switch** | Painel das switches com portas, labels, VLANs e dispositivo conectado por porta. |
-| **Snapshots** | Criar, listar, comparar e excluir fotografias da topologia. |
-| **Lixeira** | Restaurar ou excluir definitivamente; itens mesclados pelo scan aparecem com o motivo e o sobrevivente. |
-| **Exportar CSV / PNG / JSON** | Ativos em CSV, imagem da topologia, dados completos. |
-| **Layouts (Tree / Hierárquico / Grade)** | Estilos de visualização — ao trocar, o mapa faz **FIT automático**. |
-| **Zoom + / − / Fit** | Controles de navegação do mapa. |
-
-<div align="left">
-  <a href="https://github.com/maarckz/Inventory" target="_blank"><img src="https://github.com/Maarckz/Inventory/blob/main/Images/NETSCOPE_TABELA.png?raw=true"/>
-</div>
-
-#### 5.4.3. Descoberta em baixo nível e automação
+#### 5.4.2. Descoberta em baixo nível e automação
 
 - **Varredura ARP complementar:** o scan combina o _ping sweep_ tradicional com a varredura ARP — o mesmo princípio do netdiscover, implementada 100% em Python stdlib (nada é instalado no servidor). Hosts que bloqueiam ICMP entram no mapa com o selo **ARP**.
 - **Monitor ARP:** entre os scans, um monitor passivo faz varreduras ARP silenciosas (sem ICMP) e **cadastra hosts novos automaticamente**. O intervalo (5 min a 6 h) e o liga/desliga ficam no **Painel de Sincronização** das Configurações, e a mudança vale a partir do salvamento, sem reiniciar.
@@ -350,7 +322,7 @@ O fluxo operacional típico do NetScope, do zero ao mapa documentado:
 - **Nada é apagado pelo scan:** a deduplicação pós-scan (mesmo IP, prefixo de MAC ou hostname) move o "duplicado" para a **lixeira** com o selo "Mesclado automaticamente" (motivo + quem sobreviveu), restaurável — o histórico do parque permanece completo. Com a mesclagem automática **desligada** (padrão), os duplicados apenas ficam marcados com selo âmbar e o chip **Duplicados** filtra a lista.
 - **Escudo do agente com 3 estados:** verde = com agente, vermelho = sem agente, **cinza riscado = não suportado** (impressora, switch, câmera) — na lista, no mapa (badge do nó) e na Tabela de Ativos (pílula N/A). A **Cobertura de Agentes** calcula o % sobre os suportados, então dispositivos sem agente possível não derrubam o índice.
 
-#### 5.4.4. Conflitos de IP e MAC
+#### 5.4.3. Conflitos de IP e MAC
 
 O NetScope verifica continuamente dois tipos de conflito e sinaliza em três lugares (sidebar, lista e mapa):
 
@@ -383,7 +355,7 @@ O **Assistente IA** é o chatbot embutido no botão flutuante (FAB, canto inferi
 O FAB é uma **central com duas abas** — **Notificações** e **Assistente IA** — com badge de não lidas no próprio botão. O motor de notificações foi desenhado com base em boas práticas de cybersecurity, gestão de parque e compliance (OpUtils/Bitsight/ISO 27001) e avalia o ambiente **automaticamente**, com persistência em PostgreSQL.
 
 <div align="left">
-  <a href="https://github.com/maarckz/Inventory" target="_blank"><img src="https://github.com/Maarckz/Inventory/blob/main/Images/NOTIFICACOES_CENTRAL.png?raw=true"/>
+  <a href="https://raw.githubusercontent.com/Maarckz/Inventory/refs/heads/main/Images/X1_NOTIFICACOES_CENTRAL.png"/>
 </div>
 
 **As 11 regras nativas:**
