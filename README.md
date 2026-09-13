@@ -291,7 +291,7 @@ A busca avançada é a ferramenta para _threat hunting_, auditoria ou pesquisa s
 O NetScope apresenta o **mapa visual da rede** com zoom, arraste, menu de contexto e a ficha completa de cada ativo. Os dispositivos documentados aparecem com ícone do tipo, vínculo de switch (porta/VLAN) e o status descoberto pelo scan. Os dados do NetScope alimentam o dashboard, a busca e o relatório PDF — incluindo os ativos **sem agente Wazuh**.
 
 <div align="left">
-  <a href="https://github.com/maarckz/Inventory" target="_blank"><img src="https://github.com/Maarckz/Inventory/blob/main/Images/NETSCOPE_MAPA.png?raw=true"/>
+  <a href="https://github.com/maarckz/Inventory" target="_blank"><img src="https://raw.githubusercontent.com/Maarckz/Inventory/refs/heads/main/Images/X6_NETSCOPE.jpeg"/>
 </div>
 
 #### 5.4.1. Como usar no dia a dia
@@ -299,6 +299,10 @@ O NetScope apresenta o **mapa visual da rede** com zoom, arraste, menu de contex
 O fluxo operacional típico do NetScope, do zero ao mapa documentado:
 
 1. **Configurar as redes monitoradas** — botão **`+ Rede`** na barra lateral: informe o CIDR (ex.: `192.168.0.0/24`) e o gateway. As redes configuradas aparecem na sidebar e ficam **clicáveis para edição** (o modal reabre preenchido; o × é quem remove).
+<div align="left">
+  <a href="https://raw.githubusercontent.com/Maarckz/Inventory/refs/heads/main/Images/X6_NETSCOPE2.png"/>
+</div>
+
 2. **Escanear** — botão **Escanear** dispara o _ping sweep_ + varredura ARP das redes configuradas. Hosts que não respondem ping mas respondem ARP entram com o selo **ARP**; o toast do scan informa quantos foram achados só por ARP.
 3. **Sincronizar com o Wazuh** — botão **Sincronizar** importa os hosts do inventário para o mapa (e **Ver hosts do Wazuh** lista tudo o que existe na API, inclusive o que ainda não mapeou).
 4. **Documentar cada dispositivo** — duplo clique (ou menu de contexto → Editar) abre a **ficha**: tipo (16 opções: servidor, estação, laptop, firewall, switch, hypervisor, storage, VoIP, IoT...), usuário responsável, departamento, localização, asset tag, lacre, notas. Marque **"Agente não aplicável"** em impressoras/switches/câmeras para tirá-los do computo de "sem agente" — a cobertura passa a dividir só os suportados.
@@ -307,9 +311,7 @@ O fluxo operacional típico do NetScope, do zero ao mapa documentado:
 7. **Vigiar a integridade** — os chips **Conflitos** e **Duplicados** da sidebar acendem em âmbar quando algo exige atenção; clicar abre o modal com os grupos e localiza o dispositivo no mapa.
 8. **Registrar o estado** — botão **Snapshots** cria uma fotografia da topologia; depois, **comparar** dois snapshots mostra o diff (adicionados, removidos, alterados) — base da regra de notificação "mudança de topologia".
 
-<div align="left">
-  <a href="https://github.com/maarckz/Inventory" target="_blank"><img src="https://github.com/Maarckz/Inventory/blob/main/Images/NETSCOPE_FICHA.png?raw=true"/>
-</div>
+
 
 <div align="left">
   <a href="https://github.com/maarckz/Inventory" target="_blank"><img src="https://github.com/Maarckz/Inventory/blob/main/Images/NETSCOPE_PORTSCAN.png?raw=true"/>
