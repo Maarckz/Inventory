@@ -2091,7 +2091,14 @@ $('btn-subnet-add').onclick = async () => {
   const inpSubnet = $('inp-subnet'); const inpGw = $('inp-gateway');
   let subnet = inpSubnet.value.trim();
   if (!subnet) { toast(t('Digite a sub-rede (ex: 172.16.0)'), 'err'); return; }
-  subnet = subnet.replace(/\.?0\/\d+$/, '');
+  if (subnet.includes('/')) {
+    const m = subnet.match(/^(\d{1,3}(?:\.\d{1,3}){2,3})\/(\d{1,2})$/);
+    if (!m || m[2] !== '24') {
+      toast(t('Somente redes /24 são suportadas — ex: 192.168.0.0/24. Para redes maiores, adicione cada /24.'), 'err');
+      return;
+    }
+    subnet = m[1].replace(/\.0$/, '');
+  }
   let gateway = inpGw.value.trim();
   if (!gateway) gateway = subnet + '.1';
   const r = await api('/netscope/api/subnets', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ subnet, gateway }) });
