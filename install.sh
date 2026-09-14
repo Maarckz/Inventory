@@ -181,16 +181,18 @@ Wants=network-online.target docker.service
 
 [Service]
 Type=simple
-WorkingDirectory=$APP_DIR
-ExecStart=$APP_DIR/.venv/bin/python $APP_DIR/app.py
+WorkingDirectory=/opt/Inventory
+ExecStart=/opt/Inventory/.venv/bin/python /opt/Inventory/app.py
 
-User=$APP_USER
-Group=$APP_GROUP
+User=inventory
+Group=inventory
 
 Restart=always
 RestartSec=5
 
 NoNewPrivileges=yes
+AmbientCapabilities=CAP_NET_RAW
+CapabilityBoundingSet=CAP_NET_RAW
 PrivateTmp=yes
 ProtectSystem=full
 ProtectHome=yes
@@ -198,7 +200,7 @@ ProtectKernelTunables=yes
 ProtectKernelModules=yes
 ProtectKernelLogs=yes
 RestrictSUIDSGID=yes
-ReadWritePaths=$APP_DIR
+ReadWritePaths=/opt/Inventory
 
 LimitNOFILE=65536
 StandardOutput=journal
