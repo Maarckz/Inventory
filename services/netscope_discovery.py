@@ -72,42 +72,7 @@ def get_iface_info(iface):
     return ip, mac
 
 def _in_subnet(ip, prefix):
-    value = str(prefix)
-    try:
-        import ipaddress
-        net = ipaddress.IPv4Network(
-            value if '/' in value else value + '.0/24', strict=False)
-        return ipaddress.IPv4Address(str(ip)) in net
-    except (ValueError, TypeError):
-        # Fallback: comparação textual (comportamento antigo)
-        return str(ip).startswith(str(prefix) + '.')
-
-def list_ifaces():
-
-    try:
-        return sorted(p.name for p in Path('/sys/class/net').iterdir())
-    except (OSError, AttributeError):
-        return []
-
-def find_iface_for_subnet(prefix):
-
-    """Escolhe a interface cujo IP pertence à sub-rede alvo (servidores
-    multihomed têm mais de uma NIC; a rota padrão nem sempre é a certa)."""
-
-    default = get_default_iface()
-    candidates = []
-    for iface in list_ifaces():
-        try:
-            ip, _mac = get_iface_info(iface)
-        except Exception:
-            continue
-        if ip and _in_subnet(ip, prefix):
-            candidates.append(iface)
-    if not candidates:
-        return None
-    if default in candidates:
-        return default
-    return candidates[0]
+    return str(ip).startswith(str(prefix) + '.')
 
 ETH_BROADCAST = 'ff:ff:ff:ff:ff:ff'
 
@@ -209,31 +174,23 @@ def arp_discover_subnet(subnet, networks=None, exclude=(),
 
     prefix = str(subnet)
     excl = set(exclude or ())
-    target = [f'{prefix}.{i}' for i in range(1, 255)]
-    ips = [ip for ip in target if ip not in excl]
+    ips = [f'{prefix}.{i}' for i in range(1, 255) if f'{prefix}.{i}' not in excl]
     if not ips:
         return {}, 'nenhum'
-    iface = find_iface_for_subnet(prefix)
+    iface = get_default_iface()
     if not iface:
+        return {}, 'indisponivel'
+    iface_ip, _ = get_iface_info(iface)
+    if not iface_ip or not _in_subnet(iface_ip, prefix):
         return {}, 'indisponivel'
     try:
         return raw_arp_sweep(iface, ips, timeout=timeout), 'arp-raw'
     except (PermissionError, OSError):
         pass
-    # Sem acesso a socket raw (ex.: serviço sem CAP_NET_RAW): dispara
-    # tráfego UDP para provocar respostas ARP e coleta a tabela do kernel
-    # de forma paciente (vários ciclos), em vez de uma única leitura.
-    udp_arp_trigger(ips, settle=0)
-    target_set = set(ips)
-    found = {}
-    for _ in range(4):
-        time.sleep(max(0.75, settle / 2.0))
-        table = read_arp_table()
-        for ip, mac in table.items():
-            if ip in target_set and mac:
-                found[ip] = mac
-        if len(found) >= len(target_set):
-            break
+    udp_arp_trigger(ips, settle=settle)
+    table = read_arp_table()
+    found = {ip: mac for ip, mac in table.items()
+             if ip in set(ips) and _in_subnet(ip, prefix)}
     return found, 'arp-udp' if found else 'arp-udp-vazio'
 
 ARP_INTERVAL_MIN = 5
@@ -338,19 +295,14 @@ def _monitor_pass_body(app, networks):
             method = m
         seen += len(found)
         for ip, mac in found.items():
+            if store.find(mac, include_deleted=True):
+                continue
             info = {'ip': ip, 'vendor': guess_vendor(mac), 'subnet': subnet,
                     'gateway': net.get('gateway', ''), 'discovery': 'arp',
                     'source': 'monitor'}
-            known = store.find(mac, include_deleted=False)
-            if not known:
-                # Host novo: resolve DNS antes de cadastrar
-                dns = _resolve_dns_safe(ip)
-                if dns:
-                    info['dns_name'] = dns
-            # Conhecido ou novo: upsert atualiza ip/status/last_seen —
-            # uma resposta ARP prova que o host está vivo (antes o monitor
-            # ignorava hosts já cadastrados e eles ficavam offline/velhos
-            # até o próximo ping sweep).
+            dns = _resolve_dns_safe(ip)
+            if dns:
+                info['dns_name'] = dns
             if store.upsert_scan_result(mac, info, flush=False):
                 new_count += 1
     if seen or new_count:
