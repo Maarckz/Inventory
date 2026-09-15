@@ -93,10 +93,12 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.machine-row').forEach(row => {
         row.style.cursor = 'pointer';
         row.addEventListener('click', function() {
-            window.location.href = this.getAttribute('data-href');
+            const href = this.getAttribute('data-href');
+            if (href && !href.trim().toLowerCase().startsWith('javascript:')) {
+                window.location.href = href;
+            }
         });
     });
-});
 
 const _TOAST_ICONS = {
     success: 'fa-circle-check',
