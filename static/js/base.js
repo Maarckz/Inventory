@@ -99,6 +99,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+});
 
 const _TOAST_ICONS = {
     success: 'fa-circle-check',
