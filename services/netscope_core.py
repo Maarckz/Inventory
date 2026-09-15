@@ -705,62 +705,6 @@ class Store:
                     self._flush()
                 return True
 
-    def upsert_ping_result(self, ip, info, flush=True):
-
-        """Registra/atualiza um host que respondeu ping mas ainda não tem
-        MAC no ARP. Identidade por IP: atualiza o dispositivo existente do
-        IP (sem tocar no MAC dele) ou cria um novo registro sem MAC — que
-        será adotado pelo upsert_scan_result quando o ARP o descobrir."""
-
-        with self._lock:
-            self._load()
-            now = datetime.now().isoformat()
-            dev = None
-            for d in self.active():
-                if (d.get('ip') or '') == ip:
-                    dev = d
-                    break
-            if dev is not None:
-                dev['status'] = 'online'
-                dev['last_seen'] = now
-                if info.get('subnet'):
-                    dev['subnet'] = info['subnet']
-                if info.get('ttl'):
-                    dev['ttl'] = info['ttl']
-                if info.get('discovery') and not dev.get('mac'):
-                    dev['discovery'] = info['discovery']
-                dns = info.get('dns_name', '')
-                if dns:
-                    if dns != dev.get('dns_name'):
-                        dev['dns_name'] = dns
-                    short = dns.split('.')[0]
-                    if (short and not dev.get('name_manual')
-                            and short != dev.get('hostname')):
-                        dev['hostname'] = short
-                if dev.get('ip') == info.get('gateway') \
-                        and dev.get('type') not in ('router',):
-                    dev['type'] = 'router'
-                if flush:
-                    self._flush()
-                return False
-
-            existing = self.find_by_ip(ip, include_deleted=True)
-            if existing and existing.get('deleted'):
-                self._cache['devices'].remove(existing)
-
-            dev = self._new_device('', ip, info.get('vendor', ''),
-                                   info.get('subnet', ''),
-                                   info.get('gateway', ''),
-                                   source=info.get('source') or 'scan')
-            dev['dns_name'] = info.get('dns_name', '')
-            dev['hostname'] = info.get('dns_name', '').split('.')[0]
-            dev['ttl'] = info.get('ttl')
-            dev['discovery'] = info.get('discovery', 'ping')
-            self._cache['devices'].append(dev)
-            if flush:
-                self._flush()
-            return True
-
     def apply_dns_refresh(self, results):
 
         changed = 0
@@ -793,21 +737,13 @@ class Store:
                 self._flush()
         return changed
 
-    def mark_offline(self, found_macs, found_ips=None, subnets=None):
+    def mark_offline(self, found_macs):
 
         with self._lock:
             self._load()
-            macs = {(m or '').lower() for m in (found_macs or set())}
-            ips = set(found_ips or ())
-            scanned = {str(s) for s in (subnets or []) if s}
             for d in self._cache['devices']:
                 if not d.get('deleted'):
-                    # Só mexe no status de quem pertence às sub-redes
-                    # efetivamente varridas nesta passada.
-                    if scanned and (d.get('subnet') or '') not in scanned:
-                        continue
-                    if ((d.get('mac') or '').lower() in macs
-                            or (d.get('ip') or '') in ips):
+                    if (d.get('mac') or '') and d['mac'] in found_macs:
                         d['status'] = 'online'
                     elif d.get('has_agent') and d.get('agent_status') == 'active':
                         d['status'] = 'online'
