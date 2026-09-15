@@ -2092,8 +2092,8 @@ $('btn-subnet-add').onclick = async () => {
   let subnet = inpSubnet.value.trim();
   if (!subnet) { toast(t('Digite a sub-rede (ex: 172.16.0)'), 'err'); return; }
   if (subnet.includes('/')) {
-    const m = subnet.match(/^(\d{1,3}(?:\.\d{1,3}){2,3})\/(\d{1,2})$/);
-    if (!m || m[2] !== '24') {
+    const m = subnet.match(/^(\d{1,3}(?:\.\d{1,3}){3})\/24$/);
+    if (!m) {
       toast(t('Somente redes /24 são suportadas — ex: 192.168.0.0/24. Para redes maiores, adicione cada /24.'), 'err');
       return;
     }
