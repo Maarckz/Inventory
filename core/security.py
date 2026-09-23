@@ -8,10 +8,58 @@ import time
 from functools import wraps
 from urllib.parse import urlparse
 
-from flask import flash, redirect, render_template, request, session, url_for
+from flask import flash, jsonify, redirect, render_template, request, session, url_for
 
 security_logger = logging.getLogger('security')
 app_logger = logging.getLogger('inventory.app')
+
+
+# Path prefixes that serve JSON API endpoints (never HTML pages). When a
+# request hits one of these, ALL error paths (CSRF reject, IP reject, 404,
+# 500, etc.) must return JSON instead of rendering error.html — otherwise
+# the frontend's ``r.json()`` call throws "JSON.parse: unexpected character
+# at line 1 column 1" and the user sees a cryptic error instead of a
+# meaningful message.
+_API_PREFIXES = (
+    '/netscope/api/',
+    '/assistant/api/',
+    '/notifications/api/',
+    '/get_chart_data',
+    '/gw/',
+    '/api/',
+)
+
+
+def is_api_request(req=None):
+    """Return True if the current request is a JSON API call.
+
+    Detected via: (a) path prefix, (b) ``Accept: application/json`` header,
+    or (c) ``Content-Type: application/json`` on the request body. Used by
+    CSRF check, IP filter, and the global error handler to decide whether
+    to return JSON (``jsonify({...})``) or HTML (``render_template``).
+    """
+    try:
+        r = req or request
+    except RuntimeError:
+        return False
+    path = (r.path or '')
+    if any(path.startswith(p) for p in _API_PREFIXES):
+        return True
+    accept = (r.headers.get('Accept') or '').lower()
+    if 'application/json' in accept and 'text/html' not in accept:
+        return True
+    ctype = (r.headers.get('Content-Type') or '').lower()
+    if 'application/json' in ctype:
+        return True
+    return False
+
+
+def _api_error(message, code, **extra):
+    """Build a JSON error response tuple for API requests."""
+    payload = {'error': message, 'status': code}
+    payload.update(extra)
+    return jsonify(payload), code
+
 
 def is_ip_allowed(ip: str, server_ips: list, compiled_allowed_networks: list) -> bool:
     if not compiled_allowed_networks:
@@ -166,6 +214,9 @@ def register_csrf_protection(app) -> None:
             security_logger.warning(
                 f"CSRF BLOQUEADO - Origem estrangeira: {header} "
                 f"IP: {request.remote_addr} Path: {request.path}")
+            if is_api_request():
+                return _api_error('Requisição bloqueada (CSRF: origem divergente).',
+                                  400, reason='csrf_origin_mismatch')
             return render_template(
                 'error.html', error_code=400,
                 title="Requisição inválida",
