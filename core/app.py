@@ -13,6 +13,7 @@ from core import config as cfg
 from core.logging_setup import setup_logging
 from core.security import (
     ensure_strong_secrets, register_csrf_protection, is_ip_allowed,
+    is_api_request, _api_error,
 )
 from core.i18n import inject_translations, formatar_data
 
@@ -209,6 +210,9 @@ def create_app() -> Flask:
                 logging.getLogger('security').warning(
                     f"ACESSO BLOQUEADO - IP não permitido: {client_ip}, "
                     f"Usuário: {username}, Endpoint: {request.endpoint}")
+                if is_api_request():
+                    return _api_error('Acesso não permitido a partir do seu endereço IP.',
+                                      403, reason='ip_not_allowed')
                 return render_template(
                     'error.html', error_code=403,
                     message="Acesso não permitido a partir do seu endereço IP"), 403
