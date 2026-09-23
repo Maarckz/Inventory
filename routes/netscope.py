@@ -259,7 +259,16 @@ def api_trash():
 @ns_bp.route('/api/trash/<path:mac>/restore', methods=['POST'])
 @ns_login_required
 def api_trash_restore(mac):
-    ok, code = store.restore(mac)
+    try:
+        ok, code = store.restore(mac)
+    except Exception as e:
+        try:
+            from flask import current_app
+            current_app.logger.error(f"[NetScope] restore falhou para {mac}: {e!r}")
+        except Exception:
+            pass
+        return jsonify({'error': 'Falha ao restaurar dispositivo',
+                        'detail': str(e)[:300]}), 500
     if not ok:
         return jsonify({'error': 'Não encontrado na lixeira'}), code
     return jsonify({'ok': True})
@@ -267,7 +276,16 @@ def api_trash_restore(mac):
 @ns_bp.route('/api/trash/<path:mac>', methods=['DELETE'])
 @ns_login_required
 def api_trash_delete(mac):
-    ok, code = store.permanent_delete(mac)
+    try:
+        ok, code = store.permanent_delete(mac)
+    except Exception as e:
+        try:
+            from flask import current_app
+            current_app.logger.error(f"[NetScope] permanent_delete falhou para {mac}: {e!r}")
+        except Exception:
+            pass
+        return jsonify({'error': 'Falha ao excluir permanentemente',
+                        'detail': str(e)[:300]}), 500
     if not ok:
         return jsonify({'error': 'Não encontrado'}), code
     return jsonify({'ok': True})
@@ -294,7 +312,19 @@ def api_device_update(mac):
 @ns_bp.route('/api/devices/<path:mac>', methods=['DELETE'])
 @ns_login_required
 def api_device_delete(mac):
-    ok, code = store.soft_delete(mac)
+    try:
+        ok, code = store.soft_delete(mac)
+    except Exception as e:
+        # soft_delete() calls _flush() which re-raises DB errors. Without
+        # this catch the global 500 handler kicks in and (previously)
+        # returned HTML, breaking the frontend's r.json() call.
+        try:
+            from flask import current_app
+            current_app.logger.error(f"[NetScope] soft_delete falhou para {mac}: {e!r}")
+        except Exception:
+            pass
+        return jsonify({'error': 'Falha ao excluir dispositivo',
+                        'detail': str(e)[:300]}), 500
     if not ok:
         return jsonify({'error': 'Não encontrado'}), code
     return jsonify({'ok': True})
@@ -375,7 +405,11 @@ def api_link_create():
 def api_link_delete():
     body = request.get_json(silent=True) or {}
     mac = (body.get('mac') or '').strip().lower()
-    ok, code = store.remove_link(mac)
+    try:
+        ok, code = store.remove_link(mac)
+    except Exception as e:
+        return jsonify({'error': 'Falha ao desassociar',
+                        'detail': str(e)[:300]}), 500
     if not ok:
         return jsonify({'error': 'Não encontrado'}), code
     return jsonify({'ok': True})
@@ -442,7 +476,11 @@ def api_snapshot_get(snap_id):
 @ns_bp.route('/api/snapshots/<path:snap_id>', methods=['DELETE'])
 @ns_login_required
 def api_snapshot_delete(snap_id):
-    ok = get_instance().delete_snapshot(snap_id)
+    try:
+        ok = get_instance().delete_snapshot(snap_id)
+    except Exception as e:
+        return jsonify({'error': 'Falha ao excluir snapshot',
+                        'detail': str(e)[:300]}), 500
     if not ok:
         return jsonify({'error': 'Snapshot não encontrado'}), 404
     return jsonify({'ok': True})
