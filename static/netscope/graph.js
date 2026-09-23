@@ -4,9 +4,47 @@ const $ = id => document.getElementById(id);
 async function api(url, opts = {}) {
   try {
     const r = await fetch(url, opts);
-    return await r.json();
+    const ct = r.headers.get('Content-Type') || '';
+    // Try JSON parse only when the server actually sent JSON. If it sent
+    // HTML (e.g. because a session expired mid-page and a 302 redirect
+    // to /login was followed by fetch, or because a legacy error handler
+    // returned error.html), r.json() would throw "JSON.parse: unexpected
+    // character at line 1 column 1" — which is the cryptic message the
+    // user was seeing. Instead, read the body as text and surface a
+    // meaningful error.
+    if (ct.includes('application/json')) {
+      const data = await r.json();
+      // Auto-detect session expiry and bounce to login. The backend
+      // sets session_expired=True on 401 JSON responses.
+      if (data && data.session_expired) {
+        try { toast(t('Sessão expirada — recarregando...'), 'warn'); } catch (_) {}
+        setTimeout(() => { window.location.href = '/login'; }, 800);
+      }
+      return data;
+    }
+    // Non-JSON response. Read as text (capped) and return a structured
+    // error so callers can show a useful toast instead of the raw parse
+    // error.
+    let body = '';
+    try { body = (await r.text()).slice(0, 200); } catch (_) {}
+    let msg = t('Resposta inválida do servidor (não-JSON)');
+    if (r.status === 401 || r.status === 403) {
+      msg = t('Sessão expirada ou acesso negado — recarregando...');
+      setTimeout(() => { window.location.href = '/login'; }, 800);
+    } else if (r.status >= 500) {
+      msg = t('Erro interno do servidor ({s})', {s: r.status});
+    } else if (r.status === 404) {
+      msg = t('Recurso não encontrado (404)');
+    }
+    if (body && /<!doctype html|<html/i.test(body)) {
+      // The server returned an HTML page — most likely the login page
+      // (session expired) or the generic error.html. Bounce to login.
+      setTimeout(() => { window.location.href = '/login'; }, 800);
+    }
+    return { error: msg, status: r.status, body: body, non_json: true };
   } catch (e) {
-    return { error: e.message };
+    // Network error or fetch threw. Return a structured error.
+    return { error: String(e.message || e), status: 0, network_error: true };
   }
 }
 
