@@ -18,4 +18,4 @@ redis==5.2.1
 # do Pillow) e embutidos como imagens inline. Sem Pillow o relatório
 # hindi degrada para o comportamento antigo (texto invisível), os
 # demais idiomas NÃO são afetados.
-Pillow==12.3.0
+Pillow==13.0.0
